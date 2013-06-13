@@ -1,0 +1,17 @@
+bin
+Bin
+obj
+*ReSharper*
+_Package
+*.patch
+*.hg
+build
+*.sln.cache
+desktop.ini
+*.orig
+*.suo
+TestResults
+*.itrace.csdef
+*.csproj.user
+*.dotCover
+*.vsmdi
