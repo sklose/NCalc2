@@ -15,3 +15,5 @@ TestResults
 *.csproj.user
 *.dotCover
 *.vsmdi
+.nuget/
+packages/
