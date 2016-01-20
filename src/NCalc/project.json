@@ -1,5 +1,11 @@
 {
   "version": "2.0.0",
+  "author": "Sebastian Klose",
+  "description": "NCalc is a mathematical expressions evaluator in .NET. NCalc can parse any expression and evaluate the result, including static or dynamic parameters and custom functions.",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sklose/NCalc2"
+  },
   "frameworks": {
     "dnx451": { },
     "dnxcore50": {
