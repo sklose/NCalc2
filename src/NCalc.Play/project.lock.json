@@ -495,19 +495,19 @@
         }
       }
     },
-    "DNX,Version=v4.5.1/win7-x86": {
+    "DNX,Version=v4.5.1/ubuntu.14.04-x86": {
       "NCalc/2.0.0": {
         "type": "project",
         "framework": "DNX,Version=v4.5.1"
       }
     },
-    "DNX,Version=v4.5.1/win7-x64": {
+    "DNX,Version=v4.5.1/ubuntu.14.04-x64": {
       "NCalc/2.0.0": {
         "type": "project",
         "framework": "DNX,Version=v4.5.1"
       }
     },
-    "DNXCore,Version=v5.0/win7-x86": {
+    "DNXCore,Version=v5.0/ubuntu.14.04-x86": {
       "NCalc/2.0.0": {
         "type": "project",
         "framework": "DNXCore,Version=v5.0",
@@ -521,26 +521,6 @@
           "System.Runtime.Serialization.Xml": "4.0.10",
           "System.Text.RegularExpressions": "4.0.10",
           "System.Threading.Thread": "4.0.0-beta-23516"
-        }
-      },
-      "runtime.win7.System.Console/4.0.0-beta-23516": {
-        "type": "package",
-        "dependencies": {
-          "System.IO": "4.0.10",
-          "System.IO.FileSystem.Primitives": "4.0.0",
-          "System.Resources.ResourceManager": "4.0.0",
-          "System.Runtime": "4.0.20",
-          "System.Runtime.InteropServices": "4.0.20",
-          "System.Text.Encoding": "4.0.10",
-          "System.Text.Encoding.Extensions": "4.0.10",
-          "System.Threading": "4.0.10",
-          "System.Threading.Tasks": "4.0.10"
-        },
-        "compile": {
-          "ref/dotnet/_._": {}
-        },
-        "runtime": {
-          "runtimes/win7/lib/dotnet5.4/System.Console.dll": {}
         }
       },
       "System.Collections/4.0.10": {
@@ -717,51 +697,6 @@
         },
         "runtime": {
           "lib/DNXCore50/System.Reflection.dll": {}
-        }
-      },
-      "System.Reflection.Emit/4.0.0": {
-        "type": "package",
-        "dependencies": {
-          "System.IO": "4.0.0",
-          "System.Reflection": "4.0.0",
-          "System.Reflection.Emit.ILGeneration": "4.0.0",
-          "System.Reflection.Primitives": "4.0.0",
-          "System.Runtime": "4.0.0"
-        },
-        "compile": {
-          "ref/dotnet/System.Reflection.Emit.dll": {}
-        },
-        "runtime": {
-          "lib/DNXCore50/System.Reflection.Emit.dll": {}
-        }
-      },
-      "System.Reflection.Emit.ILGeneration/4.0.0": {
-        "type": "package",
-        "dependencies": {
-          "System.Reflection": "4.0.0",
-          "System.Reflection.Primitives": "4.0.0",
-          "System.Runtime": "4.0.0"
-        },
-        "compile": {
-          "ref/dotnet/System.Reflection.Emit.ILGeneration.dll": {}
-        },
-        "runtime": {
-          "lib/DNXCore50/System.Reflection.Emit.ILGeneration.dll": {}
-        }
-      },
-      "System.Reflection.Emit.Lightweight/4.0.0": {
-        "type": "package",
-        "dependencies": {
-          "System.Reflection": "4.0.0",
-          "System.Reflection.Emit.ILGeneration": "4.0.0",
-          "System.Reflection.Primitives": "4.0.0",
-          "System.Runtime": "4.0.0"
-        },
-        "compile": {
-          "ref/dotnet/System.Reflection.Emit.Lightweight.dll": {}
-        },
-        "runtime": {
-          "lib/DNXCore50/System.Reflection.Emit.Lightweight.dll": {}
         }
       },
       "System.Reflection.Extensions/4.0.0": {
@@ -1059,7 +994,7 @@
         }
       }
     },
-    "DNXCore,Version=v5.0/win7-x64": {
+    "DNXCore,Version=v5.0/ubuntu.14.04-x64": {
       "NCalc/2.0.0": {
         "type": "project",
         "framework": "DNXCore,Version=v5.0",
@@ -1075,13 +1010,17 @@
           "System.Threading.Thread": "4.0.0-beta-23516"
         }
       },
-      "runtime.win7.System.Console/4.0.0-beta-23516": {
+      "runtime.unix.System.Console/4.0.0-beta-23516": {
         "type": "package",
         "dependencies": {
+          "System.Collections": "4.0.10",
           "System.IO": "4.0.10",
           "System.IO.FileSystem.Primitives": "4.0.0",
+          "System.Linq": "4.0.0",
           "System.Resources.ResourceManager": "4.0.0",
           "System.Runtime": "4.0.20",
+          "System.Runtime.Extensions": "4.0.10",
+          "System.Runtime.Handles": "4.0.0",
           "System.Runtime.InteropServices": "4.0.20",
           "System.Text.Encoding": "4.0.10",
           "System.Text.Encoding.Extensions": "4.0.10",
@@ -1092,7 +1031,7 @@
           "ref/dotnet/_._": {}
         },
         "runtime": {
-          "runtimes/win7/lib/dotnet5.4/System.Console.dll": {}
+          "runtimes/unix/lib/dotnet5.4/System.Console.dll": {}
         }
       },
       "System.Collections/4.0.10": {
@@ -1617,17 +1556,16 @@
       "type": "project",
       "path": "../NCalc/project.json"
     },
-    "runtime.win7.System.Console/4.0.0-beta-23516": {
+    "runtime.unix.System.Console/4.0.0-beta-23516": {
       "type": "package",
       "serviceable": true,
-      "sha512": "TJZhrw44Bf7sYqne+CX5II/PaNf5L7oKVfl0FLkr4pj76KS8hSsJzsKL0IvxC+bi4d51+wTbv91kF1kgPyHMVw==",
+      "sha512": "/OIL0PzkDQHBHUIl4HzwW08BYgaOPpuBynpW301B516xOSMk3XT+j0lCaj44Ov5rnhLYMKOQA8OzCZ79CpO5Yg==",
       "files": [
         "ref/dotnet/_._",
-        "runtime.win7.System.Console.4.0.0-beta-23516.nupkg",
-        "runtime.win7.System.Console.4.0.0-beta-23516.nupkg.sha512",
-        "runtime.win7.System.Console.nuspec",
-        "runtimes/win7/lib/dotnet5.4/System.Console.dll",
-        "runtimes/win7/lib/net/_._"
+        "runtime.unix.System.Console.4.0.0-beta-23516.nupkg",
+        "runtime.unix.System.Console.4.0.0-beta-23516.nupkg.sha512",
+        "runtime.unix.System.Console.nuspec",
+        "runtimes/unix/lib/dotnet5.4/System.Console.dll"
       ]
     },
     "System.Collections/4.0.10": {

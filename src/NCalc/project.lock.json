@@ -465,9 +465,9 @@
         }
       }
     },
-    "DNX,Version=v4.5.1/win7-x86": {},
-    "DNX,Version=v4.5.1/win7-x64": {},
-    "DNXCore,Version=v5.0/win7-x86": {
+    "DNX,Version=v4.5.1/ubuntu.14.04-x86": {},
+    "DNX,Version=v4.5.1/ubuntu.14.04-x64": {},
+    "DNXCore,Version=v5.0/ubuntu.14.04-x86": {
       "System.Collections/4.0.10": {
         "type": "package",
         "dependencies": {
@@ -632,51 +632,6 @@
         },
         "runtime": {
           "lib/DNXCore50/System.Reflection.dll": {}
-        }
-      },
-      "System.Reflection.Emit/4.0.0": {
-        "type": "package",
-        "dependencies": {
-          "System.IO": "4.0.0",
-          "System.Reflection": "4.0.0",
-          "System.Reflection.Emit.ILGeneration": "4.0.0",
-          "System.Reflection.Primitives": "4.0.0",
-          "System.Runtime": "4.0.0"
-        },
-        "compile": {
-          "ref/dotnet/System.Reflection.Emit.dll": {}
-        },
-        "runtime": {
-          "lib/DNXCore50/System.Reflection.Emit.dll": {}
-        }
-      },
-      "System.Reflection.Emit.ILGeneration/4.0.0": {
-        "type": "package",
-        "dependencies": {
-          "System.Reflection": "4.0.0",
-          "System.Reflection.Primitives": "4.0.0",
-          "System.Runtime": "4.0.0"
-        },
-        "compile": {
-          "ref/dotnet/System.Reflection.Emit.ILGeneration.dll": {}
-        },
-        "runtime": {
-          "lib/DNXCore50/System.Reflection.Emit.ILGeneration.dll": {}
-        }
-      },
-      "System.Reflection.Emit.Lightweight/4.0.0": {
-        "type": "package",
-        "dependencies": {
-          "System.Reflection": "4.0.0",
-          "System.Reflection.Emit.ILGeneration": "4.0.0",
-          "System.Reflection.Primitives": "4.0.0",
-          "System.Runtime": "4.0.0"
-        },
-        "compile": {
-          "ref/dotnet/System.Reflection.Emit.Lightweight.dll": {}
-        },
-        "runtime": {
-          "lib/DNXCore50/System.Reflection.Emit.Lightweight.dll": {}
         }
       },
       "System.Reflection.Extensions/4.0.0": {
@@ -974,7 +929,7 @@
         }
       }
     },
-    "DNXCore,Version=v5.0/win7-x64": {
+    "DNXCore,Version=v5.0/ubuntu.14.04-x64": {
       "System.Collections/4.0.10": {
         "type": "package",
         "dependencies": {
