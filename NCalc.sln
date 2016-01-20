@@ -1,47 +1,32 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C27AD8D7-BE62-4A13-8857-368B555D3385}"
-	ProjectSection(SolutionItems) = preProject
-		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
-		NCalc.20.vsmdi = NCalc.20.vsmdi
-		NCalc.vsmdi = NCalc.vsmdi
-	EndProjectSection
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCalc", "src\NCalc\NCalc.xproj", "{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCalc", "Evaluant.Calculator\NCalc.csproj", "{5F014003-50D8-49E0-8AFE-91D38DCCC97C}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCalc.Tests", "test\NCalc.Tests\NCalc.Tests.xproj", "{00EE17CD-D198-48C3-AED8-1CE6A816C01B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCalc.Play", "Evaluant.Calculator.Play\NCalc.Play.csproj", "{4183699B-5B7E-4294-9807-9709BAD86477}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCalc.Tests", "Evaluant.Calculator.Tests\NCalc.Tests.csproj", "{F8E5E800-F842-4F84-A0C6-B3E1E5DB2BB4}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{E1364597-E252-4817-96DC-BB681B63F126}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCalc.Play", "src\NCalc.Play\NCalc.Play.xproj", "{396170ED-4A6E-45F6-A1DB-614E55E84D40}"
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = NCalc.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5F014003-50D8-49E0-8AFE-91D38DCCC97C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F014003-50D8-49E0-8AFE-91D38DCCC97C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F014003-50D8-49E0-8AFE-91D38DCCC97C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5F014003-50D8-49E0-8AFE-91D38DCCC97C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4183699B-5B7E-4294-9807-9709BAD86477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4183699B-5B7E-4294-9807-9709BAD86477}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4183699B-5B7E-4294-9807-9709BAD86477}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4183699B-5B7E-4294-9807-9709BAD86477}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F8E5E800-F842-4F84-A0C6-B3E1E5DB2BB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F8E5E800-F842-4F84-A0C6-B3E1E5DB2BB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F8E5E800-F842-4F84-A0C6-B3E1E5DB2BB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F8E5E800-F842-4F84-A0C6-B3E1E5DB2BB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00EE17CD-D198-48C3-AED8-1CE6A816C01B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00EE17CD-D198-48C3-AED8-1CE6A816C01B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00EE17CD-D198-48C3-AED8-1CE6A816C01B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00EE17CD-D198-48C3-AED8-1CE6A816C01B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{396170ED-4A6E-45F6-A1DB-614E55E84D40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{396170ED-4A6E-45F6-A1DB-614E55E84D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{396170ED-4A6E-45F6-A1DB-614E55E84D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{396170ED-4A6E-45F6-A1DB-614E55E84D40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
