@@ -190,6 +190,45 @@ namespace NCalc
         protected Dictionary<string, IEnumerator> ParameterEnumerators;
         protected Dictionary<string, object> ParametersBackup;
 
+        public Func<TResult> ToLambda<TResult>()
+        {
+            if (HasErrors())
+            {
+                throw new EvaluationException(Error);
+            }
+
+            if (ParsedExpression == null)
+            {
+                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
+            }
+
+            var visitor = new LambdaExpressionVistor(null);
+            ParsedExpression.Accept(visitor);
+
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(visitor.Result);
+            return lambda.Compile();
+        }
+
+        public Func<TContext, TResult> ToLambda<TContext, TResult>() where TContext : class
+        {
+            if (HasErrors())
+            {
+                throw new EvaluationException(Error);
+            }
+
+            if (ParsedExpression == null)
+            {
+                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
+            }
+
+            var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
+            var visitor = new LambdaExpressionVistor(parameter);
+            ParsedExpression.Accept(visitor);
+
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(visitor.Result, parameter);
+            return lambda.Compile();
+        }
+
         public object Evaluate()
         {
             if (HasErrors())
