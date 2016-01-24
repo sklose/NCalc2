@@ -9,5 +9,5 @@ clone_depth: 1
 test: off
 deploy: off
 artifacts:
-  - path: src\NCalc\Release\*.nupkg
+  - path: src\NCalc\bin\Release\*.nupkg
     name: NCalc2
