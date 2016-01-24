@@ -1,6 +1,6 @@
 {
   "title": "CoreCLR-NCalc",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "authors": [ "Sebastian Klose" ],
   "description": "This is a port of NCalc for .NET CoreCLR and DNX451 applications.",
   "projectUrl": "https://github.com/sklose/NCalc2",
