@@ -7,12 +7,12 @@ install:
 build_script:
   - cmd: dnu restore --quiet
   - cmd: >-
-      cd test\NCalc.Test
       dnvm use 1.0.0-rc1-update1 -r clr
+      cd test\NCalc.Test      
       dnx test
   - cmd: >-
-      cd test\NCalc.Test
       dnvm use 1.0.0-rc1-update1 -r coreclr
+      cd test\NCalc.Test      
       dnx test
 clone_depth: 1
 test: off
