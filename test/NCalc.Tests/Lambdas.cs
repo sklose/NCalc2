@@ -8,6 +8,9 @@ namespace NCalc.Tests
         {
             public int FieldA { get; set; }
             public string FieldB { get; set; }
+            public decimal FieldC { get; set; }
+            public decimal? FieldD { get; set; }
+            public int? FieldE { get; set; }
 
             public int Test(int a, int b)
             {
@@ -67,6 +70,21 @@ namespace NCalc.Tests
             var expression = new Expression(input);
             var sut = expression.ToLambda<bool>();
             Assert.True(sut());
+        }
+
+        [Theory]
+        [InlineData("[FieldA] > [FieldC]", true)]
+        [InlineData("[FieldC] > 1.34", true)]
+        [InlineData("[FieldC] > (1.34 * 2) % 3", false)]
+        [InlineData("[FieldE] = 2", true)]
+        [InlineData("[FieldD] > 0", false)]
+        public void ShouldHandleDataConversions(string input, bool expected)
+        {
+            var expression = new Expression(input);
+            var sut = expression.ToLambda<Context, bool>();
+            var context = new Context { FieldA = 7, FieldB = "test", FieldC = 2.4m, FieldE = 2 };
+
+            Assert.Equal(expected, sut(context));
         }
     }
 }

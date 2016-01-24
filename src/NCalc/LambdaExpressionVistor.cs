@@ -2,7 +2,6 @@
 using System.Reflection;
 using NCalc.Domain;
 using L = System.Linq.Expressions;
-using ValueType = NCalc.Domain.ValueType;
 
 namespace NCalc
 {
@@ -54,37 +53,37 @@ namespace NCalc
                     _result = L.Expression.OrElse(left, right);
                     break;
                 case BinaryExpressionType.NotEqual:
-                    _result = L.Expression.NotEqual(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.NotEqual);
                     break;
                 case BinaryExpressionType.LesserOrEqual:
-                    _result = L.Expression.LessThanOrEqual(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.LessThanOrEqual);
                     break;
                 case BinaryExpressionType.GreaterOrEqual:
-                    _result = L.Expression.GreaterThanOrEqual(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.GreaterThanOrEqual);
                     break;
                 case BinaryExpressionType.Lesser:
-                    _result = L.Expression.LessThan(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.LessThan);
                     break;
                 case BinaryExpressionType.Greater:
-                    _result = L.Expression.GreaterThan(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.GreaterThan);
                     break;
                 case BinaryExpressionType.Equal:
-                    _result = L.Expression.Equal(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.Equal);
                     break;
                 case BinaryExpressionType.Minus:
-                    _result = L.Expression.Subtract(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.Subtract);
                     break;
                 case BinaryExpressionType.Plus:
-                    _result = L.Expression.Add(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.Add);
                     break;
                 case BinaryExpressionType.Modulo:
-                    _result = L.Expression.Modulo(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.Modulo);
                     break;
                 case BinaryExpressionType.Div:
-                    _result = L.Expression.Divide(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.Divide);
                     break;
                 case BinaryExpressionType.Times:
-                    _result = L.Expression.Multiply(left, right);
+                    _result = WithCommonNumericType(left, right, L.Expression.Multiply);
                     break;
                 case BinaryExpressionType.BitwiseOr:
                     _result = L.Expression.Or(left, right);
@@ -127,24 +126,7 @@ namespace NCalc
 
         public override void Visit(ValueExpression expression)
         {
-            switch (expression.Type)
-            {
-                case ValueType.Integer:
-                    _result = L.Expression.Constant(expression.Value, typeof(int));
-                    break;
-                case ValueType.String:
-                    _result = L.Expression.Constant(expression.Value, typeof(string));
-                    break;
-                case ValueType.DateTime:
-                    _result = L.Expression.Constant(expression.Value, typeof(DateTime));
-                    break;
-                case ValueType.Float:
-                    _result = L.Expression.Constant(expression.Value, typeof(float));
-                    break;
-                case ValueType.Boolean:
-                    _result = L.Expression.Constant(expression.Value, typeof(bool));
-                    break;
-            }
+            _result = L.Expression.Constant(expression.Value);
         }
 
         public override void Visit(Function function)
@@ -179,6 +161,60 @@ namespace NCalc
         public override void Visit(Identifier function)
         {
             _result = L.Expression.PropertyOrField(_parameter, function.Name);
+        }
+
+        private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,
+            Func<L.Expression, L.Expression, L.Expression> action)
+        {
+            left = UnwrapNullable(left);
+            right = UnwrapNullable(right);
+
+            var precedence = new[]
+            {
+                typeof(decimal),
+                typeof(double),
+                typeof(float),
+                typeof(ulong),
+                typeof(long),
+                typeof(uint),
+                typeof(int),
+                typeof(ushort),
+                typeof(short),
+                typeof(byte),
+                typeof(sbyte)
+            };
+
+            int l = Array.IndexOf(precedence, left.Type);
+            int r = Array.IndexOf(precedence, right.Type);
+            if (l >= 0 && r >= 0)
+            {
+                var type = precedence[Math.Min(l, r)];
+                if (left.Type != type)
+                {
+                    left = L.Expression.Convert(left, type);
+                }
+
+                if (right.Type != type)
+                {
+                    right = L.Expression.Convert(right, type);
+                }
+            }
+
+            return action(left, right);
+        }
+
+        private L.Expression UnwrapNullable(L.Expression expression)
+        {
+            var ti = expression.Type.GetTypeInfo();
+            if (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof (Nullable<>))
+            {
+                return L.Expression.Condition(
+                    L.Expression.Property(expression, "HasValue"),
+                    L.Expression.Property(expression, "Value"),
+                    L.Expression.Default(expression.Type.GetGenericArguments()[0]));
+            }
+
+            return expression;
         }
     }
 }
