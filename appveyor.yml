@@ -1,19 +1,10 @@
 os: Visual Studio 2015
 install:
-- cmd: >-
-    set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
-    dnvm install 1.0.0-rc1-update1 -r clr
-    dnvm install 1.0.0-rc1-update1 -r coreclr
+- cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+- cmd: dnvm install 1.0.0-rc1-update1 -r clr
+- cmd: dnvm install 1.0.0-rc1-update1 -r coreclr
 build_script:
-  - cmd: dnu restore --quiet
-  - cmd: >-
-      dnvm use 1.0.0-rc1-update1 -r clr
-      cd test\NCalc.Test      
-      dnx test
-  - cmd: >-
-      dnvm use 1.0.0-rc1-update1 -r coreclr
-      cd test\NCalc.Test      
-      dnx test
+  - build.cmd
 clone_depth: 1
 test: off
 deploy: off
