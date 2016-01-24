@@ -8,3 +8,6 @@ build_script:
 clone_depth: 1
 test: off
 deploy: off
+artifacts:
+  - path: src\NCalc\Release\*.nupkg
+    name: NCalc2
