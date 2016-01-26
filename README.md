@@ -11,7 +11,7 @@ A clone of NCalc from http://ncalc.codeplex.com/ with the following changes:
 
 Simply install the package via NuGet
 
-```
+```powershell
 PM> Install-Package CoreCLR-NCalc
 ```
 
@@ -19,7 +19,7 @@ PM> Install-Package CoreCLR-NCalc
 
 ## Simple Expressions
 
-```
+```csharp
 var expr = new Expression("1 + 2");
 Func<int> f = expr.ToLambda<int>();
 Console.WriteLine(f()); // will print 3
@@ -27,7 +27,7 @@ Console.WriteLine(f()); // will print 3
 
 ## Expressions with Functions and Parameters
 
-```
+```csharp
 class ExpressionContext
 {
   public int Param1 { get; set; }
