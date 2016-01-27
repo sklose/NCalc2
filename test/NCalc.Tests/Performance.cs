@@ -110,12 +110,12 @@ namespace NCalc.Tests
 
         private static void PrintResult(string formula, TimeSpan m1, TimeSpan m2)
         {
-            Console.WriteLine(new string('-', Console.WindowWidth));
+            Console.WriteLine(new string('-', 60));
             Console.WriteLine("Formula: {0}", formula);
             Console.WriteLine("Expression: {0:N} evaluations / sec", Iterations / m1.TotalSeconds);
             Console.WriteLine("Lambda: {0:N} evaluations / sec", Iterations / m2.TotalSeconds);
             Console.WriteLine("Lambda Speedup: {0:P}%", (Iterations / m2.TotalSeconds) / (Iterations / m1.TotalSeconds) - 1);
-            Console.WriteLine(new string('-', Console.WindowWidth));
+            Console.WriteLine(new string('-', 60));
         }
     }
 }
