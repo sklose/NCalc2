@@ -45,3 +45,15 @@ Func<ExpressionContext, bool> f = expr.ToLambda<ExpressionContext, bool>();
 var context = new ExpressionContext { Param1 = 2, Param2 = "test" };
 Console.WriteLine(f(context)); // will print True
 ```
+
+## Performance Comparison
+
+The measurements were done during CI runs on AppVeyor and fluctuate a lot in between runs, but the speedup is consistently in the thousands of percent range. The speedup measured on actual hardware was even higher (between 10,000% and 35,000%).
+
+| Formula  | Description | Expression Evaluations / sec | Lambda Evaluations / sec | Speedup |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| (4 * 12 / 7) + ((9 * 2) % 8)  | Simple Arithmetics | 474,247.87 | 32,691,490.41 | 6,793.33% |
+| 5 * 2 = 2 * 5 && (1 / 3.0) * 3 = 1  | Simple Arithmetics | 276,226.31 | 93,222,709.05 | 33,648.67% |
+| [Param1] * 7 + [Param2]  | Constant Values| 707,493.27 | 21,766,101.47 | 2,976.51% |
+| [Param1] * 7 + [Param2]  | Dynamic Values | 582,832.10 | 21,400,445.13 | 3,571.80% |
+| Foo([Param1] * 7, [Param2])  | Dynamic Values and Function Call | 594,259.69 | 17,209,334.34 | 2,795.93% |
