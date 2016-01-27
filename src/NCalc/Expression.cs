@@ -205,7 +205,13 @@ namespace NCalc
             var visitor = new LambdaExpressionVistor(null);
             ParsedExpression.Accept(visitor);
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(visitor.Result);
+            var body = visitor.Result;
+            if (body.Type != typeof(TResult))
+            {
+                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+            }
+
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
             return lambda.Compile();
         }
 
@@ -225,7 +231,13 @@ namespace NCalc
             var visitor = new LambdaExpressionVistor(parameter);
             ParsedExpression.Accept(visitor);
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(visitor.Result, parameter);
+            var body = visitor.Result;
+            if (body.Type != typeof (TResult))
+            {
+                body = System.Linq.Expressions.Expression.Convert(body, typeof (TResult));
+            }
+
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
             return lambda.Compile();
         }
 
