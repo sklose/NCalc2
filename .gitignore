@@ -17,3 +17,6 @@ TestResults
 *.vsmdi
 .nuget/
 packages/
+.vs/
+project.lock.json
+*.user
