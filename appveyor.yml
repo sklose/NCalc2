@@ -1,8 +1,4 @@
 os: Visual Studio 2015
-install:
-- cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
-- cmd: dnvm install 1.0.0-rc1-update1 -r clr
-- cmd: dnvm install 1.0.0-rc1-update1 -r coreclr
 build_script:
   - build.cmd
 clone_depth: 1
