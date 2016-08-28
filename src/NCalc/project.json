@@ -1,6 +1,6 @@
 {
   "title": "CoreCLR-NCalc",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "authors": [ "Sebastian Klose" ],
   "description": "This is a port of NCalc for .NET Core applications.",
   "packOptions": {
@@ -12,18 +12,10 @@
     }
   },
   "frameworks": {
-    "net451": {},
     "netstandard1.3": {
       "dependencies": {
         "NETStandard.Library": "1.6.0",
-        "System.Diagnostics.Debug": "4.0.11",
-        "System.Linq": "4.1.0",
-        "System.Linq.Expressions": "4.1.0",
-        "System.Reflection.TypeExtensions": "4.1.0",
-        "System.Runtime.Extensions": "4.1.0",
-        "System.Runtime.Serialization.Xml": "4.1.1",
-        "System.Text.RegularExpressions": "4.1.0",
-        "System.Threading.Thread": "4.0.0"
+        "System.Runtime.Serialization.Primitives": "4.1.1"
       }
     }
   }

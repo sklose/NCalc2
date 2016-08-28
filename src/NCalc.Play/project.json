@@ -1,10 +1,9 @@
 {
   "version": "1.0.0",
   "dependencies": {
-    "NCalc": "2.1.0"
+    "NCalc": "2.1.1"
   },
   "frameworks": {
-    "net451": {},
     "netstandard1.3": {
       "dependencies": {
         "NETStandard.Library": "1.6.0",

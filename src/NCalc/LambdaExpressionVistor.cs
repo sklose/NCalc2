@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using NCalc.Domain;
 using L = System.Linq.Expressions;
@@ -146,13 +147,14 @@ namespace NCalc
                 case "in":
                     var items = L.Expression.NewArrayInit(args[0].Type,
                         new ArraySegment<L.Expression>(args, 1, args.Length - 1));
-                    var smi = typeof (Array).GetMethod("IndexOf", new[] { typeof(Array), typeof(object) });
+                    var smi = typeof (Array).GetRuntimeMethod("IndexOf", new[] { typeof(Array), typeof(object) });
                     var r = L.Expression.Call(smi, L.Expression.Convert(items, typeof(Array)), L.Expression.Convert(args[0], typeof(object)));
                     _result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
                 default:
-                    var mi = _parameter.Type.GetMethod(function.Identifier.Name,
-                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+                    var mi = _parameter.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
+                        m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
+                             m.IsPublic && !m.IsStatic);
                     _result = L.Expression.Call(_parameter, mi, args);
                     break;
             }
@@ -211,7 +213,7 @@ namespace NCalc
                 return L.Expression.Condition(
                     L.Expression.Property(expression, "HasValue"),
                     L.Expression.Property(expression, "Value"),
-                    L.Expression.Default(expression.Type.GetGenericArguments()[0]));
+                    L.Expression.Default(expression.Type.GetTypeInfo().GenericTypeArguments[0]));
             }
 
             return expression;
