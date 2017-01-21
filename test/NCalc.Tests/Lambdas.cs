@@ -62,6 +62,23 @@ namespace NCalc.Tests
             Assert.Equal(sut(context), 1);
         }
 
+        [Fact]
+        public void Issue1()
+        {
+            var expr = new Expression("2 + 2 - a - b - x");
+
+            decimal x = 5m;
+            decimal a = 6m;
+            decimal b = 7m;
+
+            expr.Parameters["x"] = x;
+            expr.Parameters["a"] = a;
+            expr.Parameters["b"] = b;
+
+            var f = expr.ToLambda<float>(); // Here it throws System.ArgumentNullException. Parameter name: expression
+            Assert.Equal(f(), -14);
+        }
+
         [Theory]
         [InlineData("if(true, true, false)")]
         [InlineData("in(3, 1, 2, 3, 4)")]

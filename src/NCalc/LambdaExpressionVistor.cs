@@ -3,17 +3,24 @@ using System.Linq;
 using System.Reflection;
 using NCalc.Domain;
 using L = System.Linq.Expressions;
+using System.Collections.Generic;
 
 namespace NCalc
 {
     internal class LambdaExpressionVistor : LogicalExpressionVisitor
     {
+        private readonly IDictionary<string, object> _parameters;
         private L.Expression _result;
-        private readonly L.Expression _parameter;
+        private readonly L.Expression _context;
 
-        public LambdaExpressionVistor(L.ParameterExpression parameter)
+        public LambdaExpressionVistor(IDictionary<string, object> parameters)
         {
-            _parameter = parameter;
+            _parameters = parameters;
+        }
+
+        public LambdaExpressionVistor(L.ParameterExpression context)
+        {
+            _context = context;
         }
 
         public L.Expression Result => _result;
@@ -152,17 +159,24 @@ namespace NCalc
                     _result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
                 default:
-                    var mi = _parameter.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
+                    var mi = _context.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
                         m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
                              m.IsPublic && !m.IsStatic);
-                    _result = L.Expression.Call(_parameter, mi, args);
+                    _result = L.Expression.Call(_context, mi, args);
                     break;
             }
         }
 
         public override void Visit(Identifier function)
         {
-            _result = L.Expression.PropertyOrField(_parameter, function.Name);
+            if (_context == null)
+            {
+                _result = L.Expression.Constant(_parameters[function.Name]);
+            }
+            else
+            {
+                _result = L.Expression.PropertyOrField(_context, function.Name);
+            }
         }
 
         private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,

@@ -202,7 +202,7 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var visitor = new LambdaExpressionVistor(null);
+            var visitor = new LambdaExpressionVistor(Parameters);
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
