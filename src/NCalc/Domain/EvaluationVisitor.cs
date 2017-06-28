@@ -13,6 +13,8 @@ namespace NCalc.Domain
         private readonly EvaluateOptions _options = EvaluateOptions.None;
 
         private bool IgnoreCase { get { return (_options & EvaluateOptions.IgnoreCase) == EvaluateOptions.IgnoreCase; } }
+        private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
+        private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
 
         public EvaluationVisitor(EvaluateOptions options)
         {
@@ -59,6 +61,15 @@ namespace NCalc.Domain
             a = Convert.ChangeType(a, mpt);
             b = Convert.ChangeType(b, mpt);
 
+            if (mpt.Equals(typeof(string)) && (Ordinal || IgnoreCaseString))
+            {
+                if (Ordinal)
+                {
+                    if (IgnoreCaseString) return StringComparer.OrdinalIgnoreCase.Compare(a?.ToString(), b?.ToString());
+                    else StringComparer.Ordinal.Compare(a?.ToString(), b?.ToString());
+                }
+                else return StringComparer.CurrentCultureIgnoreCase.Compare(a?.ToString(), b?.ToString());
+            }
             var cmp = a as IComparable;
             if (cmp != null)
                 return cmp.CompareTo(b);

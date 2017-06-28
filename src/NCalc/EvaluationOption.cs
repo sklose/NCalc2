@@ -25,6 +25,14 @@ namespace NCalc
         //
         // Summary:
         //     When using Round(), if a number is halfway between two others, it is rounded toward the nearest number that is away from zero. 
-        RoundAwayFromZero = 16
+        RoundAwayFromZero = 16,
+        //
+        // Summary:
+        //     Ignore case on string compare
+        MatchStringsWithIgnoreCase = 32,
+        //
+        // Summary:
+        //     Use ordinal culture on string compare
+        MatchStringsOrdinal = 64
     }
 }
