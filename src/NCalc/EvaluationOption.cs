@@ -33,6 +33,10 @@ namespace NCalc
         //
         // Summary:
         //     Use ordinal culture on string compare
-        MatchStringsOrdinal = 64
+        MatchStringsOrdinal = 64,
+        //
+        // Summary:
+        //     Use checked math
+        OverflowProtection = 128
     }
 }

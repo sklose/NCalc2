@@ -15,6 +15,7 @@ namespace NCalc.Domain
         private bool IgnoreCase { get { return (_options & EvaluateOptions.IgnoreCase) == EvaluateOptions.IgnoreCase; } }
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
         private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
+        private bool Checked { get { return (_options & EvaluateOptions.OverflowProtection) == EvaluateOptions.OverflowProtection; } }
 
         public EvaluationVisitor(EvaluateOptions options)
         {
@@ -137,6 +138,9 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.Div:
+                    //Actually doesn't need checked here, since if one is real, 
+                    // checked does nothing, and if they are int the result will only be same or smaller 
+                    // (since anything between 1 and 0 is not int and 0 is an exception anyway
                     Result = IsReal(left()) || IsReal(right())
                                  ? Numbers.Divide(left(), right())
                                  : Numbers.Divide(Convert.ToDouble(left()), right());
@@ -168,8 +172,9 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.Minus:
-                    Result = Numbers.Soustract(left(), right());
+                    Result = Checked ? Numbers.SoustractChecked(left(), right()) : Numbers.Soustract(left(), right());
                     break;
+
 
                 case BinaryExpressionType.Modulo:
                     Result = Numbers.Modulo(left(), right());
@@ -187,13 +192,13 @@ namespace NCalc.Domain
                     }
                     else
                     {
-                        Result = Numbers.Add(left(), right());
+                        Result = Checked ? Numbers.AddChecked(left(), right()) : Numbers.Add(left(), right());
                     }
 
                     break;
 
                 case BinaryExpressionType.Times:
-                    Result = Numbers.Multiply(left(), right());
+                    Result = Checked ? Numbers.MultiplyChecked(left(), right()) : Numbers.Multiply(left(), right());
                     break;
 
                 case BinaryExpressionType.BitwiseAnd:

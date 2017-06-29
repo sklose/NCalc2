@@ -16,6 +16,7 @@ namespace NCalc
 
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
         private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
+        private bool Checked { get { return (_options & EvaluateOptions.OverflowProtection) == EvaluateOptions.OverflowProtection; } }
 
         public LambdaExpressionVistor(IDictionary<string, object> parameters, EvaluateOptions options)
         {
@@ -85,10 +86,12 @@ namespace NCalc
                     _result = WithCommonNumericType(left, right, L.Expression.Equal, expression.Type);
                     break;
                 case BinaryExpressionType.Minus:
-                    _result = WithCommonNumericType(left, right, L.Expression.Subtract);
+                    if (Checked) _result = WithCommonNumericType(left, right, L.Expression.SubtractChecked);
+                    else _result = WithCommonNumericType(left, right, L.Expression.Subtract);
                     break;
                 case BinaryExpressionType.Plus:
-                    _result = WithCommonNumericType(left, right, L.Expression.Add);
+                    if (Checked) _result = WithCommonNumericType(left, right, L.Expression.AddChecked);
+                    else _result = WithCommonNumericType(left, right, L.Expression.Add);
                     break;
                 case BinaryExpressionType.Modulo:
                     _result = WithCommonNumericType(left, right, L.Expression.Modulo);
@@ -97,7 +100,8 @@ namespace NCalc
                     _result = WithCommonNumericType(left, right, L.Expression.Divide);
                     break;
                 case BinaryExpressionType.Times:
-                    _result = WithCommonNumericType(left, right, L.Expression.Multiply);
+                    if (Checked) _result = WithCommonNumericType(left, right, L.Expression.MultiplyChecked);
+                    else _result = WithCommonNumericType(left, right, L.Expression.Multiply);
                     break;
                 case BinaryExpressionType.BitwiseOr:
                     _result = L.Expression.Or(left, right);
