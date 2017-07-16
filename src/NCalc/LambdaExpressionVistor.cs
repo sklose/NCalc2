@@ -12,15 +12,22 @@ namespace NCalc
         private readonly IDictionary<string, object> _parameters;
         private L.Expression _result;
         private readonly L.Expression _context;
+        private readonly EvaluateOptions _options = EvaluateOptions.None;
 
-        public LambdaExpressionVistor(IDictionary<string, object> parameters)
+        private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
+        private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
+        private bool Checked { get { return (_options & EvaluateOptions.OverflowProtection) == EvaluateOptions.OverflowProtection; } }
+
+        public LambdaExpressionVistor(IDictionary<string, object> parameters, EvaluateOptions options)
         {
             _parameters = parameters;
+            _options = options;
         }
 
-        public LambdaExpressionVistor(L.ParameterExpression context)
+        public LambdaExpressionVistor(L.ParameterExpression context, EvaluateOptions options)
         {
             _context = context;
+            _options = options;
         }
 
         public L.Expression Result => _result;
@@ -61,28 +68,30 @@ namespace NCalc
                     _result = L.Expression.OrElse(left, right);
                     break;
                 case BinaryExpressionType.NotEqual:
-                    _result = WithCommonNumericType(left, right, L.Expression.NotEqual);
+                    _result = WithCommonNumericType(left, right, L.Expression.NotEqual, expression.Type);
                     break;
                 case BinaryExpressionType.LesserOrEqual:
-                    _result = WithCommonNumericType(left, right, L.Expression.LessThanOrEqual);
+                    _result = WithCommonNumericType(left, right, L.Expression.LessThanOrEqual, expression.Type);
                     break;
                 case BinaryExpressionType.GreaterOrEqual:
-                    _result = WithCommonNumericType(left, right, L.Expression.GreaterThanOrEqual);
+                    _result = WithCommonNumericType(left, right, L.Expression.GreaterThanOrEqual, expression.Type);
                     break;
                 case BinaryExpressionType.Lesser:
-                    _result = WithCommonNumericType(left, right, L.Expression.LessThan);
+                    _result = WithCommonNumericType(left, right, L.Expression.LessThan, expression.Type);
                     break;
                 case BinaryExpressionType.Greater:
-                    _result = WithCommonNumericType(left, right, L.Expression.GreaterThan);
+                    _result = WithCommonNumericType(left, right, L.Expression.GreaterThan, expression.Type);
                     break;
                 case BinaryExpressionType.Equal:
-                    _result = WithCommonNumericType(left, right, L.Expression.Equal);
+                    _result = WithCommonNumericType(left, right, L.Expression.Equal, expression.Type);
                     break;
                 case BinaryExpressionType.Minus:
-                    _result = WithCommonNumericType(left, right, L.Expression.Subtract);
+                    if (Checked) _result = WithCommonNumericType(left, right, L.Expression.SubtractChecked);
+                    else _result = WithCommonNumericType(left, right, L.Expression.Subtract);
                     break;
                 case BinaryExpressionType.Plus:
-                    _result = WithCommonNumericType(left, right, L.Expression.Add);
+                    if (Checked) _result = WithCommonNumericType(left, right, L.Expression.AddChecked);
+                    else _result = WithCommonNumericType(left, right, L.Expression.Add);
                     break;
                 case BinaryExpressionType.Modulo:
                     _result = WithCommonNumericType(left, right, L.Expression.Modulo);
@@ -91,7 +100,8 @@ namespace NCalc
                     _result = WithCommonNumericType(left, right, L.Expression.Divide);
                     break;
                 case BinaryExpressionType.Times:
-                    _result = WithCommonNumericType(left, right, L.Expression.Multiply);
+                    if (Checked) _result = WithCommonNumericType(left, right, L.Expression.MultiplyChecked);
+                    else _result = WithCommonNumericType(left, right, L.Expression.Multiply);
                     break;
                 case BinaryExpressionType.BitwiseOr:
                     _result = L.Expression.Or(left, right);
@@ -180,7 +190,7 @@ namespace NCalc
         }
 
         private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,
-            Func<L.Expression, L.Expression, L.Expression> action)
+            Func<L.Expression, L.Expression, L.Expression> action, BinaryExpressionType expressiontype = BinaryExpressionType.Unknown)
         {
             left = UnwrapNullable(left);
             right = UnwrapNullable(right);
@@ -215,7 +225,26 @@ namespace NCalc
                     right = L.Expression.Convert(right, type);
                 }
             }
+            L.Expression comparer = null;
+            if (IgnoreCaseString)
+            {
+                if (Ordinal) comparer = L.Expression.Property(null, typeof(StringComparer), "OrdinalIgnoreCase");
+                else comparer = L.Expression.Property(null, typeof(StringComparer), "CurrentCultureIgnoreCase");
+            }
+            else comparer = L.Expression.Property(null, typeof(StringComparer), "Ordinal");
 
+            if (comparer != null && (typeof(string).Equals(left.Type) || typeof(string).Equals(right.Type)))
+            {
+                switch (expressiontype)
+                {
+                    case BinaryExpressionType.Equal: return L.Expression.Call(comparer, typeof(StringComparer).GetRuntimeMethod("Equals", new[] { typeof(string), typeof(string) }), new L.Expression[] { left, right });
+                    case BinaryExpressionType.NotEqual: return L.Expression.Not(L.Expression.Call(comparer, typeof(StringComparer).GetRuntimeMethod("Equals", new[] { typeof(string), typeof(string) }), new L.Expression[] { left, right }));
+                    case BinaryExpressionType.GreaterOrEqual: return L.Expression.GreaterThanOrEqual(L.Expression.Call(comparer, typeof(StringComparer).GetRuntimeMethod("Compare", new[] { typeof(string), typeof(string) }), new L.Expression[] { left, right }), L.Expression.Constant(0));
+                    case BinaryExpressionType.LesserOrEqual: return L.Expression.LessThanOrEqual(L.Expression.Call(comparer, typeof(StringComparer).GetRuntimeMethod("Compare", new[] { typeof(string), typeof(string) }), new L.Expression[] { left, right }), L.Expression.Constant(0));
+                    case BinaryExpressionType.Greater: return L.Expression.GreaterThan(L.Expression.Call(comparer, typeof(StringComparer).GetRuntimeMethod("Compare", new[] { typeof(string), typeof(string) }), new L.Expression[] { left, right }), L.Expression.Constant(0));
+                    case BinaryExpressionType.Lesser: return L.Expression.LessThan(L.Expression.Call(comparer, typeof(StringComparer).GetRuntimeMethod("Compare", new[] { typeof(string), typeof(string) }), new L.Expression[] { left, right }), L.Expression.Constant(0));
+                }
+            }
             return action(left, right);
         }
 

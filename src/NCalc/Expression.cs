@@ -202,7 +202,7 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var visitor = new LambdaExpressionVistor(Parameters);
+            var visitor = new LambdaExpressionVistor(Parameters, Options);
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
@@ -228,7 +228,7 @@ namespace NCalc
             }
 
             var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
-            var visitor = new LambdaExpressionVistor(parameter);
+            var visitor = new LambdaExpressionVistor(parameter, Options);
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
