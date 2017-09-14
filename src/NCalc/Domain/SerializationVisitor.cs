@@ -149,7 +149,7 @@ namespace NCalc.Domain
                     break;
 
                 case ValueType.Float:
-                    Result.Append(decimal.Parse(expression.Value.ToString()).ToString(_numberFormatInfo)).Append(" ");
+                    Result.Append(decimal.Parse(expression.Value.ToString(), NumberStyles.Any).ToString(_numberFormatInfo)).Append(" ");
                     break;
 
                 case ValueType.Integer:

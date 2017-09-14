@@ -44,6 +44,16 @@ namespace NCalc.Tests
         }
 
         [Fact]
+        public void ParsedExpressionToStringShouldHandleSmallDecimals()
+        {
+            // small decimals starting with 0 resulting in scientific notation did not work in original NCalc
+            var equation = "0.000001";
+            var testExpression = new Expression(equation);
+            testExpression.Evaluate();
+            Assert.Equal(equation, testExpression.ParsedExpression.ToString());
+        }
+
+        [Fact]
         public void ShouldHandleUnicode()
         {
             Assert.Equal("経済協力開発機構", new Expression("'経済協力開発機構'").Evaluate());
