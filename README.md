@@ -3,7 +3,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/ugw4wg1iws3far9m?svg=true)](https://ci.appveyor.com/project/sklose/ncalc2) [![NuGet](https://img.shields.io/nuget/v/CoreCLR-NCalc.svg)](https://www.nuget.org/packages/CoreCLR-NCalc) [![NuGet](https://img.shields.io/nuget/dt/CoreCLR-NCalc.svg)](https://www.nuget.org/packages/CoreCLR-NCalc)
 
 A clone of NCalc from http://ncalc.codeplex.com/ with the following changes:
-- added support for CoreCLR / DNX
+- added support for CoreCLR (.NET Standard 1.3+)
 - embedded portable version of Antlr (no extra library/dependency required)
 - added compilation of expressions to actual CLR lambdas
 

@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCalc", "src\NCalc\NCalc.xproj", "{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCalc", "src\NCalc\NCalc.csproj", "{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCalc.Tests", "test\NCalc.Tests\NCalc.Tests.xproj", "{00EE17CD-D198-48C3-AED8-1CE6A816C01B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCalc.Tests", "test\NCalc.Tests\NCalc.Tests.csproj", "{00EE17CD-D198-48C3-AED8-1CE6A816C01B}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCalc.Play", "src\NCalc.Play\NCalc.Play.xproj", "{396170ED-4A6E-45F6-A1DB-614E55E84D40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCalc.Play", "src\NCalc.Play\NCalc.Play.csproj", "{396170ED-4A6E-45F6-A1DB-614E55E84D40}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A72135DF-4418-42F9-B676-45C36CFF8219}
 	EndGlobalSection
 EndGlobal
