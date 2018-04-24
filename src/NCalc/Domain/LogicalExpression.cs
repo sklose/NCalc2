@@ -1,6 +1,7 @@
 using System;
 using Antlr.Runtime.Tree;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NCalc.Domain
 {
@@ -235,6 +236,11 @@ namespace NCalc.Domain
         public virtual void Accept(LogicalExpressionVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public virtual async Task AcceptAsync(LogicalExpressionVisitor visitor)
+        {
+            await visitor.VisitAsync(this);
         }
     }
 }

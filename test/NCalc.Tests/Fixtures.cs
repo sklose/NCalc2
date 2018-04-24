@@ -123,24 +123,6 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public async void ExpressionShouldEvaluateCustomFunctionsAsync()
-        {
-            var e = new Expression("SecretOperation(3, 6)");
-
-            e.EvaluateFunctionAsync += async delegate (object name, FunctionArgs args) 
-            {
-                await Task.Delay(10);
-                if ((string)name == "SecretOperation")
-                    args.Result = (int)args.Parameters[0].Evaluate() + (int)args.Parameters[1].Evaluate();
-                else
-                    args.Result = string.Empty;
-
-            };
-
-            Assert.Equal(9, await e.EvaluateAsync());
-        }
-
-        [Fact]
         public void ExpressionShouldEvaluateCustomFunctionsWithParameters()
         {
             var e = new Expression("SecretOperation([e], 6) + f");

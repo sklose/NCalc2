@@ -336,10 +336,9 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            await Task.Delay(0);
             var visitor = new EvaluationVisitor(Options);
             visitor.EvaluateFunctionAsync += EvaluateFunctionAsync;
-            visitor.EvaluateParameter += EvaluateParameter;
+            visitor.EvaluateParameterAsync += EvaluateParameterAsync;
             visitor.Parameters = Parameters;
 
             // if array evaluation, execute the same expression multiple times
@@ -406,10 +405,10 @@ namespace NCalc
 
         }
 
-
         public event EvaluateFunctionHandler EvaluateFunction;
-        public event Func<object, FunctionArgs, Task> EvaluateFunctionAsync;
+        public event Func<string, FunctionArgs, Task> EvaluateFunctionAsync;
         public event EvaluateParameterHandler EvaluateParameter;
+        public event Func<string, ParameterArgs, Task> EvaluateParameterAsync;
 
         private Dictionary<string, object> _parameters;
 
