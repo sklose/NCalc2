@@ -5,6 +5,7 @@ using NCalc.Domain;
 using Antlr.Runtime;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NCalc
 {
@@ -323,7 +324,91 @@ namespace NCalc
             
         }
 
+        public async System.Threading.Tasks.Task<object> EvaluateAsync()
+        {
+            if (HasErrors())
+            {
+                throw new EvaluationException(Error);
+            }
+
+            if (ParsedExpression == null)
+            {
+                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
+            }
+
+            await Task.Delay(0);
+            var visitor = new EvaluationVisitor(Options);
+            visitor.EvaluateFunctionAsync += EvaluateFunctionAsync;
+            visitor.EvaluateParameter += EvaluateParameter;
+            visitor.Parameters = Parameters;
+
+            // if array evaluation, execute the same expression multiple times
+            if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
+            {
+                int size = -1;
+                ParametersBackup = new Dictionary<string, object>();
+                foreach (string key in Parameters.Keys)
+                {
+                    ParametersBackup.Add(key, Parameters[key]);
+                }
+
+                ParameterEnumerators = new Dictionary<string, IEnumerator>();
+
+                foreach (object parameter in Parameters.Values)
+                {
+                    if (parameter is IEnumerable)
+                    {
+                        int localsize = 0;
+                        foreach (object o in (IEnumerable)parameter)
+                        {
+                            localsize++;
+                        }
+
+                        if (size == -1)
+                        {
+                            size = localsize;
+                        }
+                        else if (localsize != size)
+                        {
+                            throw new EvaluationException("When IterateParameters option is used, IEnumerable parameters must have the same number of items");
+                        }
+                    }
+                }
+
+                foreach (string key in Parameters.Keys)
+                {
+                    var parameter = Parameters[key] as IEnumerable;
+                    if (parameter != null)
+                    {
+                        ParameterEnumerators.Add(key, parameter.GetEnumerator());
+                    }
+                }
+
+                var results = new List<object>();
+                for (int i = 0; i < size; i++)
+                {
+                    foreach (string key in ParameterEnumerators.Keys)
+                    {
+                        IEnumerator enumerator = ParameterEnumerators[key];
+                        enumerator.MoveNext();
+                        Parameters[key] = enumerator.Current;
+                    }
+
+                    await ParsedExpression.AcceptAsync(visitor);
+                    results.Add(visitor.Result);
+                }
+
+                return results;
+            }
+
+            await ParsedExpression.AcceptAsync(visitor);
+            return visitor.Result;
+
+        }
+
+
         public event EvaluateFunctionHandler EvaluateFunction;
+        public event Func<object, FunctionArgs, Task> EvaluateFunctionAsync;
         public event EvaluateParameterHandler EvaluateParameter;
 
         private Dictionary<string, object> _parameters;

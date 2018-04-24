@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NCalc.Domain
 {
@@ -16,6 +17,7 @@ namespace NCalc.Domain
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
         private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
         private bool Checked { get { return (_options & EvaluateOptions.OverflowProtection) == EvaluateOptions.OverflowProtection; } }
+        private bool RunCustomFunctionsAsync { get { return (_options & EvaluateOptions.RunCustomFunctionsAsync) == EvaluateOptions.RunCustomFunctionsAsync; } }
 
         public EvaluationVisitor(EvaluateOptions options)
         {

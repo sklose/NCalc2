@@ -37,6 +37,10 @@ namespace NCalc
         //
         // Summary:
         //     Use checked math
-        OverflowProtection = 128
+        OverflowProtection = 128,
+        //
+        // Summary:
+        //     run 
+        RunCustomFunctionsAsync =256 
     }
 }
