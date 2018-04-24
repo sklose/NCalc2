@@ -31,6 +31,12 @@ namespace NCalc.Domain
             return Result;
         }
 
+        private async Task<object> EvaluateAsync(LogicalExpression expression)
+        {
+            await expression.AcceptAsync(this);
+            return Result;
+        }
+
         public override void Visit(LogicalExpression expression)
         {
             throw new Exception("The method or operation is not implemented.");
@@ -834,7 +840,7 @@ namespace NCalc.Domain
                         throw new ArgumentException("Abs() takes exactly 1 argument");
 
                     Result = Math.Abs(Convert.ToDecimal(
-                        Evaluate(function.Expressions[0]))
+                        await EvaluateAsync(function.Expressions[0]))
                         );
 
                     break;
@@ -849,7 +855,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Acos() takes exactly 1 argument");
 
-                    Result = Math.Acos(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Acos(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -863,7 +869,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Asin() takes exactly 1 argument");
 
-                    Result = Math.Asin(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Asin(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -877,7 +883,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Atan() takes exactly 1 argument");
 
-                    Result = Math.Atan(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Atan(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -891,7 +897,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Ceiling() takes exactly 1 argument");
 
-                    Result = Math.Ceiling(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Ceiling(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -906,7 +912,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Cos() takes exactly 1 argument");
 
-                    Result = Math.Cos(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Cos(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -920,7 +926,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Exp() takes exactly 1 argument");
 
-                    Result = Math.Exp(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Exp(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -934,7 +940,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Floor() takes exactly 1 argument");
 
-                    Result = Math.Floor(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Floor(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -948,7 +954,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 2)
                         throw new ArgumentException("IEEERemainder() takes exactly 2 arguments");
 
-                    Result = Math.IEEERemainder(Convert.ToDouble(Evaluate(function.Expressions[0])), Convert.ToDouble(Evaluate(function.Expressions[1])));
+                    Result = Math.IEEERemainder(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])), Convert.ToDouble(await EvaluateAsync(function.Expressions[1])));
 
                     break;
 
@@ -962,7 +968,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 2)
                         throw new ArgumentException("Log() takes exactly 2 arguments");
 
-                    Result = Math.Log(Convert.ToDouble(Evaluate(function.Expressions[0])), Convert.ToDouble(Evaluate(function.Expressions[1])));
+                    Result = Math.Log(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])), Convert.ToDouble(await EvaluateAsync(function.Expressions[1])));
 
                     break;
 
@@ -976,7 +982,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Log10() takes exactly 1 argument");
 
-                    Result = Math.Log10(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Log10(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -990,7 +996,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 2)
                         throw new ArgumentException("Pow() takes exactly 2 arguments");
 
-                    Result = Math.Pow(Convert.ToDouble(Evaluate(function.Expressions[0])), Convert.ToDouble(Evaluate(function.Expressions[1])));
+                    Result = Math.Pow(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])), Convert.ToDouble(await EvaluateAsync(function.Expressions[1])));
 
                     break;
 
@@ -1006,7 +1012,7 @@ namespace NCalc.Domain
 
                     MidpointRounding rounding = (_options & EvaluateOptions.RoundAwayFromZero) == EvaluateOptions.RoundAwayFromZero ? MidpointRounding.AwayFromZero : MidpointRounding.ToEven;
 
-                    Result = Math.Round(Convert.ToDouble(Evaluate(function.Expressions[0])), Convert.ToInt16(Evaluate(function.Expressions[1])), rounding);
+                    Result = Math.Round(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])), Convert.ToInt16(await EvaluateAsync(function.Expressions[1])), rounding);
 
                     break;
 
@@ -1020,7 +1026,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Sign() takes exactly 1 argument");
 
-                    Result = Math.Sign(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Sign(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -1034,7 +1040,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Sin() takes exactly 1 argument");
 
-                    Result = Math.Sin(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Sin(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -1048,7 +1054,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Sqrt() takes exactly 1 argument");
 
-                    Result = Math.Sqrt(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Sqrt(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -1062,7 +1068,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Tan() takes exactly 1 argument");
 
-                    Result = Math.Tan(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Tan(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -1076,7 +1082,7 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Truncate() takes exactly 1 argument");
 
-                    Result = Math.Truncate(Convert.ToDouble(Evaluate(function.Expressions[0])));
+                    Result = Math.Truncate(Convert.ToDouble(await EvaluateAsync(function.Expressions[0])));
 
                     break;
 
@@ -1090,8 +1096,8 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 2)
                         throw new ArgumentException("Max() takes exactly 2 arguments");
 
-                    object maxleft = Evaluate(function.Expressions[0]);
-                    object maxright = Evaluate(function.Expressions[1]);
+                    object maxleft = await EvaluateAsync(function.Expressions[0]);
+                    object maxright = await EvaluateAsync(function.Expressions[1]);
 
                     Result = Numbers.Max(maxleft, maxright);
                     break;
@@ -1106,8 +1112,8 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 2)
                         throw new ArgumentException("Min() takes exactly 2 arguments");
 
-                    object minleft = Evaluate(function.Expressions[0]);
-                    object minright = Evaluate(function.Expressions[1]);
+                    object minleft = await EvaluateAsync(function.Expressions[0]);
+                    object minright = await EvaluateAsync(function.Expressions[1]);
 
                     Result = Numbers.Min(minleft, minright);
                     break;
@@ -1122,9 +1128,9 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 3)
                         throw new ArgumentException("if() takes exactly 3 arguments");
 
-                    bool cond = Convert.ToBoolean(Evaluate(function.Expressions[0]));
+                    bool cond = Convert.ToBoolean(await EvaluateAsync(function.Expressions[0]));
 
-                    Result = cond ? Evaluate(function.Expressions[1]) : Evaluate(function.Expressions[2]);
+                    Result = cond ? await EvaluateAsync(function.Expressions[1]) : await EvaluateAsync(function.Expressions[2]);
                     break;
 
                 #endregion
@@ -1137,14 +1143,14 @@ namespace NCalc.Domain
                     if (function.Expressions.Length < 2)
                         throw new ArgumentException("in() takes at least 2 arguments");
 
-                    object parameter = Evaluate(function.Expressions[0]);
+                    object parameter = await EvaluateAsync(function.Expressions[0]);
 
                     bool evaluation = false;
 
                     // Goes through any values, and stop whe one is found
                     for (int i = 1; i < function.Expressions.Length; i++)
                     {
-                        object argument = Evaluate(function.Expressions[i]);
+                        object argument = await EvaluateAsync(function.Expressions[i]);
                         if (CompareUsingMostPreciseType(parameter, argument) == 0)
                         {
                             evaluation = true;
