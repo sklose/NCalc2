@@ -1,10 +1,8 @@
-﻿#if !NET45
-using System;
+﻿#if NETSTANDARD1_3
 namespace System
 {
     public class SerializableAttribute : Attribute
     {
-
     }
 
     public class NonSerializedAttribute : Attribute
@@ -16,8 +14,6 @@ namespace System
         // Methods
         object Clone();
     }
-
-
 }
 
 namespace System.Runtime.Serialization
