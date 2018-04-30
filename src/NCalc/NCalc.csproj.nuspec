@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>C:\Users\dgeller\Documents\Projects\3rdParty\NCalc2\src\NCalc\NCalc.csproj</id>
+    <version>1.0.0</version>
+    <authors>dgeller</authors>
+    <owners>dgeller</owners>
+    <licenseUrl>http://opensource.org/licenses/MS-PL</licenseUrl>
+    <projectUrl>https://github.com/dgeller-OUHSC/NCalc2</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>NCalc-CLR clone with async</description>
+    <releaseNotes>created, added async.</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags></tags>
+    <dependencies>
+        <dependency id="NETStandard.Library" version="1.6" />
+        <dependency id="System.Runtime.Serialization.Primitives" version="4.1.1" />
+    </dependencies>
+  </metadata>
+</package>

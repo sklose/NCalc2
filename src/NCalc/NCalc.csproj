@@ -4,14 +4,14 @@
     <Description>This is a port of NCalc for .NET Core applications.</Description>
     <AssemblyTitle>CoreCLR-NCalc</AssemblyTitle>
     <VersionPrefix>2.2.0</VersionPrefix>
-    <Authors>Sebastian Klose</Authors>
+    <Authors>Sebastian Klose-dgeller</Authors>
     <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
     <AssemblyName>NCalc</AssemblyName>
     <PackageId>CoreCLR-NCalc</PackageId>
     <PackageTags>ncalc;coreclr;expression;evaluator</PackageTags>
-    <PackageProjectUrl>https://github.com/sklose/NCalc2</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/dgeller-OUHSC/NCalc2</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>git://github.com/sklose/NCalc2</RepositoryUrl>
+    <RepositoryUrl>https://github.com/dgeller-OUHSC/NCalc2</RepositoryUrl>
     <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.3' ">1.6.0</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
@@ -22,6 +22,8 @@
     <GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>2.2.33.1</Version>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
