@@ -173,7 +173,7 @@ namespace NCalc
                         m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
                              m.IsPublic && !m.IsStatic);
                     if (mi == null)
-                        throw new MissingMethodException($"method not found: {function.Identifier.Name} ");
+                        throw new MissingMethodException($"method not found: {function.Identifier.Name}");
                     _result = L.Expression.Call(_context, mi, args);
                     break;
             }
