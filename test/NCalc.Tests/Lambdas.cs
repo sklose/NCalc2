@@ -53,6 +53,25 @@ namespace NCalc.Tests
         }
 
         [Fact]
+        public void MissingMethod()
+        {
+            var expression = new Expression("MissingMethod(1)");
+            try
+            {
+                var sut = expression.ToLambda<Context, int>();
+            }
+            catch(System.MissingMethodException ex)
+            {
+
+                System.Diagnostics.Debug.Write(ex);
+                Assert.True(true);
+                return;
+            }
+            Assert.True(false);
+
+        }
+
+        [Fact]
         public void ShouldHandleTernaryOperator()
         {
             var expression = new Expression("Test(1, 2) = 3 ? 1 : 2");
