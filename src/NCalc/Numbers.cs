@@ -14,10 +14,26 @@ namespace NCalc
             return s;
         }
 
-        public static object Add(object a, object b)
+        private static object ConvertIfBoolean(object input)
+        {
+            if (input is bool boolean)
+            {
+                return boolean ? 1 : 0;
+            }
+
+            return input;
+        }
+
+        public static object Add(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -27,9 +43,9 @@ namespace NCalc
                 case TypeCode.Boolean:
                     switch (typeCodeB)
                     {
-                        case TypeCode.Boolean: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'bool'"); 
-                        case TypeCode.Byte: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'"); 
-                        case TypeCode.SByte: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'"); 
+                        case TypeCode.Boolean: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'bool'");
+                        case TypeCode.Byte: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'");
+                        case TypeCode.SByte: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'");
                         case TypeCode.Int16: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'");
                         case TypeCode.UInt16: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'");
                         case TypeCode.Int32: throw new InvalidOperationException("Operator '+' can't be applied to operands of types 'bool' and 'byte'");
@@ -242,10 +258,16 @@ namespace NCalc
             return null;
         }
 
-        public static object AddChecked(object a, object b)
+        public static object AddChecked(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -472,10 +494,16 @@ namespace NCalc
             }
         }
 
-        public static object Soustract(object a, object b)
+        public static object Soustract(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -688,10 +716,16 @@ namespace NCalc
 
             return null;
         }
-        public static object SoustractChecked(object a, object b)
+        public static object SoustractChecked(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -905,10 +939,16 @@ namespace NCalc
             }
             return null;
         }
-        public static object Multiply(object a, object b)
+        public static object Multiply(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -1104,10 +1144,16 @@ namespace NCalc
 
             return null;
         }
-        public static object MultiplyChecked(object a, object b)
+        public static object MultiplyChecked(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -1304,10 +1350,16 @@ namespace NCalc
             }
             return null;
         }
-        public static object Divide(object a, object b)
+        public static object Divide(object a, object b, EvaluateOptions options)
         {
             a = ConvertIfString(a);
             b = ConvertIfString(b);
+
+            if (options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                a = ConvertIfBoolean(a);
+                b = ConvertIfBoolean(b);
+            }
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
