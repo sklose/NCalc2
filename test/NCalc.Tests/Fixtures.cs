@@ -3,6 +3,8 @@ using NCalc.Domain;
 using System.Collections.Generic;
 using System.Threading;
 using System.Collections;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using Xunit;
 
 namespace NCalc.Tests
@@ -84,27 +86,35 @@ namespace NCalc.Tests
             }
         }
 
-        [Fact]
-        public void Maths()
+        [Theory]
+        [InlineData("Abs(-1)", 1)]
+        [InlineData("Acos(1)", 0)]
+        [InlineData("Asin(0)", 0)]
+        [InlineData("Atan(0)", 0)]
+        [InlineData("Ceiling(1.5)", 2)]
+        [InlineData("Cos(0)", 1)]
+        [InlineData("Exp(0)", 1)]
+        [InlineData("Floor(1.5)", 1)]
+        [InlineData("IEEERemainder(3,2)", -1)]
+        [InlineData("Log(1,10)", 0)]
+        [InlineData("Log10(1)", 0)]
+        [InlineData("Pow(3,2)", 9)]
+        [InlineData("Round(3.222,2)", 3.22)]
+        [InlineData("Sign(-10)", -1)]
+        [InlineData("Sin(0)", 0)]
+        [InlineData("Sqrt(4)", 2)]
+        [InlineData("Tan(0)", 0)]
+        [InlineData("Truncate(1.7)", 1)]
+        public void Maths(string formula, object expectedValue)
         {
-            Assert.Equal(1M, new Expression("Abs(-1)").Evaluate());
-            Assert.Equal(0d, new Expression("Acos(1)").Evaluate());
-            Assert.Equal(0d, new Expression("Asin(0)").Evaluate());
-            Assert.Equal(0d, new Expression("Atan(0)").Evaluate());
-            Assert.Equal(2d, new Expression("Ceiling(1.5)").Evaluate());
-            Assert.Equal(1d, new Expression("Cos(0)").Evaluate());
-            Assert.Equal(1d, new Expression("Exp(0)").Evaluate());
-            Assert.Equal(1d, new Expression("Floor(1.5)").Evaluate());
-            Assert.Equal(-1d, new Expression("IEEERemainder(3,2)").Evaluate());
-            Assert.Equal(0d, new Expression("Log(1,10)").Evaluate());
-            Assert.Equal(0d, new Expression("Log10(1)").Evaluate());
-            Assert.Equal(9d, new Expression("Pow(3,2)").Evaluate());
-            Assert.Equal(3.22d, new Expression("Round(3.222,2)").Evaluate());
-            Assert.Equal(-1, new Expression("Sign(-10)").Evaluate());
-            Assert.Equal(0d, new Expression("Sin(0)").Evaluate());
-            Assert.Equal(2d, new Expression("Sqrt(4)").Evaluate());
-            Assert.Equal(0d, new Expression("Tan(0)").Evaluate());
-            Assert.Equal(1d, new Expression("Truncate(1.7)").Evaluate());
+            using (new AssertionScope())
+            {
+                var expression = new Expression(formula);
+                expression.Evaluate().Should().Be(expectedValue);
+
+                var lambda = expression.ToLambda<object>();
+                lambda().Should().BeEquivalentTo(expectedValue);
+            }
         }
 
         [Fact]
@@ -138,21 +148,21 @@ namespace NCalc.Tests
         }
 
         [Fact]
-		public void ExpressionShouldEvaluateParameters()
-		{
-			var e = new Expression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)");
-		    
-			e.Parameters["Pi Squared"] = new Expression("Pi * [Pi]");
-			e.Parameters["X"] = 10;
+        public void ExpressionShouldEvaluateParameters()
+        {
+            var e = new Expression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)");
 
-			e.EvaluateParameter += delegate(string name, ParameterArgs args)
-				{
-					if (name == "Pi")
-						args.Result = 3.14;
-				};
+            e.Parameters["Pi Squared"] = new Expression("Pi * [Pi]");
+            e.Parameters["X"] = 10;
 
-			Assert.Equal(117.07, e.Evaluate());
-		}
+            e.EvaluateParameter += delegate(string name, ParameterArgs args)
+                {
+                    if (name == "Pi")
+                        args.Result = 3.14;
+                };
+
+            Assert.Equal(117.07, e.Evaluate());
+        }
 
         [Fact]
         public void ShouldEvaluateConditionnal()
@@ -208,47 +218,49 @@ namespace NCalc.Tests
 
         }
 
-        [Fact]
-        public void ShouldEvaluateOperators()
+        [Theory]
+        [InlineData("!true", false)]
+        [InlineData("not false", true)]
+        [InlineData("2 * 3", 6)]
+        [InlineData("6 / 2", 3d)]
+        [InlineData("7 % 2", 1)]
+        [InlineData("2 + 3", 5)]
+        [InlineData("2 - 1", 1)]
+        [InlineData("1 < 2", true)]
+        [InlineData("1.0 < 2", true)]
+        [InlineData("1 > 2", false)]
+        [InlineData("1 > 2.0", false)]
+        [InlineData("1 <= 2", true)]
+        [InlineData("1.0 <= 2.0", true)]
+        [InlineData("1 <= 1", true)]
+        [InlineData("1 >= 2", false)]
+        [InlineData("1 >= 1", true)]
+        [InlineData("1 = 1", true)]
+        [InlineData("1 == 1", true)]
+        [InlineData("1 != 1", false)]
+        [InlineData("1 <> 1", false)]
+        [InlineData("1 & 1", 1)]
+        [InlineData("1 | 1", 1)]
+        [InlineData("1 ^ 1", 0)]
+        [InlineData("~1", ~1)]
+        [InlineData("2 >> 1", 1)]
+        [InlineData("2 << 1", 4)]
+        [InlineData("true && false", false)]
+        [InlineData("true and false", false)]
+        [InlineData("true || false", true)]
+        [InlineData("true or false", true)]
+        [InlineData("if(true, 0, 1)", 0)]
+        [InlineData("if(false, 0, 1)", 1)]
+        public void ShouldEvaluateOperators(string formula, object expectedValue)
         {
-            var expressions = new Dictionary<string, object>
-                                  {
-                                      {"!true", false},
-                                      {"not false", true},
-                                      {"2 * 3", 6},
-                                      {"6 / 2", 3d},
-                                      {"7 % 2", 1},
-                                      {"2 + 3", 5},
-                                      {"2 - 1", 1},
-                                      {"1 < 2", true},
-                                      {"1 > 2", false},
-                                      {"1 <= 2", true},
-                                      {"1 <= 1", true},
-                                      {"1 >= 2", false},
-                                      {"1 >= 1", true},
-                                      {"1 = 1", true},
-                                      {"1 == 1", true},
-                                      {"1 != 1", false},
-                                      {"1 <> 1", false},
-                                      {"1 & 1", 1},
-                                      {"1 | 1", 1},
-                                      {"1 ^ 1", 0},
-                                      {"~1", ~1},
-                                      {"2 >> 1", 1},
-                                      {"2 << 1", 4},
-                                      {"true && false", false},
-                                      {"true and false", false},
-                                      {"true || false", true},
-                                      {"true or false", true},
-                                      {"if(true, 0, 1)", 0},
-                                      {"if(false, 0, 1)", 1}
-                                  };
-
-            foreach (KeyValuePair<string, object> pair in expressions)
+            using (new AssertionScope())
             {
-                Assert.Equal(pair.Value, new Expression(pair.Key).Evaluate());
+                var expression = new Expression(formula);
+                expression.Evaluate().Should().Be(expectedValue);
+
+                var lambda = expression.ToLambda<object>();
+                lambda().Should().BeEquivalentTo(expectedValue);
             }
-            
         }
 
         [Fact]
@@ -589,7 +601,7 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ShouldNotConvertRealTypes() 
+        public void ShouldNotConvertRealTypes()
         {
             var e = new Expression("x/2");
             e.Parameters["x"] = 2F;

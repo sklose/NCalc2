@@ -24,7 +24,7 @@ namespace NCalc
         public Expression(string expression, EvaluateOptions options)
         {
             if (String.IsNullOrEmpty(expression))
-                throw new 
+                throw new
                     ArgumentException("Expression can't be empty", "expression");
 
             OriginalExpression = expression;
@@ -53,8 +53,8 @@ namespace NCalc
         public static bool CacheEnabled
         {
             get { return _cacheEnabled; }
-            set 
-            { 
+            set
+            {
                 _cacheEnabled = value;
 
                 if (!CacheEnabled)
@@ -113,7 +113,7 @@ namespace NCalc
                         Debug.WriteLine("Expression retrieved from cache: " + expression);
                         var wr = _compiledExpressions[expression];
                         logicalExpression = wr.Target as LogicalExpression;
-                    
+
                         if (wr.IsAlive && logicalExpression != null)
                         {
                             return logicalExpression;
@@ -203,6 +203,9 @@ namespace NCalc
             }
 
             var visitor = new LambdaExpressionVistor(Parameters, Options);
+            visitor.EvaluateFunction += EvaluateFunctionExpression;
+            visitor.EvaluateParameter += EvaluateParameterExpression;
+
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
@@ -229,6 +232,9 @@ namespace NCalc
 
             var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
             var visitor = new LambdaExpressionVistor(parameter, Options);
+            visitor.EvaluateFunction += EvaluateFunctionExpression;
+            visitor.EvaluateParameter += EvaluateParameterExpression;
+
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
@@ -320,11 +326,12 @@ namespace NCalc
 
             ParsedExpression.Accept(visitor);
             return visitor.Result;
-            
         }
 
         public event EvaluateFunctionHandler EvaluateFunction;
         public event EvaluateParameterHandler EvaluateParameter;
+        public event EventHandler<FunctionExpressionEventArgs> EvaluateFunctionExpression;
+        public event EventHandler<ParameterExpressionEventArgs> EvaluateParameterExpression;
 
         private Dictionary<string, object> _parameters;
 

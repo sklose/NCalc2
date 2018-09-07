@@ -1,4 +1,7 @@
-﻿using Xunit;
+﻿using System;
+using FluentAssertions;
+using Xunit;
+using LQ = System.Linq.Expressions;
 
 namespace NCalc.Tests
 {
@@ -18,20 +21,6 @@ namespace NCalc.Tests
             }
         }
 
-        [Theory]
-        [InlineData("1+2", 3)]
-        [InlineData("1-2", -1)]
-        [InlineData("2*2", 4)]
-        [InlineData("10/2", 5)]
-        [InlineData("7%2", 1)]
-        public void ShouldHandleIntegers(string input, int expected)
-        {
-            var expression = new Expression(input);
-            var sut = expression.ToLambda<int>();
-
-            Assert.Equal(sut(), expected);
-        }
-
         [Fact]
         public void ShouldHandleParameters()
         {
@@ -43,13 +32,21 @@ namespace NCalc.Tests
         }
 
         [Fact]
+        public void ThrowUnknownParameter()
+        {
+            var expression = new Expression("3*PI");
+            var action = new Action(() => expression.ToLambda<double>());
+            action.Should().Throw<ArgumentException>();
+        }
+
+        [Fact]
         public void ShouldHandleCustomFunctions()
         {
             var expression = new Expression("Test(Test(1, 2), 3)");
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 6);
+            Assert.Equal(6, sut(context));
         }
 
         [Fact]
@@ -60,7 +57,7 @@ namespace NCalc.Tests
             {
                 var sut = expression.ToLambda<Context, int>();
             }
-            catch(System.MissingMethodException ex)
+            catch (System.MissingMethodException ex)
             {
 
                 System.Diagnostics.Debug.Write(ex);
@@ -78,7 +75,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 1);
+            Assert.Equal(1, sut(context));
         }
 
         [Fact]
@@ -106,6 +103,38 @@ namespace NCalc.Tests
             var expression = new Expression(input);
             var sut = expression.ToLambda<bool>();
             Assert.True(sut());
+        }
+
+        [Fact]
+        public void ShouldHandleExtendedParameters()
+        {
+            var expression = new Expression("PI");
+            expression.EvaluateParameterExpression += (sender, args) =>
+            {
+                if (args.Name == "PI")
+                {
+                    args.Result = LQ.Expression.Constant(3.1415);
+                }
+            };
+
+            var sut = expression.ToLambda<double>();
+            sut().Should().BeApproximately(3.1415, 0.001);
+        }
+
+        [Fact]
+        public void ShouldHandleExtendedFunctions()
+        {
+            var expression = new Expression("MyFunc(X1)") {Parameters = {["X1"] = 1}};
+            expression.EvaluateFunctionExpression += (sender, args) =>
+            {
+                if (args.Name == "MyFunc")
+                {
+                    args.Result = LQ.Expression.Add(args.ArgumentExpressions[0], LQ.Expression.Constant(1));
+                }
+            };
+
+            var sut = expression.ToLambda<int>();
+            sut().Should().Be(2);
         }
 
         [Theory]
