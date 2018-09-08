@@ -331,56 +331,55 @@ namespace NCalc
                     if(asyncAttrib != null)
                     {
                         object classInstance = Activator.CreateInstance(_context.Type, null);
-                        var objList = new List<object>();
+                        var methodParamList = new List<object>();
                         foreach(var argItem in args)
                         {
-                            //var varTemp = L.Expression.Convert(argItem,argItem.Type);
-                            objList.Add(ValueExpression.GetUnderlyingValue(argItem));
+                            methodParamList.Add(ValueExpression.GetUnderlyingValue(argItem));
                         }
-                        var task = mi.Invoke(classInstance, objList.ToArray());
-                        switch (task)
+                        var invokedMethod = mi.Invoke(classInstance, methodParamList.ToArray());
+                        switch (invokedMethod)
                         {
-                            case Task<Boolean> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Boolean> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<DateTime> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<DateTime> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Decimal> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Decimal> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Double> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Double> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Single> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Single> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Byte> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Byte> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<SByte> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<SByte> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Int16> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Int16> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Int32> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Int32> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<Int64> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<Int64> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<UInt16> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<UInt16> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<UInt32> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<UInt32> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<UInt64> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<UInt64> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
-                            case Task<String> a:
-                                _result = L.Expression.Constant(await a);
+                            case Task<String> invokedMethodTyped:
+                                _result = L.Expression.Constant(await invokedMethodTyped);
                                 break;
                         }
 

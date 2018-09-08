@@ -56,7 +56,7 @@ namespace NCalc.Tests
             Assert.True(sut(context));
         }
 
-        public async void ShouldHandleAsycCustomInlineFunctions()
+        public async void ShouldHandleAsyncCustomInlineFunctions()
         {
             var e = new Expression("SecretOperation(3, 6)");
 
@@ -78,7 +78,7 @@ namespace NCalc.Tests
         {
             var expression = new Expression("Test(Test(1, 2), 3)");
             var sut = expression.ToLambda<Context, int>();
-            var context = new Context();
+            var context = new Context() { FieldA=1 };
 
             Assert.Equal(sut(context), 6);
         }
@@ -89,7 +89,7 @@ namespace NCalc.Tests
         {
             var expression = new Expression("TestDecimalAsync(TestAsync(1, 2), 3)");
             var sut = await expression.ToLambdaAsync<Context, int>();
-            var context = new Context();
+            var context = new Context() { FieldA = 1};
 
             Assert.Equal(sut(context), 6);
         }
