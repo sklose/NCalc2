@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace NCalc.Domain
 {
-	public class ValueExpression : LogicalExpression
-	{
+    public class ValueExpression : LogicalExpression
+    {
         public ValueExpression(object value, ValueType type)
         {
             Value = value;
@@ -16,11 +16,11 @@ namespace NCalc.Domain
         {
             switch (value.GetTypeCode())
             {
-                case TypeCode.Boolean :
+                case TypeCode.Boolean:
                     Type = ValueType.Boolean;
                     break;
 
-                case TypeCode.DateTime :
+                case TypeCode.DateTime:
                     Type = ValueType.DateTime;
                     break;
 
@@ -94,14 +94,36 @@ namespace NCalc.Domain
         {
             await visitor.VisitAsync(this);
         }
+
+        public static object GetUnderlyingValue(System.Linq.Expressions.Expression e)
+        {
+
+            if (e.Type == typeof(Boolean)) { return Boolean.Parse(e.ToString()); }
+            else if (e.Type == typeof(DateTime)) { return DateTime.Parse(e.ToString()); }
+            else if (e.Type == typeof(Decimal)) { return Decimal.Parse(e.ToString()); }
+            else if (e.Type == typeof(Double)) { return Double.Parse(e.ToString()); }
+            else if (e.Type == typeof(Single)) { return Single.Parse(e.ToString()); }
+            else if (e.Type == typeof(Byte)) { return Byte.Parse(e.ToString()); }
+            else if (e.Type == typeof(SByte)) { return SByte.Parse(e.ToString()); }
+            else if (e.Type == typeof(Int16)) { return Int16.Parse(e.ToString()); }
+            else if (e.Type == typeof(Int32)) { return Int32.Parse(e.ToString()); }
+            else if (e.Type == typeof(Int64)) { return Int64.Parse(e.ToString()); }
+            else if (e.Type == typeof(UInt16)) { return UInt16.Parse(e.ToString()); }
+            else if (e.Type == typeof(UInt32)) { return UInt32.Parse(e.ToString()); }
+            else if (e.Type == typeof(UInt64)) { return UInt64.Parse(e.ToString()); }
+            else if (e.Type == typeof(String)) { return e.ToString(); }
+            else
+                return string.Empty;
+
+        }
     }
 
-	public enum ValueType
-	{
-		Integer,
-		String,
-		DateTime,
-		Float,
-		Boolean
-	}
+    public enum ValueType
+    {
+        Integer,
+        String,
+        DateTime,
+        Float,
+        Boolean
+    }
 }

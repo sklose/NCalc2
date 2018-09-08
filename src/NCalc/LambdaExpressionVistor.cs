@@ -5,6 +5,7 @@ using NCalc.Domain;
 using L = System.Linq.Expressions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace NCalc
 {
@@ -321,7 +322,74 @@ namespace NCalc
                     var mi = _context.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
                         m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
                              m.IsPublic && !m.IsStatic);
-                    _result = L.Expression.Call(_context, mi, args);
+
+                    if (mi == null)
+                        throw new MissingMethodException($"method not found: {function.Identifier.Name}");
+
+                    var asyncAttrib = (AsyncStateMachineAttribute)mi.GetCustomAttribute(typeof(AsyncStateMachineAttribute));
+                    //method is async
+                    if(asyncAttrib != null)
+                    {
+                        object classInstance = Activator.CreateInstance(_context.Type, null);
+                        var objList = new List<object>();
+                        foreach(var argItem in args)
+                        {
+                            //var varTemp = L.Expression.Convert(argItem,argItem.Type);
+                            objList.Add(ValueExpression.GetUnderlyingValue(argItem));
+                        }
+                        var task = mi.Invoke(classInstance, objList.ToArray());
+                        switch (task)
+                        {
+                            case Task<Boolean> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<DateTime> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Decimal> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Double> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Single> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Byte> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<SByte> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Int16> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Int32> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<Int64> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<UInt16> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<UInt32> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<UInt64> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                            case Task<String> a:
+                                _result = L.Expression.Constant(await a);
+                                break;
+                        }
+
+                    }
+                    else
+                    {
+                        _result = L.Expression.Call(_context, mi, args);
+                    }
+
                     break;
             }
         }

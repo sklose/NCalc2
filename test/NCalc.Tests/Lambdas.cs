@@ -1,10 +1,12 @@
-﻿using Xunit;
+﻿using System;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace NCalc.Tests
 {
     public class Lambdas
     {
-        private class Context
+        public class Context
         {
             public int FieldA { get; set; }
             public string FieldB { get; set; }
@@ -14,6 +16,18 @@ namespace NCalc.Tests
 
             public int Test(int a, int b)
             {
+                return a + b;
+            }
+
+            public async Task<int> TestAsync(int a, int b)
+            {
+                await Task.Delay(1);
+                return a + b;
+            }
+
+            public async Task<decimal> TestDecimalAsync(int a, int b)
+            {
+                await Task.Delay(1);
                 return a + b;
             }
         }
@@ -42,11 +56,39 @@ namespace NCalc.Tests
             Assert.True(sut(context));
         }
 
+        public async void ShouldHandleAsycCustomInlineFunctions()
+        {
+            var e = new Expression("SecretOperation(3, 6)");
+
+            e.EvaluateFunctionAsync += async delegate (string name, FunctionArgs args)
+            {
+                await Task.Delay(1);
+                if (name == "SecretOperation")
+                    args.Result = (int)await args.Parameters[0].EvaluateAsync() + (int)await args.Parameters[1].EvaluateAsync();
+            };
+
+            var sut = await e.ToLambdaAsync<int>();
+            Assert.Equal(9, sut());
+
+        }
+
+
         [Fact]
         public void ShouldHandleCustomFunctions()
         {
             var expression = new Expression("Test(Test(1, 2), 3)");
             var sut = expression.ToLambda<Context, int>();
+            var context = new Context();
+
+            Assert.Equal(sut(context), 6);
+        }
+
+
+        [Fact]
+        public async void ShouldHandleCustomAsyncFunctions()
+        {
+            var expression = new Expression("TestDecimalAsync(TestAsync(1, 2), 3)");
+            var sut = await expression.ToLambdaAsync<Context, int>();
             var context = new Context();
 
             Assert.Equal(sut(context), 6);
