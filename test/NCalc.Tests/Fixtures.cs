@@ -3,6 +3,7 @@ using NCalc.Domain;
 using System.Collections.Generic;
 using System.Threading;
 using System.Collections;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -608,7 +609,11 @@ namespace NCalc.Tests
         public void ShouldOptionallyCalculateWithBoolean(string formula, object expectedValue)
         {
             var expression = new Expression(formula, EvaluateOptions.BooleanCalculation) {Parameters = {["X1"] = 1}};
-            Assert.Equal(expectedValue, expression.Evaluate());
+
+            expression.Evaluate().Should().Be(expectedValue);
+
+            var lambda = expression.ToLambda<object>();
+            lambda().Should().Be(expectedValue);
         }
 
         [Fact]
