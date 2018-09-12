@@ -24,7 +24,7 @@ namespace NCalc
         public Expression(string expression, EvaluateOptions options)
         {
             if (String.IsNullOrEmpty(expression))
-                throw new 
+                throw new
                     ArgumentException("Expression can't be empty", "expression");
 
             OriginalExpression = expression;
@@ -53,8 +53,8 @@ namespace NCalc
         public static bool CacheEnabled
         {
             get { return _cacheEnabled; }
-            set 
-            { 
+            set
+            {
                 _cacheEnabled = value;
 
                 if (!CacheEnabled)
@@ -113,7 +113,7 @@ namespace NCalc
                         Debug.WriteLine("Expression retrieved from cache: " + expression);
                         var wr = _compiledExpressions[expression];
                         logicalExpression = wr.Target as LogicalExpression;
-                    
+
                         if (wr.IsAlive && logicalExpression != null)
                         {
                             return logicalExpression;
@@ -179,11 +179,14 @@ namespace NCalc
             catch(Exception e)
             {
                 Error = e.Message;
+                ErrorException = e;
                 return true;
             }
         }
 
         public string Error { get; private set; }
+
+        public Exception ErrorException { get; private set; }
 
         public LogicalExpression ParsedExpression { get; private set; }
 
@@ -194,7 +197,7 @@ namespace NCalc
         {
             if (HasErrors())
             {
-                throw new EvaluationException(Error);
+                throw new EvaluationException(Error, ErrorException);
             }
 
             if (ParsedExpression == null)
@@ -219,7 +222,7 @@ namespace NCalc
         {
             if (HasErrors())
             {
-                throw new EvaluationException(Error);
+                throw new EvaluationException(Error, ErrorException);
             }
 
             if (ParsedExpression == null)
@@ -245,7 +248,7 @@ namespace NCalc
         {
             if (HasErrors())
             {
-                throw new EvaluationException(Error);
+                throw new EvaluationException(Error, ErrorException);
             }
 
             if (ParsedExpression == null)
@@ -320,7 +323,7 @@ namespace NCalc
 
             ParsedExpression.Accept(visitor);
             return visitor.Result;
-            
+
         }
 
         public event EvaluateFunctionHandler EvaluateFunction;
