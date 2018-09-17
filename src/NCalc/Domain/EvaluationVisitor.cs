@@ -302,8 +302,8 @@ namespace NCalc.Domain
                     // checked does nothing, and if they are int the result will only be same or smaller 
                     // (since anything between 1 and 0 is not int and 0 is an exception anyway
                     Result = IsReal(await left()) || IsReal(await right())
-                                 ? Numbers.Divide(await left(), await right())
-                                 : Numbers.Divide(Convert.ToDouble(await left()), await right());
+                                 ? Numbers.Divide(await left(), await right(), _options)
+                                 : Numbers.Divide(Convert.ToDouble(await left()), await right(), _options);
                     break;
 
                 case BinaryExpressionType.Equal:
@@ -332,7 +332,7 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.Minus:
-                    Result = Checked ? Numbers.SoustractChecked(await left(), await right()) : Numbers.Soustract(await left(), await right());
+                    Result = Checked ? Numbers.SoustractChecked(await left(), await right(), _options) : Numbers.Soustract(await left(), await right(), _options);
                     break;
 
 
@@ -352,13 +352,13 @@ namespace NCalc.Domain
                     }
                     else
                     {
-                        Result = Checked ? Numbers.AddChecked(await left(), await right()) : Numbers.Add(await left(), await right());
+                        Result = Checked ? Numbers.AddChecked(await left(), await right(), _options) : Numbers.Add(await left(), await right(), _options);
                     }
 
                     break;
 
                 case BinaryExpressionType.Times:
-                    Result = Checked ? Numbers.MultiplyChecked(await left(), await right()) : Numbers.Multiply(await left(), await right());
+                    Result = Checked ? Numbers.MultiplyChecked(await left(), await right(), _options) : Numbers.Multiply(await left(), await right(), _options);
                     break;
 
                 case BinaryExpressionType.BitwiseAnd:
@@ -421,7 +421,7 @@ namespace NCalc.Domain
                     break;
 
                 case UnaryExpressionType.Negate:
-                    Result = Numbers.Soustract(0, Result);
+                    Result = Numbers.Soustract(0, Result, _options);
                     break;
 
                 case UnaryExpressionType.BitwiseNot:
