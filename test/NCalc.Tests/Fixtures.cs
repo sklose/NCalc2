@@ -3,13 +3,22 @@ using NCalc.Domain;
 using System.Collections.Generic;
 using System.Threading;
 using System.Collections;
+using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 using System.Threading.Tasks;
 
 namespace NCalc.Tests
 {
     public class Fixtures
     {
+        private readonly ITestOutputHelper _output;
+
+        public Fixtures(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void ExpressionShouldEvaluate()
         {
@@ -28,7 +37,7 @@ namespace NCalc.Tests
             };
 
             foreach (string expression in expressions)
-                Console.WriteLine("{0} = {1}",
+                _output.WriteLine("{0} = {1}",
                     expression,
                     new Expression(expression).Evaluate());
         }
@@ -81,7 +90,7 @@ namespace NCalc.Tests
             }
             catch(EvaluationException e)
             {
-                Console.WriteLine("Error catched: " + e.Message);
+                _output.WriteLine("Error catched: " + e.Message);
             }
         }
 
@@ -139,21 +148,21 @@ namespace NCalc.Tests
         }
 
         [Fact]
-		public void ExpressionShouldEvaluateParameters()
-		{
-			var e = new Expression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)");
-		    
-			e.Parameters["Pi Squared"] = new Expression("Pi * [Pi]");
-			e.Parameters["X"] = 10;
+        public void ExpressionShouldEvaluateParameters()
+        {
+            var e = new Expression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)");
 
-			e.EvaluateParameter += delegate(string name, ParameterArgs args)
-				{
-					if (name == "Pi")
-						args.Result = 3.14;
-				};
+            e.Parameters["Pi Squared"] = new Expression("Pi * [Pi]");
+            e.Parameters["X"] = 10;
 
-			Assert.Equal(117.07, e.Evaluate());
-		}
+            e.EvaluateParameter += delegate(string name, ParameterArgs args)
+                {
+                    if (name == "Pi")
+                        args.Result = 3.14;
+                };
+
+            Assert.Equal(117.07, e.Evaluate());
+        }
 
         [Fact]
         public void ShouldEvaluateConditionnal()
@@ -249,7 +258,7 @@ namespace NCalc.Tests
             {
                 Assert.Equal(pair.Value, new Expression(pair.Key).Evaluate());
             }
-            
+
         }
 
         [Fact]
@@ -280,7 +289,7 @@ namespace NCalc.Tests
             }
             catch (EvaluationException e)
             {
-                Console.WriteLine("Error catched: " + e.Message);
+                _output.WriteLine("Error catched: " + e.Message);
             }
         }
 
@@ -384,7 +393,7 @@ namespace NCalc.Tests
 
                 if (_exceptions.Count > 0)
                 {
-                    Console.WriteLine(_exceptions[0].StackTrace);
+                    _output.WriteLine(_exceptions[0].StackTrace);
                     throw _exceptions[0];
                 }
             }
@@ -589,8 +598,27 @@ namespace NCalc.Tests
             Assert.Throws<InvalidOperationException>(() => e.Evaluate());
         }
 
+        [Theory]
+        [InlineData("(X1 = 1)/2", 0.5)]
+        [InlineData("(X1 = 1)*2", 2)]
+        [InlineData("(X1 = 1)+1", 2)]
+        [InlineData("(X1 = 1)-1", 0)]
+        [InlineData("2*(X1 = 1)", 2)]
+        [InlineData("2/(X1 = 1)", 2.0)]
+        [InlineData("1+(X1 = 1)", 2)]
+        [InlineData("1-(X1 = 1)", 0)]
+        public void ShouldOptionallyCalculateWithBoolean(string formula, object expectedValue)
+        {
+            var expression = new Expression(formula, EvaluateOptions.BooleanCalculation) {Parameters = {["X1"] = 1}};
+
+            expression.Evaluate().Should().Be(expectedValue);
+
+            var lambda = expression.ToLambda<object>();
+            lambda().Should().Be(expectedValue);
+        }
+
         [Fact]
-        public void ShouldNotConvertRealTypes() 
+        public void ShouldNotConvertRealTypes()
         {
             var e = new Expression("x/2");
             e.Parameters["x"] = 2F;

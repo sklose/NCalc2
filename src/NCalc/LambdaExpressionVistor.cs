@@ -424,6 +424,19 @@ namespace NCalc
             left = UnwrapNullable(left);
             right = UnwrapNullable(right);
 
+            if (_options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                if (left.Type == typeof(bool))
+                {
+                    left = L.Expression.Condition(left, L.Expression.Constant(1.0), L.Expression.Constant(0.0));
+                }
+
+                if (right.Type == typeof(bool))
+                {
+                    right = L.Expression.Condition(right, L.Expression.Constant(1.0), L.Expression.Constant(0.0));
+                }
+            }
+
             var precedence = new[]
             {
                 typeof(decimal),
