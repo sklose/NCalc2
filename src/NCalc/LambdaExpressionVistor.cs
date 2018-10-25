@@ -169,12 +169,8 @@ namespace NCalc
                     _result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
                 default:
-                    var mi = _context.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
-                        m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
-                             m.IsPublic && !m.IsStatic);
-                    if (mi == null)
-                        throw new MissingMethodException($"method not found: {function.Identifier.Name}");
-                    _result = L.Expression.Call(_context, mi, args);
+                    var mi = FindMethod(function.Identifier.Name, args);
+                    _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
                     break;
             }
         }
@@ -189,6 +185,71 @@ namespace NCalc
             {
                 _result = L.Expression.PropertyOrField(_context, function.Name);
             }
+        }
+
+        private ExtendedMethodInfo FindMethod(string methodName, L.Expression[] methodArgs) 
+        {
+            var methods = _context.Type.GetTypeInfo().DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && !m.IsStatic);
+            foreach (var potentialMethod in methods) 
+            {
+                var methodParams = potentialMethod.GetParameters();
+                var newParams = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
+
+                if (newParams != null) 
+                {
+                    return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newParams };
+                }
+            }
+
+            throw new MissingMethodException($"method not found: {methodName}");
+        }
+
+        private L.Expression[] PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments) 
+        {
+            if (!parameters.Any() && !arguments.Any()) return arguments;
+            if (!parameters.Any()) return null;
+            bool paramsMatch = true;
+
+            bool hasParamsKeyword = parameters.Last().IsDefined(typeof(ParamArrayAttribute));
+            if (hasParamsKeyword && parameters.Length > arguments.Length) return null;
+            L.Expression[] newArguments = new L.Expression[parameters.Length];
+            L.Expression[] paramsKeywordArgument = null;
+            var paramsElementTypeCode = TypeCode.Empty;
+            Type paramsElementType = null;
+            if (!hasParamsKeyword) 
+            {
+                paramsMatch &= parameters.Length == arguments.Length;
+                if (!paramsMatch) return null;
+            } 
+            else 
+            {
+                paramsElementType = parameters.Last().ParameterType.GetElementType();
+                paramsElementTypeCode = paramsElementType.ToTypeCode();
+                paramsKeywordArgument = new L.Expression[arguments.Length - parameters.Length + 1];
+            }
+            
+            for (int i = 0; i < arguments.Length; i++) 
+            {
+                var isParamsElement = hasParamsKeyword && i >= parameters.Length - 1;
+                var argumentType = arguments[i].Type.ToTypeCode();
+                var parameterType = isParamsElement ? paramsElementTypeCode : parameters[i].ParameterType.ToTypeCode();
+                paramsMatch &= argumentType == parameterType;
+                if (!paramsMatch) return null;
+                if (!isParamsElement) 
+                {
+                    newArguments[i] = arguments[i];
+                } 
+                else 
+                {
+                    paramsKeywordArgument[i] = arguments[i];
+                }
+            }
+
+            if (hasParamsKeyword) 
+            {
+                newArguments[parameters.Length - 1] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
+            }
+            return newArguments;
         }
 
         private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,

@@ -16,6 +16,26 @@ namespace NCalc.Tests
             {
                 return a + b;
             }
+            
+            public string Test(string a, string b) 
+            {
+                return a + b;
+            }
+
+            public int Test(int a, int b, int c) 
+            {
+                return a + b + c;
+            }
+
+            public int Sum(params int[] numbers) 
+            {
+                int total = 0;
+                foreach (var num in numbers) {
+                    total += num;
+                }
+                return total;
+            }
+
         }
 
         [Theory]
@@ -40,6 +60,36 @@ namespace NCalc.Tests
             var context = new Context {FieldA = 7, FieldB = "test"};
 
             Assert.True(sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleOverloadingSameParamCount() 
+        {
+            var expression = new Expression("Test('Hello', ' world!')");
+            var sut = expression.ToLambda<Context, string>();
+            var context = new Context();
+
+            Assert.Equal("Hello world!", sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleOverloadingDifferentParamCount() 
+        {
+            var expression = new Expression("Test(Test(1, 2), 3, 4)");
+            var sut = expression.ToLambda<Context, int>();
+            var context = new Context();
+
+            Assert.Equal(10, sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleParamsKeyword() 
+        {
+            var expression = new Expression("Sum(Test(1,1),2)");
+            var sut = expression.ToLambda<Context, int>();
+            var context = new Context();
+
+            Assert.Equal(4, sut(context));
         }
 
         [Fact]

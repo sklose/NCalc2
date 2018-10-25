@@ -25,15 +25,20 @@ namespace System
                 {typeof(string), TypeCode.String}
             };
 
-        public static TypeCode GetTypeCode(this object obj)
+        public static TypeCode GetTypeCode(this object obj) 
         {
             if (obj == null)
                 return TypeCode.Empty;
 
+            return obj.GetType().ToTypeCode();
+        }
+        public static TypeCode ToTypeCode(this Type type) 
+        {
+            if (type == null)
+                return TypeCode.Empty;
+
             TypeCode tc;
-            var type = obj.GetType();
-            if (!TypeCodeMap.TryGetValue(type, out tc))
-            {
+            if (!TypeCodeMap.TryGetValue(type, out tc)) {
                 tc = TypeCode.Object;
             }
 
