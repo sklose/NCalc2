@@ -193,11 +193,11 @@ namespace NCalc
             foreach (var potentialMethod in methods) 
             {
                 var methodParams = potentialMethod.GetParameters();
-                var newParams = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
+                var newArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
 
-                if (newParams != null) 
+                if (newArguments != null) 
                 {
-                    return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newParams };
+                    return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newArguments };
                 }
             }
 
@@ -208,46 +208,49 @@ namespace NCalc
         {
             if (!parameters.Any() && !arguments.Any()) return arguments;
             if (!parameters.Any()) return null;
-            bool paramsMatch = true;
+            bool paramsMatchArguments = true;
 
-            bool hasParamsKeyword = parameters.Last().IsDefined(typeof(ParamArrayAttribute));
+            var lastParameter = parameters.Last();
+            bool hasParamsKeyword = lastParameter.IsDefined(typeof(ParamArrayAttribute));
             if (hasParamsKeyword && parameters.Length > arguments.Length) return null;
             L.Expression[] newArguments = new L.Expression[parameters.Length];
             L.Expression[] paramsKeywordArgument = null;
             var paramsElementTypeCode = TypeCode.Empty;
             Type paramsElementType = null;
+            int paramsParameterPosition = 0;
             if (!hasParamsKeyword) 
             {
-                paramsMatch &= parameters.Length == arguments.Length;
-                if (!paramsMatch) return null;
+                paramsMatchArguments &= parameters.Length == arguments.Length;
+                if (!paramsMatchArguments) return null;
             } 
             else 
             {
-                paramsElementType = parameters.Last().ParameterType.GetElementType();
+                paramsParameterPosition = lastParameter.Position;
+                paramsElementType = lastParameter.ParameterType.GetElementType();
                 paramsElementTypeCode = paramsElementType.ToTypeCode();
                 paramsKeywordArgument = new L.Expression[arguments.Length - parameters.Length + 1];
             }
             
             for (int i = 0; i < arguments.Length; i++) 
             {
-                var isParamsElement = hasParamsKeyword && i >= parameters.Length - 1;
+                var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
                 var argumentType = arguments[i].Type.ToTypeCode();
                 var parameterType = isParamsElement ? paramsElementTypeCode : parameters[i].ParameterType.ToTypeCode();
-                paramsMatch &= argumentType == parameterType;
-                if (!paramsMatch) return null;
+                paramsMatchArguments &= argumentType == parameterType;
+                if (!paramsMatchArguments) return null;
                 if (!isParamsElement) 
                 {
                     newArguments[i] = arguments[i];
                 } 
                 else 
                 {
-                    paramsKeywordArgument[i] = arguments[i];
+                    paramsKeywordArgument[i - paramsParameterPosition] = arguments[i];
                 }
             }
 
             if (hasParamsKeyword) 
             {
-                newArguments[parameters.Length - 1] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
+                newArguments[paramsParameterPosition] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
             }
             return newArguments;
         }

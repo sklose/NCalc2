@@ -27,6 +27,14 @@ namespace NCalc.Tests
                 return a + b + c;
             }
 
+            public string Sum(string msg, params int[] numbers) {
+                int total = 0;
+                foreach (var num in numbers) {
+                    total += num;
+                }
+                return msg + total;
+            }
+
             public int Sum(params int[] numbers) 
             {
                 int total = 0;
@@ -90,6 +98,15 @@ namespace NCalc.Tests
             var context = new Context();
 
             Assert.Equal(4, sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleMixedParamsKeyword() {
+            var expression = new Expression("Sum('Your total is: ', Test(1,1), 2, 3)");
+            var sut = expression.ToLambda<Context, string>();
+            var context = new Context();
+
+            Assert.Equal("Your total is: 7", sut(context));
         }
 
         [Fact]
