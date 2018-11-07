@@ -5,6 +5,7 @@ using NCalc.Domain;
 using Antlr.Runtime;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NCalc
 {
@@ -218,6 +219,31 @@ namespace NCalc
             return lambda.Compile();
         }
 
+        public async Task<Func<TResult>> ToLambdaAsync<TResult>()
+        {
+            if (HasErrors())
+            {
+                throw new EvaluationException(Error);
+            }
+
+            if (ParsedExpression == null)
+            {
+                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
+            }
+
+            var visitor = new LambdaExpressionVistor(Parameters, Options);
+            await ParsedExpression.AcceptAsync(visitor);
+
+            var body = visitor.Result;
+            if (body.Type != typeof(TResult))
+            {
+                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+            }
+
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
+            return lambda.Compile();
+        }
+
         public Func<TContext, TResult> ToLambda<TContext, TResult>() where TContext : class
         {
             if (HasErrors())
@@ -233,6 +259,32 @@ namespace NCalc
             var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
             var visitor = new LambdaExpressionVistor(parameter, Options);
             ParsedExpression.Accept(visitor);
+
+            var body = visitor.Result;
+            if (body.Type != typeof (TResult))
+            {
+                body = System.Linq.Expressions.Expression.Convert(body, typeof (TResult));
+            }
+
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
+            return lambda.Compile();
+        }
+
+        public async Task<Func<TContext, TResult>> ToLambdaAsync<TContext, TResult>() where TContext : class
+        {
+            if (HasErrors())
+            {
+                throw new EvaluationException(Error);
+            }
+
+            if (ParsedExpression == null)
+            {
+                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
+            }
+
+            var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
+            var visitor = new LambdaExpressionVistor(parameter, Options);
+            await ParsedExpression.AcceptAsync(visitor);
 
             var body = visitor.Result;
             if (body.Type != typeof (TResult))
@@ -326,8 +378,91 @@ namespace NCalc
 
         }
 
+        public async System.Threading.Tasks.Task<object> EvaluateAsync()
+        {
+            if (HasErrors())
+            {
+                throw new EvaluationException(Error);
+            }
+
+            if (ParsedExpression == null)
+            {
+                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
+            }
+
+            var visitor = new EvaluationVisitor(Options);
+            visitor.EvaluateFunctionAsync += EvaluateFunctionAsync;
+            visitor.EvaluateParameterAsync += EvaluateParameterAsync;
+            visitor.Parameters = Parameters;
+
+            // if array evaluation, execute the same expression multiple times
+            if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
+            {
+                int size = -1;
+                ParametersBackup = new Dictionary<string, object>();
+                foreach (string key in Parameters.Keys)
+                {
+                    ParametersBackup.Add(key, Parameters[key]);
+                }
+
+                ParameterEnumerators = new Dictionary<string, IEnumerator>();
+
+                foreach (object parameter in Parameters.Values)
+                {
+                    if (parameter is IEnumerable)
+                    {
+                        int localsize = 0;
+                        foreach (object o in (IEnumerable)parameter)
+                        {
+                            localsize++;
+                        }
+
+                        if (size == -1)
+                        {
+                            size = localsize;
+                        }
+                        else if (localsize != size)
+                        {
+                            throw new EvaluationException("When IterateParameters option is used, IEnumerable parameters must have the same number of items");
+                        }
+                    }
+                }
+
+                foreach (string key in Parameters.Keys)
+                {
+                    var parameter = Parameters[key] as IEnumerable;
+                    if (parameter != null)
+                    {
+                        ParameterEnumerators.Add(key, parameter.GetEnumerator());
+                    }
+                }
+
+                var results = new List<object>();
+                for (int i = 0; i < size; i++)
+                {
+                    foreach (string key in ParameterEnumerators.Keys)
+                    {
+                        IEnumerator enumerator = ParameterEnumerators[key];
+                        enumerator.MoveNext();
+                        Parameters[key] = enumerator.Current;
+                    }
+
+                    await ParsedExpression.AcceptAsync(visitor);
+                    results.Add(visitor.Result);
+                }
+
+                return results;
+            }
+
+            await ParsedExpression.AcceptAsync(visitor);
+            return visitor.Result;
+
+        }
+
         public event EvaluateFunctionHandler EvaluateFunction;
+        public event Func<string, FunctionArgs, Task> EvaluateFunctionAsync;
         public event EvaluateParameterHandler EvaluateParameter;
+        public event Func<string, ParameterArgs, Task> EvaluateParameterAsync;
 
         private Dictionary<string, object> _parameters;
 

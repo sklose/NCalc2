@@ -1,4 +1,6 @@
-﻿namespace NCalc.Domain
+﻿using System.Threading.Tasks;
+
+namespace NCalc.Domain
 {
 	public class TernaryExpression : LogicalExpression
 	{
@@ -18,6 +20,11 @@
 	    public override void Accept(LogicalExpressionVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public async override Task AcceptAsync(LogicalExpressionVisitor visitor)
+        {
+            await visitor.VisitAsync(this);
         }
 
     }   

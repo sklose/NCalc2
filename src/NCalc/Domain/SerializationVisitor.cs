@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace NCalc.Domain
 {
@@ -21,6 +22,11 @@ namespace NCalc.Domain
             throw new Exception("The method or operation is not implemented.");
         }
 
+        public override Task VisitAsync(LogicalExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Visit(TernaryExpression expression)
         {
             EncapsulateNoValue(expression.LeftExpression);
@@ -32,6 +38,19 @@ namespace NCalc.Domain
             Result.Append(": ");
 
             EncapsulateNoValue(expression.RightExpression);
+        }
+
+        public async override Task VisitAsync(TernaryExpression expression)
+        {
+            await EncapsulateNoValueAsync(expression.LeftExpression);
+
+            Result.Append("? ");
+
+            await EncapsulateNoValueAsync(expression.MiddleExpression);
+
+            Result.Append(": ");
+
+            await EncapsulateNoValueAsync(expression.RightExpression);
         }
 
         public override void Visit(BinaryExpression expression)
@@ -116,6 +135,88 @@ namespace NCalc.Domain
             EncapsulateNoValue(expression.RightExpression);
         }
 
+        public async override Task VisitAsync(BinaryExpression expression)
+        {
+            await EncapsulateNoValueAsync(expression.LeftExpression);
+
+            switch (expression.Type)
+            {
+                case BinaryExpressionType.And:
+                    Result.Append("and ");
+                    break;
+
+                case BinaryExpressionType.Or:
+                    Result.Append("or ");
+                    break;
+
+                case BinaryExpressionType.Div:
+                    Result.Append("/ ");
+                    break;
+
+                case BinaryExpressionType.Equal:
+                    Result.Append("= ");
+                    break;
+
+                case BinaryExpressionType.Greater:
+                    Result.Append("> ");
+                    break;
+
+                case BinaryExpressionType.GreaterOrEqual:
+                    Result.Append(">= ");
+                    break;
+
+                case BinaryExpressionType.Lesser:
+                    Result.Append("< ");
+                    break;
+
+                case BinaryExpressionType.LesserOrEqual:
+                    Result.Append("<= ");
+                    break;
+
+                case BinaryExpressionType.Minus:
+                    Result.Append("- ");
+                    break;
+
+                case BinaryExpressionType.Modulo:
+                    Result.Append("% ");
+                    break;
+
+                case BinaryExpressionType.NotEqual:
+                    Result.Append("!= ");
+                    break;
+
+                case BinaryExpressionType.Plus:
+                    Result.Append("+ ");
+                    break;
+
+                case BinaryExpressionType.Times:
+                    Result.Append("* ");
+                    break;
+
+                case BinaryExpressionType.BitwiseAnd:
+                    Result.Append("& ");
+                    break;
+
+                case BinaryExpressionType.BitwiseOr:
+                    Result.Append("| ");
+                    break;
+
+                case BinaryExpressionType.BitwiseXOr:
+                    Result.Append("~ ");
+                    break;
+
+                case BinaryExpressionType.LeftShift:
+                    Result.Append("<< ");
+                    break;
+
+                case BinaryExpressionType.RightShift:
+                    Result.Append(">> ");
+                    break;
+            }
+
+            await EncapsulateNoValueAsync(expression.RightExpression);
+        }
+
         public override void Visit(UnaryExpression expression)
         {
             switch (expression.Type)
@@ -134,6 +235,26 @@ namespace NCalc.Domain
             }
 
             EncapsulateNoValue(expression.Expression);
+        }
+
+        public async override Task VisitAsync(UnaryExpression expression)
+        {
+            switch (expression.Type)
+            {
+                case UnaryExpressionType.Not:
+                    Result.Append("!");
+                    break;
+
+                case UnaryExpressionType.Negate:
+                    Result.Append("-");
+                    break;
+
+                case UnaryExpressionType.BitwiseNot:
+                    Result.Append("~");
+                    break;
+            }
+
+            await EncapsulateNoValueAsync(expression.Expression);
         }
 
         public override void Visit(ValueExpression expression)
@@ -185,8 +306,38 @@ namespace NCalc.Domain
             Result.Append(") ");
         }
 
+        public async override Task VisitAsync(Function function)
+        {
+            Result.Append(function.Identifier.Name);
+
+            Result.Append("(");
+
+            for (int i = 0; i < function.Expressions.Length; i++)
+            {
+                await function.Expressions[i].AcceptAsync(this);
+                if (i < function.Expressions.Length - 1)
+                {
+                    Result.Remove(Result.Length - 1, 1);
+                    Result.Append(", ");
+                }
+            }
+
+            // trim spaces before adding a closing paren
+            while (Result[Result.Length - 1] == ' ')
+                Result.Remove(Result.Length - 1, 1);
+
+            Result.Append(") ");
+        }
+
         public override void Visit(Identifier parameter)
         {
+            Result.Append("[").Append(parameter.Name).Append("] ");
+        }
+
+        public async override Task VisitAsync(Identifier parameter)
+        {
+
+            await Task.Delay(0);
             Result.Append("[").Append(parameter.Name).Append("] ");
         }
 
@@ -209,5 +360,51 @@ namespace NCalc.Domain
             }
         }
 
+        protected async Task EncapsulateNoValueAsync(LogicalExpression expression)
+        {
+            //value expressions are syncronous
+            if (expression is ValueExpression)
+            {
+                expression.Accept(this);
+            }
+            else
+            {
+                Result.Append("(");
+                await expression.AcceptAsync(this);
+
+                // trim spaces before adding a closing paren
+                while (Result[Result.Length - 1] == ' ')
+                    Result.Remove(Result.Length - 1, 1);
+
+                Result.Append(") ");
+            }
+        }
+
+        public async override Task VisitAsync(ValueExpression expression)
+        {
+            await Task.Delay(0);
+            switch (expression.Type)
+            {
+                case ValueType.Boolean:
+                    Result.Append(expression.Value.ToString()).Append(" ");
+                    break;
+
+                case ValueType.DateTime:
+                    Result.Append("#").Append(expression.Value.ToString()).Append("#").Append(" ");
+                    break;
+
+                case ValueType.Float:
+                    Result.Append(decimal.Parse(expression.Value.ToString(), NumberStyles.Any).ToString(_numberFormatInfo)).Append(" ");
+                    break;
+
+                case ValueType.Integer:
+                    Result.Append(expression.Value.ToString()).Append(" ");
+                    break;
+
+                case ValueType.String:
+                    Result.Append("'").Append(expression.Value.ToString()).Append("'").Append(" ");
+                    break;
+            }
+        }
     }
 }

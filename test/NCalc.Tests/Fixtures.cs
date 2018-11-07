@@ -6,6 +6,7 @@ using System.Collections;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using System.Threading.Tasks;
 
 namespace NCalc.Tests
 {

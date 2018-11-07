@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace NCalc.Domain
 {
 	public class UnaryExpression : LogicalExpression
@@ -16,7 +18,12 @@ namespace NCalc.Domain
         {
             visitor.Visit(this);
         }
-	}
+
+        public async override Task AcceptAsync(LogicalExpressionVisitor visitor)
+        {
+            await visitor.VisitAsync(this);
+        }
+    }
 
 	public enum UnaryExpressionType
 	{
