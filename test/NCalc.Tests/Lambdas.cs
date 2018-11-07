@@ -52,8 +52,6 @@ namespace NCalc.Tests
                 return total;
             }
 
-        }
-
             public async Task<decimal> TestDecimalAsync(int a, int b)
             {
                 await Task.Delay(1);
