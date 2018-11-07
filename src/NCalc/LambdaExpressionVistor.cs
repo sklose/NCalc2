@@ -287,12 +287,8 @@ namespace NCalc
                     _result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
                 default:
-                    var mi = _context.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
-                        m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
-                             m.IsPublic && !m.IsStatic);
-                    if (mi == null)
-                        throw new MissingMethodException($"method not found: {function.Identifier.Name}");
-                    _result = L.Expression.Call(_context, mi, args);
+                    var mi = FindMethod(function.Identifier.Name, args);
+                    _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
                     break;
             }
         }
@@ -319,14 +315,9 @@ namespace NCalc
                     _result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
                 default:
-                    var mi = _context.Type.GetTypeInfo().DeclaredMethods.FirstOrDefault(
-                        m => m.Name.Equals(function.Identifier.Name, StringComparison.OrdinalIgnoreCase) &&
-                             m.IsPublic && !m.IsStatic);
+                    var mi = FindMethod(function.Identifier.Name, args);
 
-                    if (mi == null)
-                        throw new MissingMethodException($"method not found: {function.Identifier.Name}");
-
-                    var asyncAttrib = (AsyncStateMachineAttribute)mi.GetCustomAttribute(typeof(AsyncStateMachineAttribute));
+                    var asyncAttrib = (AsyncStateMachineAttribute)mi.BaseMethodInfo.GetCustomAttribute(typeof(AsyncStateMachineAttribute));
                     //method is async
                     if(asyncAttrib != null)
                     {
@@ -336,7 +327,7 @@ namespace NCalc
                         {
                             methodParamList.Add(ValueExpression.GetUnderlyingValue(argItem));
                         }
-                        var invokedMethod = mi.Invoke(classInstance, methodParamList.ToArray());
+                        var invokedMethod = mi.BaseMethodInfo.Invoke(classInstance, methodParamList.ToArray());
                         switch (invokedMethod)
                         {
                             case Task<Boolean> invokedMethodTyped:
@@ -386,7 +377,7 @@ namespace NCalc
                     }
                     else
                     {
-                        _result = L.Expression.Call(_context, mi, args);
+                        _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
                     }
 
                     break;
@@ -416,6 +407,74 @@ namespace NCalc
             {
                 _result = L.Expression.PropertyOrField(_context, function.Name);
             }
+        }
+
+        private ExtendedMethodInfo FindMethod(string methodName, L.Expression[] methodArgs) 
+        {
+            var methods = _context.Type.GetTypeInfo().DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && !m.IsStatic);
+            foreach (var potentialMethod in methods) 
+            {
+                var methodParams = potentialMethod.GetParameters();
+                var newArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
+
+                if (newArguments != null) 
+                {
+                    return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newArguments };
+                }
+            }
+
+            throw new MissingMethodException($"method not found: {methodName}");
+        }
+
+        private L.Expression[] PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments) 
+        {
+            if (!parameters.Any() && !arguments.Any()) return arguments;
+            if (!parameters.Any()) return null;
+            bool paramsMatchArguments = true;
+
+            var lastParameter = parameters.Last();
+            bool hasParamsKeyword = lastParameter.IsDefined(typeof(ParamArrayAttribute));
+            if (hasParamsKeyword && parameters.Length > arguments.Length) return null;
+            L.Expression[] newArguments = new L.Expression[parameters.Length];
+            L.Expression[] paramsKeywordArgument = null;
+            var paramsElementTypeCode = TypeCode.Empty;
+            Type paramsElementType = null;
+            int paramsParameterPosition = 0;
+            if (!hasParamsKeyword) 
+            {
+                paramsMatchArguments &= parameters.Length == arguments.Length;
+                if (!paramsMatchArguments) return null;
+            } 
+            else 
+            {
+                paramsParameterPosition = lastParameter.Position;
+                paramsElementType = lastParameter.ParameterType.GetElementType();
+                paramsElementTypeCode = paramsElementType.ToTypeCode();
+                paramsKeywordArgument = new L.Expression[arguments.Length - parameters.Length + 1];
+            }
+            
+            for (int i = 0; i < arguments.Length; i++) 
+            {
+                var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
+                var argumentType = arguments[i].Type.ToTypeCode();
+                var parameterType = isParamsElement ? paramsElementTypeCode : parameters[i].ParameterType.ToTypeCode();
+                paramsMatchArguments &= argumentType == parameterType;
+                if (!paramsMatchArguments) return null;
+                if (!isParamsElement) 
+                {
+                    newArguments[i] = arguments[i];
+                } 
+                else 
+                {
+                    paramsKeywordArgument[i - paramsParameterPosition] = arguments[i];
+                }
+            }
+
+            if (hasParamsKeyword) 
+            {
+                newArguments[paramsParameterPosition] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
+            }
+            return newArguments;
         }
 
         private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,

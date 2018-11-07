@@ -18,12 +18,41 @@ namespace NCalc.Tests
             {
                 return a + b;
             }
+            
+            public string Test(string a, string b) 
+            {
+                return a + b;
+            }
 
             public async Task<int> TestAsync(int a, int b)
             {
                 await Task.Delay(1);
                 return a + b;
             }
+
+            public int Test(int a, int b, int c) 
+            {
+                return a + b + c;
+            }
+
+            public string Sum(string msg, params int[] numbers) {
+                int total = 0;
+                foreach (var num in numbers) {
+                    total += num;
+                }
+                return msg + total;
+            }
+
+            public int Sum(params int[] numbers) 
+            {
+                int total = 0;
+                foreach (var num in numbers) {
+                    total += num;
+                }
+                return total;
+            }
+
+        }
 
             public async Task<decimal> TestDecimalAsync(int a, int b)
             {
@@ -72,6 +101,45 @@ namespace NCalc.Tests
 
         }
 
+
+        [Fact]
+        public void ShouldHandleOverloadingSameParamCount() 
+        {
+            var expression = new Expression("Test('Hello', ' world!')");
+            var sut = expression.ToLambda<Context, string>();
+            var context = new Context();
+
+            Assert.Equal("Hello world!", sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleOverloadingDifferentParamCount() 
+        {
+            var expression = new Expression("Test(Test(1, 2), 3, 4)");
+            var sut = expression.ToLambda<Context, int>();
+            var context = new Context();
+
+            Assert.Equal(10, sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleParamsKeyword() 
+        {
+            var expression = new Expression("Sum(Test(1,1),2)");
+            var sut = expression.ToLambda<Context, int>();
+            var context = new Context();
+
+            Assert.Equal(4, sut(context));
+        }
+
+        [Fact]
+        public void ShouldHandleMixedParamsKeyword() {
+            var expression = new Expression("Sum('Your total is: ', Test(1,1), 2, 3)");
+            var sut = expression.ToLambda<Context, string>();
+            var context = new Context();
+
+            Assert.Equal("Your total is: 7", sut(context));
+        }
 
         [Fact]
         public void ShouldHandleCustomFunctions()
