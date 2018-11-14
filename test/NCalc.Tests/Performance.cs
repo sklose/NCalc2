@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Diagnostics;
+using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace NCalc.Tests
 {
     public class Performance
     {
         private const int Iterations = 100000;
+
+        private readonly ITestOutputHelper _output;
+
+        public Performance(ITestOutputHelper output)
+        {
+            _output = output;
+        }
 
         private class Context
         {
@@ -27,8 +36,8 @@ namespace NCalc.Tests
             var expression = new Expression(formula);
             var lambda = expression.ToLambda<object>();
 
-            var m1 = Measure(() => expression.Evaluate());
-            var m2 = Measure(() => lambda());
+            var m1 = Measure(i => expression.Evaluate());
+            var m2 = Measure(i => lambda());
 
             PrintResult(formula, m1, m2);
         }
@@ -38,14 +47,12 @@ namespace NCalc.Tests
         public void ParameterAccess(string formula)
         {
             var expression = new Expression(formula);
-            var lambda = expression.ToLambda<Context, int>();
+            expression.AddParameter("Param1", 4);
+            expression.AddParameter("Param2", 9);
+            var lambda = expression.ToLambda<int>();
 
-            var context = new Context {Param1 = 4, Param2 = 9};
-            expression.Parameters["Param1"] = 4;
-            expression.Parameters["Param2"] = 9;
-
-            var m1 = Measure(() => expression.Evaluate());
-            var m2 = Measure(() => lambda(context));
+            var m1 = Measure(i => expression.Evaluate());
+            var m2 = Measure(i => lambda());
 
             PrintResult(formula, m1, m2);
         }
@@ -53,6 +60,46 @@ namespace NCalc.Tests
         [Theory]
         [InlineData("[Param1] * 7 + [Param2]")]
         public void DynamicParameterAccess(string formula)
+        {
+            var expression = new Expression(formula);
+            var index = expression.AddParameter("Param1", 4);
+            expression.AddParameter("Param2", 9);
+            var lambda = expression.ToLambda<int>();
+
+            var m1 = Measure(i =>
+            {
+                expression.SetParameter(index, i);
+                expression.Evaluate();
+            });
+            var m2 = Measure(i =>
+            {
+                expression.SetParameter(index, i);
+                lambda();
+            });
+
+            PrintResult(formula, m1, m2);
+        }
+
+        [Theory]
+        [InlineData("[Param1] * 7 + [Param2]")]
+        public void ContextAccess(string formula)
+        {
+            var expression = new Expression(formula);
+            var lambda = expression.ToLambda<Context, int>();
+
+            var context = new Context {Param1 = 4, Param2 = 9};
+            expression.AddParameter("Param1", 4);
+            expression.AddParameter("Param2", 9);
+
+            var m1 = Measure(i => expression.Evaluate());
+            var m2 = Measure(i => lambda(context));
+
+            PrintResult(formula, m1, m2);
+        }
+
+        [Theory]
+        [InlineData("[Param1] * 7 + [Param2]")]
+        public void DynamicContextAccess(string formula)
         {
             var expression = new Expression(formula);
             var lambda = expression.ToLambda<Context, int>();
@@ -64,8 +111,8 @@ namespace NCalc.Tests
                 if (name == "Param2") args.Result = context.Param2;
             };
 
-            var m1 = Measure(() => expression.Evaluate());
-            var m2 = Measure(() => lambda(context));
+            var m1 = Measure(i => expression.Evaluate());
+            var m2 = Measure(i => lambda(context));
 
             PrintResult(formula, m1, m2);
         }
@@ -92,30 +139,33 @@ namespace NCalc.Tests
                 }
             };
 
-            var m1 = Measure(() => expression.Evaluate());
-            var m2 = Measure(() => lambda(context));
+            var m1 = Measure(i => expression.Evaluate());
+            var m2 = Measure(i => lambda(context));
 
             PrintResult(formula, m1, m2);
         }
 
-        private TimeSpan Measure(Action action)
+        private TimeSpan Measure(Action<int> action)
         {
             var sw = new Stopwatch();
             sw.Start();
             for (int i = 0; i < Iterations; i++)
-                action();
+                action(i);
             sw.Stop();
             return sw.Elapsed;
         }
 
-        private static void PrintResult(string formula, TimeSpan m1, TimeSpan m2)
+        private void PrintResult(string formula, TimeSpan m1, TimeSpan m2)
         {
-            Console.WriteLine(new string('-', 60));
-            Console.WriteLine("Formula: {0}", formula);
-            Console.WriteLine("Expression: {0:N} evaluations / sec", Iterations / m1.TotalSeconds);
-            Console.WriteLine("Lambda: {0:N} evaluations / sec", Iterations / m2.TotalSeconds);
-            Console.WriteLine("Lambda Speedup: {0:P}%", (Iterations / m2.TotalSeconds) / (Iterations / m1.TotalSeconds) - 1);
-            Console.WriteLine(new string('-', 60));
+            _output.WriteLine(new string('-', 60));
+            _output.WriteLine("Formula: {0}", formula);
+            _output.WriteLine("Expression: {0:N} evaluations / sec", Iterations / m1.TotalSeconds);
+            _output.WriteLine("Lambda: {0:N} evaluations / sec", Iterations / m2.TotalSeconds);
+            var speedup = (Iterations / m2.TotalSeconds) / (Iterations / m1.TotalSeconds) - 1;
+            _output.WriteLine("Lambda Speedup: {0:P}%", speedup);
+            _output.WriteLine(new string('-', 60));
+
+            speedup.Should().BeInRange(2, 2000, "we should get reasonable speedup using lambda expression");
         }
     }
 }

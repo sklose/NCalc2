@@ -174,12 +174,68 @@ namespace NCalc.Tests
             decimal a = 6m;
             decimal b = 7m;
 
-            expr.Parameters["x"] = x;
-            expr.Parameters["a"] = a;
-            expr.Parameters["b"] = b;
+            expr.AddParameter("x", x);
+            expr.AddParameter("a", a);
+            expr.AddParameter("b", b);
 
             var f = expr.ToLambda<float>(); // Here it throws System.ArgumentNullException. Parameter name: expression
-            Assert.Equal(f(), -14);
+            Assert.Equal(-14, f());
+        }
+
+        [Fact]
+        public void Issue13Single()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<float>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal) 3);
+            Assert.Equal(5, f());
+        }
+
+        [Fact]
+        public void Issue13Double()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<double>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal)3);
+            Assert.Equal(5, f());
+        }
+
+        [Fact]
+        public void Issue13Int32()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<int>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal)3);
+            Assert.Equal(5, f());
+        }
+
+        [Fact]
+        public void Issue13Byte()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<byte>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal)3);
+            Assert.Equal(5, f());
         }
 
         [Theory]
@@ -211,17 +267,21 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleExtendedFunctions()
         {
-            var expression = new Expression("MyFunc(X1)") {Parameters = {["X1"] = 1}};
+            var expression = new Expression("MyFunc(X1)");
+            expression.AddParameter("X1", 1);
             expression.EvaluateFunctionExpression += (sender, args) =>
             {
                 if (args.Name == "MyFunc")
                 {
-                    args.Result = LQ.Expression.Add(args.ArgumentExpressions[0], LQ.Expression.Constant(1));
+                    args.Result = LQ.Expression.Add(args.ArgumentExpressions[0], LQ.Expression.Constant((long)1));
                 }
             };
 
             var sut = expression.ToLambda<int>();
             sut().Should().Be(2);
+
+            expression.SetParameter("X1", 2);
+            sut().Should().Be(3);
         }
 
         [Theory]
@@ -234,7 +294,7 @@ namespace NCalc.Tests
         {
             var expression = new Expression(input);
             var sut = expression.ToLambda<Context, bool>();
-            var context = new Context {FieldA = 7, FieldB = "test", FieldC = 2.4m, FieldE = 2};
+            var context = new Context { FieldA = 7, FieldB = "test", FieldC = 2.4m, FieldE = 2 };
 
             Assert.Equal(expected, sut(context));
         }

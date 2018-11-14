@@ -76,7 +76,6 @@ namespace NCalc.Domain
                 return cmp.CompareTo(b);
 
             return -1;
-            //return Comparer.Default.Compare(Convert.ChangeType(a, mpt), Convert.ChangeType(b, mpt));
         }
 
         public override void Visit(TernaryExpression expression)
@@ -106,14 +105,14 @@ namespace NCalc.Domain
             // simulate Lazy<Func<>> behavior for late evaluation
             object leftValue = null;
             Func<object> left = () =>
-                                 {
-                                     if (leftValue == null)
-                                     {
-                                         expression.LeftExpression.Accept(this);
-                                         leftValue = Result;
-                                     }
-                                     return leftValue;
-                                 };
+            {
+                if (leftValue == null)
+                {
+                    expression.LeftExpression.Accept(this);
+                    leftValue = Result;
+                }
+                return leftValue;
+            };
 
             // simulate Lazy<Func<>> behavior for late evaluation
             object rightValue = null;
@@ -142,8 +141,8 @@ namespace NCalc.Domain
                     // checked does nothing, and if they are int the result will only be same or smaller
                     // (since anything between 1 and 0 is not int and 0 is an exception anyway
                     Result = IsReal(left()) || IsReal(right())
-                                 ? Numbers.Divide(left(), right(), _options)
-                                 : Numbers.Divide(Convert.ToDouble(left()), right(), _options);
+                        ? Numbers.Divide(left(), right(), _options)
+                        : Numbers.Divide(Convert.ToDouble(left()), right(), _options);
                     break;
 
                 case BinaryExpressionType.Equal:
@@ -208,27 +207,23 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.BitwiseAnd:
-                    Result = Convert.ToUInt16(left()) & Convert.ToUInt16(right());
+                    Result = Numbers.BitwiseAnd(left(), right());
                     break;
-
 
                 case BinaryExpressionType.BitwiseOr:
-                    Result = Convert.ToUInt16(left()) | Convert.ToUInt16(right());
+                    Result = Numbers.BitwiseOr(left(), right());
                     break;
-
 
                 case BinaryExpressionType.BitwiseXOr:
-                    Result = Convert.ToUInt16(left()) ^ Convert.ToUInt16(right());
+                    Result = Numbers.BitwiseXor(left(), right());
                     break;
-
 
                 case BinaryExpressionType.LeftShift:
-                    Result = Convert.ToUInt16(left()) << Convert.ToUInt16(right());
+                    Result = Numbers.LeftShift(left(), right());
                     break;
 
-
                 case BinaryExpressionType.RightShift:
-                    Result = Convert.ToUInt16(left()) >> Convert.ToUInt16(right());
+                    Result = Numbers.RightShift(left(), right());
                     break;
             }
         }
@@ -276,7 +271,7 @@ namespace NCalc.Domain
                 args.Parameters[i].EvaluateParameter += EvaluateParameter;
 
                 // Assign the parameters of the Expression to the arguments so that custom Functions and Parameters can use them
-                args.Parameters[i].Parameters = Parameters;
+                args.Parameters[i].SetParameters(Parameters);
             }
 
             // Calls external implementation
@@ -668,7 +663,7 @@ namespace NCalc.Domain
                     // Overloads parameters
                     foreach (var p in Parameters)
                     {
-                        expression.Parameters[p.Key] = p.Value;
+                        expression.SetParameter(p.Key, p.Value);
                     }
 
                     expression.EvaluateFunction += EvaluateFunction;

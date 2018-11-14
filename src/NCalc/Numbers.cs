@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace NCalc
 {
@@ -6,7 +7,7 @@ namespace NCalc
     {
         private static object ConvertIfString(object s)
         {
-            if (s is String|| s is char)
+            if (s is String || s is char)
             {
                 return Decimal.Parse(s.ToString());
             }
@@ -1856,5 +1857,156 @@ namespace NCalc
             return null;
         }
 
+        public static object LeftShift(object a, object b)
+        {
+            a = ConvertIfString(a);
+            b = ConvertIfString(b);
+
+            TypeCode typeCodeA = a.GetTypeCode();
+
+            var bits = Convert.ToByte(b);
+
+            switch (typeCodeA)
+            {
+                case TypeCode.Boolean:
+                    throw new InvalidOperationException("Operator '<<' can't be applied to operands of types 'decimal' and 'bool'");
+                case TypeCode.Byte:
+                    return (byte)a << bits;
+                case TypeCode.SByte:
+                    return (sbyte)a << bits;
+                case TypeCode.Int16:
+                    return (short)a << bits;
+                case TypeCode.UInt16:
+                    return (ushort)a << bits;
+                case TypeCode.Int32:
+                    return (int)a << bits;
+                case TypeCode.UInt32:
+                    return (uint)a << bits;
+                case TypeCode.Int64:
+                    return (long)a << bits;
+                case TypeCode.UInt64:
+                    return (ulong)a << bits;
+                case TypeCode.Single:
+                    return Convert.ToInt32(a) << bits;
+                case TypeCode.Double:
+                    return Convert.ToInt64(a) << bits;
+                case TypeCode.Decimal:
+                    return Convert.ToInt64(a) << bits;
+            }
+
+            return null;
+        }
+
+        public static object RightShift(object a, object b)
+        {
+            a = ConvertIfString(a);
+            b = ConvertIfString(b);
+
+            TypeCode typeCodeA = a.GetTypeCode();
+
+            var bits = Convert.ToByte(b);
+
+            switch (typeCodeA)
+            {
+                case TypeCode.Boolean:
+                    throw new InvalidOperationException("Operator '>>' can't be applied to operands of types 'decimal' and 'bool'");
+                case TypeCode.Byte:
+                    return (byte)a >> bits;
+                case TypeCode.SByte:
+                    return (sbyte)a >> bits;
+                case TypeCode.Int16:
+                    return (short)a >> bits;
+                case TypeCode.UInt16:
+                    return (ushort)a >> bits;
+                case TypeCode.Int32:
+                    return (int)a >> bits;
+                case TypeCode.UInt32:
+                    return (uint)a >> bits;
+                case TypeCode.Int64:
+                    return (long)a >> bits;
+                case TypeCode.UInt64:
+                    return (ulong)a >> bits;
+                case TypeCode.Single:
+                    return Convert.ToInt64(a) >> bits;
+                case TypeCode.Double:
+                    return Convert.ToInt64(a) >> bits;
+                case TypeCode.Decimal:
+                    return Convert.ToInt64(a) >> bits;
+            }
+
+            return null;
+        }
+
+        public static object BitwiseAnd(object a, object b)
+        {
+            return ApplyBitwiseOperator(a, b, "&");
+        }
+
+        public static object BitwiseOr(object a, object b)
+        {
+            return ApplyBitwiseOperator(a, b, "|");
+        }
+
+        public static object BitwiseXor(object a, object b)
+        {
+            return ApplyBitwiseOperator(a, b, "^");
+        }
+
+        private static object ApplyBitwiseOperator(object a, object b, string @operator)
+        {
+            a = ConvertIfString(a);
+            b = ConvertIfString(b);
+
+            TypeCode typeCodeA = a.GetTypeCode();
+            TypeCode typeCodeB = b.GetTypeCode();
+
+            // Are both values numerical?
+            if (typeCodeA < TypeCode.SByte || typeCodeA > TypeCode.Double || typeCodeB < TypeCode.SByte
+                || typeCodeB > TypeCode.Double)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Operator '{0}' can't be applied to operands of types '{1}' and '{2}'",
+                        @operator,
+                        typeCodeA,
+                        typeCodeB));
+            }
+
+            // Determine the result type, float and double are converted to long
+            var resultType = typeCodeA > TypeCode.UInt64 || typeCodeB > TypeCode.UInt64
+                ? TypeCode.Int64
+                : (TypeCode)Math.Max((int)typeCodeA, (int)typeCodeB);
+
+            if (resultType == TypeCode.UInt64)
+            {
+                var aul = (ulong)Convert.ChangeType(a, TypeCode.UInt64, CultureInfo.CurrentCulture);
+                var bul = (ulong)Convert.ChangeType(b, TypeCode.UInt64, CultureInfo.CurrentCulture);
+
+                switch (@operator)
+                {
+                    case "&": return aul & bul;
+                    case "|": return aul | bul;
+                    case "^": return aul ^ bul;
+                    default:
+                        throw new InvalidOperationException("Unknown operator");
+                }
+            }
+
+            // Convert temporarily to long since it is large enough for the other types
+            var al = (long)Convert.ChangeType(a, TypeCode.Int64, CultureInfo.CurrentCulture);
+            var bl = (long)Convert.ChangeType(b, TypeCode.Int64, CultureInfo.CurrentCulture);
+            long result;
+            switch (@operator)
+            {
+                case "&": result = al & bl; break;
+                case "|": result = al | bl; break;
+                case "^": result = al ^ bl; break;
+                default:
+                    throw new InvalidOperationException("Unknown operator");
+            }
+
+            // Convert to the smallest type required
+            return Convert.ChangeType(result, resultType, CultureInfo.CurrentCulture);
+        }
     }
 }

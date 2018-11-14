@@ -4,12 +4,18 @@ using System.Collections.Generic;
 using NCalc.Domain;
 using Antlr.Runtime;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 
 namespace NCalc
 {
     public class Expression
     {
+        // Use "self managed" dictionary because the generic dictionary is too slow when accessed from generated lambda.
+        private string[] _parameterNames = new string[10];
+        private object[] _parameterValues = new object[10];
+        private uint _currentParameterIndex;
+
         public EvaluateOptions Options { get; set; }
 
         /// <summary>
@@ -205,7 +211,7 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var visitor = new LambdaExpressionVistor(Parameters, Options);
+            var visitor = new LambdaExpressionVisitor(_parameterNames, _parameterValues, typeof(TResult), Options);
             visitor.EvaluateFunction += EvaluateFunctionExpression;
             visitor.EvaluateParameter += EvaluateParameterExpression;
 
@@ -217,8 +223,25 @@ namespace NCalc
                 body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
             }
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
-            return lambda.Compile();
+            if (!Parameters.Any())
+            {
+                // no parameter used
+                // formula is static and can be used directly
+                var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
+                return lambda.Compile();
+            }
+
+            // create lambda with parameters context
+            var innerLambda = System.Linq.Expressions.Expression.Lambda<Func<object[], TResult>>(
+                body,
+                visitor.Context);
+            var invokeInner = System.Linq.Expressions.Expression.Invoke(
+                innerLambda,
+                System.Linq.Expressions.Expression.Constant(_parameterValues));
+
+            // create parameter free lambda to be called directly
+            var outerLambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(invokeInner);
+            return outerLambda.Compile();
         }
 
         public Func<TContext, TResult> ToLambda<TContext, TResult>() where TContext : class
@@ -233,8 +256,7 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
-            var visitor = new LambdaExpressionVistor(parameter, Options);
+            var visitor = new LambdaExpressionVisitor(typeof(TContext), Options);
             visitor.EvaluateFunction += EvaluateFunctionExpression;
             visitor.EvaluateParameter += EvaluateParameterExpression;
 
@@ -246,7 +268,7 @@ namespace NCalc
                 body = System.Linq.Expressions.Expression.Convert(body, typeof (TResult));
             }
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, visitor.Context);
             return lambda.Compile();
         }
 
@@ -266,17 +288,16 @@ namespace NCalc
             var visitor = new EvaluationVisitor(Options);
             visitor.EvaluateFunction += EvaluateFunction;
             visitor.EvaluateParameter += EvaluateParameter;
-            visitor.Parameters = Parameters;
+            visitor.Parameters = _parameterNames
+                .TakeWhile(x => x != null)
+                .Zip(_parameterValues, (name, value) => new { name, value })
+                .ToDictionary(val => val.name, val => val.value);
 
             // if array evaluation, execute the same expression multiple times
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
             {
                 int size = -1;
-                ParametersBackup = new Dictionary<string, object>();
-                foreach (string key in Parameters.Keys)
-                {
-                    ParametersBackup.Add(key, Parameters[key]);
-                }
+                ParametersBackup = Parameters.ToDictionary(x => x.Key, x => x.Value);
 
                 ParameterEnumerators = new Dictionary<string, IEnumerator>();
 
@@ -317,8 +338,14 @@ namespace NCalc
                     {
                         IEnumerator enumerator = ParameterEnumerators[key];
                         enumerator.MoveNext();
-                        Parameters[key] = enumerator.Current;
+                        var index = Array.IndexOf(_parameterNames, key);
+                        _parameterValues[index] = enumerator.Current;
                     }
+
+                    visitor.Parameters = _parameterNames
+                        .TakeWhile(x => x != null)
+                        .Zip(_parameterValues, (name, value) => new { name, value })
+                        .ToDictionary(val => val.name, val => val.value);
 
                     ParsedExpression.Accept(visitor);
                     results.Add(visitor.Result);
@@ -336,13 +363,61 @@ namespace NCalc
         public event EventHandler<FunctionExpressionEventArgs> EvaluateFunctionExpression;
         public event EventHandler<ParameterExpressionEventArgs> EvaluateParameterExpression;
 
-        private Dictionary<string, object> _parameters;
-
-        public Dictionary<string, object> Parameters
+        public IReadOnlyDictionary<string, object> Parameters
         {
-            get { return _parameters ?? (_parameters = new Dictionary<string, object>()); }
-            set { _parameters = value; }
+            get
+            {
+                return _parameterNames
+                    .TakeWhile(x => x != null)
+                    .Zip(_parameterValues, (name, value) => new {name, value})
+                    .ToDictionary(val => val.name, val => val.value);
+            }
         }
 
+        public void SetParameters(IReadOnlyDictionary<string, object> parameters)
+        {
+            _parameterNames = parameters.Keys.ToArray();
+            _parameterValues = parameters.Values.ToArray();
+        }
+
+        public void SetParameter(string key, object value)
+        {
+            var index = Array.IndexOf(_parameterNames, key);
+            if (index < 0)
+            {
+                AddParameter(key, value);
+                return;
+            }
+
+            _parameterValues[index] = value;
+        }
+
+        public void SetParameter(uint index, object value)
+        {
+            _parameterValues[index] = value;
+        }
+
+        public uint AddParameter(string key, object value)
+        {
+            if (_currentParameterIndex >= _parameterNames.Length)
+            {
+                Resize();
+            }
+
+            _parameterNames[_currentParameterIndex] = key;
+            _parameterValues[_currentParameterIndex] = value;
+
+            return _currentParameterIndex++;
+        }
+
+        private void Resize()
+        {
+            var names = _parameterNames;
+            _parameterNames = new string[names.Length + 10];
+            Array.Copy(names, _parameterNames, names.Length);
+            var values = _parameterValues;
+            _parameterValues = new object[values.Length + 10];
+            Array.Copy(values, _parameterValues, values.Length);
+        }
     }
 }

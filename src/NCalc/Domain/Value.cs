@@ -63,6 +63,12 @@ namespace NCalc.Domain
             Type = ValueType.Integer;
         }
 
+	    public ValueExpression(long value)
+	    {
+	        Value = value;
+	        Type = ValueType.Integer;
+	    }
+
         public ValueExpression(float value)
         {
             Value = value;

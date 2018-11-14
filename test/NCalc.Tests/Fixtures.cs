@@ -45,12 +45,15 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldParseValues()
         {
-            Assert.Equal(123456, new Expression("123456").Evaluate());
-            Assert.Equal(new DateTime(2001, 01, 01), new Expression("#01/01/2001#").Evaluate());
-            Assert.Equal(123.456d, new Expression("123.456").Evaluate());
-            Assert.Equal(true, new Expression("true").Evaluate());
-            Assert.Equal("true", new Expression("'true'").Evaluate());
-            Assert.Equal("azerty", new Expression("'azerty'").Evaluate());
+            using (new AssertionScope())
+            {
+                new Expression("123456").Evaluate().Should().Be(123456);
+                new Expression("#01/01/2001#").Evaluate().Should().Be(new DateTime(2001, 01, 01));
+                new Expression("123.456").Evaluate().Should().Be(123.456d);
+                new Expression("true").Evaluate().Should().Be(true);
+                new Expression("'true'").Evaluate().Should().Be("true");
+                new Expression("'foo'").Evaluate().Should().Be("foo");
+            }
         }
 
         [Fact]
@@ -143,8 +146,8 @@ namespace NCalc.Tests
         public void ExpressionShouldEvaluateCustomFunctionsWithParameters()
         {
             var e = new Expression("SecretOperation([e], 6) + f");
-            e.Parameters["e"] = 3;
-            e.Parameters["f"] = 1;
+            e.AddParameter("e", 3);
+            e.AddParameter("f", 1);
 
             e.EvaluateFunction += delegate(string name, FunctionArgs args)
                 {
@@ -160,8 +163,8 @@ namespace NCalc.Tests
         {
             var e = new Expression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)");
 
-            e.Parameters["Pi Squared"] = new Expression("Pi * [Pi]");
-            e.Parameters["X"] = 10;
+            e.AddParameter("Pi Squared", new Expression("Pi * [Pi]"));
+            e.AddParameter("X", 10);
 
             e.EvaluateParameter += delegate(string name, ParameterArgs args)
                 {
@@ -173,17 +176,17 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ShouldEvaluateConditionnal()
+        public void ShouldEvaluateConditional()
         {
             var eif = new Expression("if([divider] <> 0, [divided] / [divider], 0)");
-            eif.Parameters["divider"] = 5;
-            eif.Parameters["divided"] = 5;
+            eif.AddParameter("divider", 5);
+            eif.AddParameter("divided", 5);
 
             Assert.Equal(1d, eif.Evaluate());
 
             eif = new Expression("if([divider] <> 0, [divided] / [divider], 0)");
-            eif.Parameters["divider"] = 0;
-            eif.Parameters["divided"] = 5;
+            eif.AddParameter("divider", 0);
+            eif.AddParameter("divided", 5);
             Assert.Equal(0, eif.Evaluate());
         }
 
@@ -207,23 +210,22 @@ namespace NCalc.Tests
         public void ShouldEvaluateInOperator()
         {
             // The last argument should not be evaluated
-            var ein = new Expression("in((2 + 2), [1], [2], 1 + 2, 4, 1 / 0)");
-            ein.Parameters["1"] = 2;
-            ein.Parameters["2"] = 5;
+            var sutIn = new Expression("in((2 + 2), [1], [2], 1 + 2, 4, 1 / 0)");
+            sutIn.AddParameter("1", 2);
+            sutIn.AddParameter("2", 5);
 
-            Assert.Equal(true, ein.Evaluate());
+            sutIn.Evaluate().Should().Be(true);
 
-            var eout = new Expression("in((2 + 2), [1], [2], 1 + 2, 3)");
-            eout.Parameters["1"] = 2;
-            eout.Parameters["2"] = 5;
+            var sutOut = new Expression("in((2 + 2), [1], [2], 1 + 2, 3)");
+            sutOut.AddParameter("1", 2);
+            sutOut.AddParameter("2", 5);
 
-            Assert.Equal(false, eout.Evaluate());
+            sutOut.Evaluate().Should().Be(false);
 
             // Should work with strings
-            var estring = new Expression("in('to' + 'to', 'titi', 'toto')");
+            var sutString = new Expression("in('to' + 'to', 'titi', 'toto')");
 
-            Assert.Equal(true, estring.Evaluate());
-
+            sutString.Evaluate().Should().Be(true);
         }
 
         [Theory]
@@ -248,9 +250,14 @@ namespace NCalc.Tests
         [InlineData("1 != 1", false)]
         [InlineData("1 <> 1", false)]
         [InlineData("1 & 1", 1)]
+        [InlineData("1.0 & 1", 1L)]
+        [InlineData("1 && 0", 0)]
+        [InlineData("1.0 && 0", 0)]
+        [InlineData("4294967295 & 255", 255L)]
         [InlineData("1 | 1", 1)]
         [InlineData("1 ^ 1", 0)]
         [InlineData("~1", ~1)]
+        [InlineData("4294967295 >> 8", 16777215L)]
         [InlineData("2 >> 1", 1)]
         [InlineData("2 << 1", 4)]
         [InlineData("true && false", false)]
@@ -290,23 +297,16 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ShouldThrowAnExpcetionWhenInvalidNumber()
+        public void ShouldThrowWhenInvalidNumber()
         {
-            try
-            {
-                new Expression("4. + 2").Evaluate();
-                throw new Exception();
-            }
-            catch (EvaluationException e)
-            {
-                _output.WriteLine("Error catched: " + e.Message);
-            }
+            var action = new Action(() => new Expression("4. + 2").Evaluate());
+            action.Should().Throw<EvaluationException>();
         }
 
         [Fact]
         public void ShouldNotRoundDecimalValues()
         {
-            Assert.Equal(false, new Expression("0 <= -0.6").Evaluate());
+            new Expression("0 <= -0.6").Evaluate().Should().Be(false);
         }
 
         [Fact]
@@ -344,7 +344,7 @@ namespace NCalc.Tests
             Assert.Equal("'hello'", new ValueExpression("hello").ToString());
             Assert.Equal("#" + new DateTime(2009, 1, 1) + "#", new ValueExpression(new DateTime(2009, 1, 1)).ToString());
 
-            Assert.Equal("Sum(1 + 2)", new Function(new Identifier("Sum"), new [] { new BinaryExpression(BinaryExpressionType.Plus, new ValueExpression(1), new ValueExpression(2))}).ToString());
+            Assert.Equal("Sum(1 + 2)", new Function(new Identifier("Sum"), new LogicalExpression[] { new BinaryExpression(BinaryExpressionType.Plus, new ValueExpression(1), new ValueExpression(2))}).ToString());
         }
 
         [Fact]
@@ -476,24 +476,30 @@ namespace NCalc.Tests
             {
                 switch (name)
                 {
-                    case "func1": arg.Result = 1;
+                    case "func1":
+                        arg.Result = 1;
                         break;
-                    case "func2": arg.Result = 2 * Convert.ToDouble(arg.Parameters[0].Evaluate());
+                    case "func2":
+                        arg.Result = 2 * Convert.ToDouble(arg.Parameters[0].Evaluate());
                         break;
-                    case "func3": arg.Result = 3 * Convert.ToDouble(arg.Parameters[0].Evaluate());
+                    case "func3":
+                        arg.Result = 3 * Convert.ToDouble(arg.Parameters[0].Evaluate());
                         break;
                 }
             };
 
-            e.EvaluateParameter += delegate(string name, ParameterArgs arg)
+            e.EvaluateParameter += delegate (string name, ParameterArgs arg)
             {
                 switch (name)
                 {
-                    case "x": arg.Result = 1;
+                    case "x":
+                        arg.Result = 1;
                         break;
-                    case "y": arg.Result = 2;
+                    case "y":
+                        arg.Result = 2;
                         break;
-                    case "z": arg.Result = 3;
+                    case "z":
+                        arg.Result = 3;
                         break;
                 }
             };
@@ -517,7 +523,7 @@ namespace NCalc.Tests
         public void ShouldEvaluateArrayParameters()
         {
             var e = new Expression("x * x", EvaluateOptions.IterateParameters);
-            e.Parameters["x"] = new [] { 0, 1, 2, 3, 4 };
+            e.AddParameter("x", new[] { 0, 1, 2, 3, 4 });
 
             var result = (IList)e.Evaluate();
 
@@ -541,7 +547,7 @@ namespace NCalc.Tests
                 Assert.True(args.HasResult);
             };
 
-            Assert.Equal(null, e.Evaluate());
+            Assert.Null(e.Evaluate());
         }
 
         [Fact]
@@ -557,14 +563,14 @@ namespace NCalc.Tests
                 Assert.True(args.HasResult);
             };
 
-            Assert.Equal(null, e.Evaluate());
+            Assert.Null(e.Evaluate());
         }
 
         [Fact]
         public void ShouldCompareDates()
         {
-            Assert.Equal(true, new Expression("#1/1/2009#==#1/1/2009#").Evaluate());
-            Assert.Equal(false, new Expression("#2/1/2009#==#1/1/2009#").Evaluate());
+            new Expression("#1/1/2009#==#1/1/2009#").Evaluate().Should().Be(true);
+            new Expression("#2/1/2009#==#1/1/2009#").Evaluate().Should().Be(false);
         }
 
         [Fact]
@@ -579,10 +585,10 @@ namespace NCalc.Tests
         {
             var volume = new Expression("[surface] * h");
             var surface = new Expression("[l] * [L]");
-            volume.Parameters["surface"] = surface;
-            volume.Parameters["h"] = 3;
-            surface.Parameters["l"] = 1;
-            surface.Parameters["L"] = 2;
+            volume.AddParameter("surface", surface);
+            volume.AddParameter("h", 3);
+            surface.AddParameter("l", 1);
+            surface.AddParameter("L", 2);
 
             Assert.Equal(6, volume.Evaluate());
         }
@@ -590,21 +596,21 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleLongValues()
         {
-            Assert.Equal(40000000000 + 1f, new Expression("40000000000+1").Evaluate());
+            Assert.Equal(40000000000 + 1, new Expression("40000000000+1").Evaluate());
         }
 
         [Fact]
         public void ShouldCompareLongValues()
         {
-            Assert.Equal(false, new Expression("(0=1500000)||(((0+2200000000)-1500000)<0)").Evaluate());
+            new Expression("(0=1500000)||(((0+2200000000)-1500000)<0)").Evaluate().Should().Be(false);
         }
 
         [Fact]
-        public void ShouldDisplayErrorIfUncompatibleTypes()
+        public void ShouldDisplayErrorIfIncompatibleTypes()
         {
             var e = new Expression("(a > b) + 10");
-            e.Parameters["a"] = 1;
-            e.Parameters["b"] = 2;
+            e.AddParameter("a", 1);
+            e.AddParameter("b", 2);
             Assert.Throws<InvalidOperationException>(() => e.Evaluate());
         }
 
@@ -619,7 +625,8 @@ namespace NCalc.Tests
         [InlineData("1-(X1 = 1)", 0)]
         public void ShouldOptionallyCalculateWithBoolean(string formula, object expectedValue)
         {
-            var expression = new Expression(formula, EvaluateOptions.BooleanCalculation) {Parameters = {["X1"] = 1}};
+            var expression = new Expression(formula, EvaluateOptions.BooleanCalculation);
+            expression.AddParameter("X1", 1);
 
             expression.Evaluate().Should().Be(expectedValue);
 
@@ -631,20 +638,20 @@ namespace NCalc.Tests
         public void ShouldNotConvertRealTypes()
         {
             var e = new Expression("x/2");
-            e.Parameters["x"] = 2F;
+            e.AddParameter("x", 2F);
             Assert.Equal(typeof(float), e.Evaluate().GetType());
 
             e = new Expression("x/2");
-            e.Parameters["x"] = 2D;
+            e.AddParameter("x", 2D);
             Assert.Equal(typeof(double), e.Evaluate().GetType());
 
             e = new Expression("x/2");
-            e.Parameters["x"] = 2m;
+            e.AddParameter("x", 2m);
             Assert.Equal(typeof(decimal), e.Evaluate().GetType());
 
             e = new Expression("a / b * 100");
-            e.Parameters["a"] = 20M;
-            e.Parameters["b"] = 20M;
+            e.AddParameter("a", 20M);
+            e.AddParameter("b", 20M);
             Assert.Equal(100M, e.Evaluate());
 
         }
@@ -653,16 +660,16 @@ namespace NCalc.Tests
         public void ShouldShortCircuitBooleanExpressions()
         {
             var e = new Expression("([a] != 0) && ([b]/[a]>2)");
-            e.Parameters["a"] = 0;
+            e.AddParameter("a", 0);
 
-            Assert.Equal(false, e.Evaluate());
+            e.Evaluate().Should().Be(false);
         }
 
         [Fact]
         public void ShouldAddDoubleAndDecimal()
         {
             var e = new Expression("1.8 + Abs([var1])");
-            e.Parameters["var1"] = 9.2;
+            e.AddParameter("var1", 9.2);
 
             Assert.Equal(11M, e.Evaluate());
         }
