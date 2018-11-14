@@ -138,12 +138,12 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.Div:
-                    //Actually doesn't need checked here, since if one is real, 
-                    // checked does nothing, and if they are int the result will only be same or smaller 
+                    //Actually doesn't need checked here, since if one is real,
+                    // checked does nothing, and if they are int the result will only be same or smaller
                     // (since anything between 1 and 0 is not int and 0 is an exception anyway
                     Result = IsReal(left()) || IsReal(right())
-                                 ? Numbers.Divide(left(), right())
-                                 : Numbers.Divide(Convert.ToDouble(left()), right());
+                                 ? Numbers.Divide(left(), right(), _options)
+                                 : Numbers.Divide(Convert.ToDouble(left()), right(), _options);
                     break;
 
                 case BinaryExpressionType.Equal:
@@ -172,7 +172,9 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.Minus:
-                    Result = Checked ? Numbers.SoustractChecked(left(), right()) : Numbers.Soustract(left(), right());
+                    Result = Checked
+                        ? Numbers.SoustractChecked(left(), right(), _options)
+                        : Numbers.Soustract(left(), right(), _options);
                     break;
 
 
@@ -192,13 +194,17 @@ namespace NCalc.Domain
                     }
                     else
                     {
-                        Result = Checked ? Numbers.AddChecked(left(), right()) : Numbers.Add(left(), right());
+                        Result = Checked
+                            ? Numbers.AddChecked(left(), right(), _options)
+                            : Numbers.Add(left(), right(), _options);
                     }
 
                     break;
 
                 case BinaryExpressionType.Times:
-                    Result = Checked ? Numbers.MultiplyChecked(left(), right()) : Numbers.Multiply(left(), right());
+                    Result = Checked
+                        ? Numbers.MultiplyChecked(left(), right(), _options)
+                        : Numbers.Multiply(left(), right(), _options);
                     break;
 
                 case BinaryExpressionType.BitwiseAnd:
@@ -239,7 +245,7 @@ namespace NCalc.Domain
                     break;
 
                 case UnaryExpressionType.Negate:
-                    Result = Numbers.Soustract(0, Result);
+                    Result = Numbers.Soustract(0, Result, _options);
                     break;
 
                 case UnaryExpressionType.BitwiseNot:
@@ -271,7 +277,7 @@ namespace NCalc.Domain
 
                 // Assign the parameters of the Expression to the arguments so that custom Functions and Parameters can use them
                 args.Parameters[i].Parameters = Parameters;
-            }            
+            }
 
             // Calls external implementation
             OnEvaluateFunction(IgnoreCase ? function.Identifier.Name.ToLower() : function.Identifier.Name, args);
@@ -541,7 +547,7 @@ namespace NCalc.Domain
                     break;
 
                 #endregion
-                
+
                 #region Max
                 case "max":
 
@@ -618,7 +624,7 @@ namespace NCalc.Domain
                 #endregion
 
                 default:
-                    throw new ArgumentException("Function not found", 
+                    throw new ArgumentException("Function not found",
                         function.Identifier.Name);
             }
         }
@@ -659,7 +665,7 @@ namespace NCalc.Domain
                     // The parameter is itself another Expression
                     var expression = (Expression)Parameters[parameter.Name];
 
-                    // Overloads parameters 
+                    // Overloads parameters
                     foreach (var p in Parameters)
                     {
                         expression.Parameters[p.Key] = p.Value;

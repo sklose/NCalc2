@@ -6,11 +6,19 @@ using System.Collections;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace NCalc.Tests
 {
     public class Fixtures
     {
+        private readonly ITestOutputHelper _output;
+
+        public Fixtures(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void ExpressionShouldEvaluate()
         {
@@ -29,7 +37,7 @@ namespace NCalc.Tests
             };
 
             foreach (string expression in expressions)
-                Console.WriteLine("{0} = {1}",
+                _output.WriteLine("{0} = {1}",
                     expression,
                     new Expression(expression).Evaluate());
         }
@@ -82,7 +90,7 @@ namespace NCalc.Tests
             }
             catch(EvaluationException e)
             {
-                Console.WriteLine("Error catched: " + e.Message);
+                _output.WriteLine("Error catched: " + e.Message);
             }
         }
 
@@ -291,7 +299,7 @@ namespace NCalc.Tests
             }
             catch (EvaluationException e)
             {
-                Console.WriteLine("Error catched: " + e.Message);
+                _output.WriteLine("Error catched: " + e.Message);
             }
         }
 
@@ -395,7 +403,7 @@ namespace NCalc.Tests
 
                 if (_exceptions.Count > 0)
                 {
-                    Console.WriteLine(_exceptions[0].StackTrace);
+                    _output.WriteLine(_exceptions[0].StackTrace);
                     throw _exceptions[0];
                 }
             }
@@ -598,6 +606,25 @@ namespace NCalc.Tests
             e.Parameters["a"] = 1;
             e.Parameters["b"] = 2;
             Assert.Throws<InvalidOperationException>(() => e.Evaluate());
+        }
+
+        [Theory]
+        [InlineData("(X1 = 1)/2", 0.5)]
+        [InlineData("(X1 = 1)*2", 2)]
+        [InlineData("(X1 = 1)+1", 2)]
+        [InlineData("(X1 = 1)-1", 0)]
+        [InlineData("2*(X1 = 1)", 2)]
+        [InlineData("2/(X1 = 1)", 2.0)]
+        [InlineData("1+(X1 = 1)", 2)]
+        [InlineData("1-(X1 = 1)", 0)]
+        public void ShouldOptionallyCalculateWithBoolean(string formula, object expectedValue)
+        {
+            var expression = new Expression(formula, EvaluateOptions.BooleanCalculation) {Parameters = {["X1"] = 1}};
+
+            expression.Evaluate().Should().Be(expectedValue);
+
+            var lambda = expression.ToLambda<object>();
+            lambda().Should().Be(expectedValue);
         }
 
         [Fact]

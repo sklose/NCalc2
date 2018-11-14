@@ -179,11 +179,14 @@ namespace NCalc
             catch(Exception e)
             {
                 Error = e.Message;
+                ErrorException = e;
                 return true;
             }
         }
 
         public string Error { get; private set; }
+
+        public Exception ErrorException { get; private set; }
 
         public LogicalExpression ParsedExpression { get; private set; }
 
@@ -194,7 +197,7 @@ namespace NCalc
         {
             if (HasErrors())
             {
-                throw new EvaluationException(Error);
+                throw new EvaluationException(Error, ErrorException);
             }
 
             if (ParsedExpression == null)
@@ -222,7 +225,7 @@ namespace NCalc
         {
             if (HasErrors())
             {
-                throw new EvaluationException(Error);
+                throw new EvaluationException(Error, ErrorException);
             }
 
             if (ParsedExpression == null)
@@ -251,7 +254,7 @@ namespace NCalc
         {
             if (HasErrors())
             {
-                throw new EvaluationException(Error);
+                throw new EvaluationException(Error, ErrorException);
             }
 
             if (ParsedExpression == null)

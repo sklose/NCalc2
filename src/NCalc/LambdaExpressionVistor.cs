@@ -12,8 +12,7 @@ namespace NCalc
     /// </summary>
     internal class LambdaExpressionVistor : LogicalExpressionVisitor
     {
-        private static readonly Type DoubleType = typeof(double);
-        private static readonly Type BooleanType = typeof(bool);
+        private static readonly Type MathType = typeof(Math);
 
         private readonly IDictionary<string, object> _parameters;
         private readonly L.Expression _context;
@@ -141,7 +140,6 @@ namespace NCalc
                     break;
                 default:
                     throw new ArgumentOutOfRangeException($"The expression type '{expression.Type}' is not yet supported.");
-
             }
         }
 
@@ -200,23 +198,36 @@ namespace NCalc
                     Result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
                 default:
-                    if (SearchMethod(null, typeof(Math), functionName, functionArgs))
+                    if (_context != null)
                     {
-                        return;
+                        var method = FindMethod(
+                            _context.Type, function.Identifier.Name, functionArgs, ContextMethodPredicate);
+                        if (method != null)
+                        {
+                            Result = L.Expression.Call(_context, method.BaseMethodInfo, method.PreparedArguments);
+                            break;
+                        }
                     }
 
-                    if (_context == null)
+                    var mathMethod = FindMethod(MathType, function.Identifier.Name, functionArgs, MathMethodPredicate);
+                    if (mathMethod == null)
                     {
                         throw new MissingMethodException($"The function '{function.Identifier.Name}' was not defined.");
                     }
 
-                    if (SearchMethod(_context, _context.Type, functionName, functionArgs))
-                    {
-                        return;
-                    }
-
-                    throw new MissingMethodException($"The function '{function.Identifier.Name}' was not defined.");
+                    Result = L.Expression.Call(_context, mathMethod.BaseMethodInfo, mathMethod.PreparedArguments);
+                    break;
             }
+        }
+
+        private bool ContextMethodPredicate(MethodInfo method)
+        {
+            return !method.IsStatic;
+        }
+
+        private bool MathMethodPredicate(MethodInfo arg)
+        {
+            return true;
         }
 
         public override void Visit(Identifier identifier)
@@ -248,68 +259,93 @@ namespace NCalc
             Result = args.Result;
         }
 
-        private static L.Expression EnsureType(L.Expression expression, Type type)
+        private ExtendedMethodInfo FindMethod(Type type, string methodName, L.Expression[] methodArgs, Func<MethodInfo, bool> methodPredicate)
         {
-            if (expression.Type == type)
+            var methods = type.GetTypeInfo().DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && methodPredicate(m));
+            foreach (var potentialMethod in methods)
             {
-                return expression;
+                var methodParams = potentialMethod.GetParameters();
+                var newArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
+
+                if (newArguments != null)
+                {
+                    return new ExtendedMethodInfo { BaseMethodInfo = potentialMethod, PreparedArguments = newArguments };
+                }
             }
 
-            if (type == BooleanType)
-            {
-                return L.Expression.GreaterThan(EnsureType(expression, DoubleType), L.Expression.Constant(0.0));
-            }
-
-            return L.Expression.Convert(expression, type);
+            return null;
         }
 
-        private bool SearchMethod(L.Expression instance, Type type, string methodName,
-            L.Expression[] methodArgs)
+        private L.Expression[] PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments)
         {
-            var methodCandidates = type.GetRuntimeMethods()
-                .Where(x =>
-                    x.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase)
-                    && x.GetParameters().Length == methodArgs.Length);
+            if (!parameters.Any() && !arguments.Any()) return arguments;
+            if (!parameters.Any()) return null;
 
-            // search for method with exactly matching parameters
-            foreach (var methodCandidate in methodCandidates)
+            var lastParameter = parameters.Last();
+            bool hasParamsKeyword = lastParameter.IsDefined(typeof(ParamArrayAttribute));
+            if (hasParamsKeyword && parameters.Length > arguments.Length) return null;
+            L.Expression[] newArguments = new L.Expression[parameters.Length];
+            L.Expression[] paramsKeywordArgument = null;
+            Type paramsElementType = null;
+            int paramsParameterPosition = 0;
+            if (!hasParamsKeyword)
             {
-                var methodParameters = methodCandidate.GetParameters();
-                int matchCount = 0;
-                for (int i = 0; i < methodArgs.Length; i++)
+                if (parameters.Length != arguments.Length) return null;
+            }
+            else
+            {
+                paramsParameterPosition = lastParameter.Position;
+                paramsElementType = lastParameter.ParameterType.GetElementType();
+                paramsKeywordArgument = new L.Expression[arguments.Length - parameters.Length + 1];
+            }
+
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
+                var argument = arguments[i];
+                var argumentType = argument.Type.ToTypeCode();
+                var parameterType = isParamsElement ? paramsElementType : parameters[i].ParameterType;
+                var parameterTypeCode = parameterType.ToTypeCode();
+                if (argumentType != parameterTypeCode && !CanConvert(argumentType, parameterTypeCode)) return null;
+                if (!isParamsElement)
                 {
-                    if (methodParameters[i].ParameterType != methodArgs[i].Type)
+                    if (argumentType != parameterTypeCode)
                     {
-                        continue;
+                        newArguments[i] = L.Expression.Convert(argument, parameterType);
                     }
-
-                    matchCount++;
+                    else
+                    {
+                        newArguments[i] = argument;
+                    }
                 }
-
-                if (matchCount == methodArgs.Length)
+                else
                 {
-                    Result = instance == null
-                        ? L.Expression.Call(methodCandidate, methodArgs)
-                        : L.Expression.Call(instance, methodCandidate, methodArgs);
-                    return true;
+                    paramsKeywordArgument[i - paramsParameterPosition] = argument;
                 }
             }
 
-            // search for method using double and convert parameters
-            var method = type.GetRuntimeMethods().FirstOrDefault(x =>
-                x.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase)
-                && x.GetParameters().Length == methodArgs.Length
-                && x.GetParameters().All(p => p.ParameterType == DoubleType));
-            if (method == null)
+            if (hasParamsKeyword)
             {
-                return false;
+                newArguments[paramsParameterPosition] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
+            }
+            return newArguments;
+        }
+
+        private bool CanConvert(TypeCode fromType, TypeCode toType)
+        {
+            if (toType == TypeCode.Double)
+            {
+                switch (fromType)
+                {
+                    case TypeCode.Int32:
+                        return true;
+
+                    default:
+                        return false;
+                }
             }
 
-            var convertedArgs = methodArgs.Select(x => EnsureType(x, DoubleType)).ToArray();
-            Result = instance == null
-                ? L.Expression.Call(method, convertedArgs)
-                : L.Expression.Call(instance, method, convertedArgs);
-            return true;
+            return false;
         }
 
         private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,
@@ -317,6 +353,19 @@ namespace NCalc
         {
             left = UnwrapNullable(left);
             right = UnwrapNullable(right);
+
+            if (_options.HasFlag(EvaluateOptions.BooleanCalculation))
+            {
+                if (left.Type == typeof(bool))
+                {
+                    left = L.Expression.Condition(left, L.Expression.Constant(1.0), L.Expression.Constant(0.0));
+                }
+
+                if (right.Type == typeof(bool))
+                {
+                    right = L.Expression.Condition(right, L.Expression.Constant(1.0), L.Expression.Constant(0.0));
+                }
+            }
 
             var precedence = new[]
             {
