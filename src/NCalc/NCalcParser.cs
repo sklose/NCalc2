@@ -2635,7 +2635,7 @@ public partial class NCalcParser : Antlr.Runtime.Parser
 				adaptor.AddChild(root_0, DATETIME38_tree);
 
 				DebugLocation(211, 14);
-				 retval.value = new ValueExpression(DateTime.Parse((DATETIME38!=null?DATETIME38.Text:null).Substring(1, (DATETIME38!=null?DATETIME38.Text:null).Length-2))); 
+				 retval.value = new ValueExpression(DateTime.Parse((DATETIME38!=null?DATETIME38.Text:null).Substring(1, (DATETIME38!=null?DATETIME38.Text:null).Length-2),CultureInfo.InvariantCulture)); 
 
 				}
 				break;
