@@ -1804,17 +1804,24 @@ public partial class NCalcLexer : Antlr.Runtime.Lexer
 			DebugLocation(265, 39);
 			// C:\\Users\\sebros\\My Projects\\NCalc\\Grammar\\NCalc.g:265:39: (~ ( ']' ) )*
 			try { DebugEnterSubRule(10);
+			int opened	= 0;
 			while (true)
 			{
 				int alt10=2;
 				try { DebugEnterDecision(10, decisionCanBacktrack[10]);
 				int LA10_0 = input.LA(1);
 
-				if (((LA10_0>='\u0000' && LA10_0<='\\')||(LA10_0>='^' && LA10_0<='\uFFFF')))
+				if (LA10_0 >= '\u0000' || LA10_0 <= '\uFFFF')
+					alt10 = 1;
+					
+				if(LA10_0 == '[')
+					opened++;
+				else if(LA10_0 == ']')
 				{
-					alt10=1;
+					opened--;
+					if(opened < 0)
+						alt10=2;
 				}
-
 
 				} finally { DebugExitDecision(10); }
 				switch ( alt10 )
