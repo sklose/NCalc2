@@ -47,6 +47,7 @@ namespace NCalc
 
         #region Cache management
         private static bool _cacheEnabled = true;
+        private static bool _cacheLogging = true;
         private static Dictionary<string, WeakReference> _compiledExpressions = new Dictionary<string, WeakReference>();
         private static readonly ReaderWriterLockSlim Rwl = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
@@ -63,6 +64,11 @@ namespace NCalc
                     _compiledExpressions = new Dictionary<string, WeakReference>();
                 }
             }
+        }
+
+        public static bool CacheLogging {
+            get { return _cacheLogging; }
+            set { _cacheLogging = value;}
         }
 
         /// <summary>
@@ -87,7 +93,8 @@ namespace NCalc
                 foreach (string key in keysToRemove)
                 {
                     _compiledExpressions.Remove(key);
-                    Debug.WriteLine("Cache entry released: " + key);
+                    if (_cacheLogging)
+                        Debug.WriteLine("Cache entry released: " + key);
                 }
             }
             finally
@@ -110,7 +117,8 @@ namespace NCalc
 
                     if (_compiledExpressions.ContainsKey(expression))
                     {
-                        Debug.WriteLine("Expression retrieved from cache: " + expression);
+                        if (_cacheLogging)
+                            Debug.WriteLine("Expression retrieved from cache: " + expression);
                         var wr = _compiledExpressions[expression];
                         logicalExpression = wr.Target as LogicalExpression;
 
@@ -152,7 +160,8 @@ namespace NCalc
 
                     CleanCache();
 
-                    Debug.WriteLine("Expression added to cache: " + expression);
+                    if (_cacheLogging)
+                        Debug.WriteLine("Expression added to cache: " + expression);
                 }
             }
 
