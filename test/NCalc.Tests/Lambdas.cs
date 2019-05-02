@@ -44,6 +44,48 @@ namespace NCalc.Tests
                 return total;
             }
 
+            public int Sum(TestObject1 obj1, TestObject2 obj2) 
+            {
+                return obj1.Count1 + obj2.Count2;
+            }
+
+            public int Sum(TestObject2 obj1, TestObject1 obj2) 
+            {
+                return obj1.Count2 + obj2.Count1;
+            }
+
+            public int Sum(TestObject1 obj1, TestObject1 obj2) 
+            {
+                return obj1.Count1 + obj2.Count1;
+            }
+
+            public int Sum(TestObject2 obj1, TestObject2 obj2) 
+            {
+                return obj1.Count2 + obj2.Count2;
+            }
+
+            public class TestObject1 
+            {
+                public int Count1 { get; set; }
+            }
+
+            public class TestObject2 
+            {
+                public int Count2 { get; set; }
+            }
+
+            
+            public TestObject1 CreateTestObject1(int count) 
+            {
+                return new TestObject1() { Count1 = count };
+            }
+
+            public TestObject2 CreateTestObject2(int count) 
+            {
+                return new TestObject2() { Count2 = count };
+            }
+
+
         }
 
         [Theory]
@@ -89,6 +131,17 @@ namespace NCalc.Tests
 
             Assert.Equal(10, sut(context));
         }
+
+        [Fact]
+        public void ShouldHandleOverloadingObjectParameters() 
+        {
+            var expression = new Expression("Sum(CreateTestObject1(2), CreateTestObject2(2)) + Sum(CreateTestObject2(1), CreateTestObject1(5))");
+            var sut = expression.ToLambda<Context, int>();
+            var context = new Context();
+
+            Assert.Equal(10, sut(context));
+        }
+        
 
         [Fact]
         public void ShouldHandleParamsKeyword() 

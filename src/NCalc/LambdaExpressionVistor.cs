@@ -215,7 +215,6 @@ namespace NCalc
             if (hasParamsKeyword && parameters.Length > arguments.Length) return null;
             L.Expression[] newArguments = new L.Expression[parameters.Length];
             L.Expression[] paramsKeywordArgument = null;
-            var paramsElementTypeCode = TypeCode.Empty;
             Type paramsElementType = null;
             int paramsParameterPosition = 0;
             if (!hasParamsKeyword) 
@@ -227,15 +226,14 @@ namespace NCalc
             {
                 paramsParameterPosition = lastParameter.Position;
                 paramsElementType = lastParameter.ParameterType.GetElementType();
-                paramsElementTypeCode = paramsElementType.ToTypeCode();
                 paramsKeywordArgument = new L.Expression[arguments.Length - parameters.Length + 1];
             }
             
             for (int i = 0; i < arguments.Length; i++) 
             {
                 var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
-                var argumentType = arguments[i].Type.ToTypeCode();
-                var parameterType = isParamsElement ? paramsElementTypeCode : parameters[i].ParameterType.ToTypeCode();
+                var argumentType = arguments[i].Type;
+                var parameterType = isParamsElement ? paramsElementType : parameters[i].ParameterType;
                 paramsMatchArguments &= argumentType == parameterType;
                 if (!paramsMatchArguments) return null;
                 if (!isParamsElement) 
