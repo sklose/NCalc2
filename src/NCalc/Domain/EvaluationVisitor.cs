@@ -299,9 +299,19 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Abs() takes exactly 1 argument");
 
-                    Result = Math.Abs(Convert.ToDecimal(
-                        Evaluate(function.Expressions[0]))
+                    bool useDouble = (_options & EvaluateOptions.UseDoubleForAbsFunction) == EvaluateOptions.UseDoubleForAbsFunction;
+                    if (useDouble)
+                    {
+                        Result = Math.Abs(Convert.ToDouble(
+                                                  Evaluate(function.Expressions[0]))
                         );
+                    }
+                    else
+                    {
+                        Result = Math.Abs(Convert.ToDecimal(
+                                                  Evaluate(function.Expressions[0]))
+                        );
+                    }
 
                     break;
 
