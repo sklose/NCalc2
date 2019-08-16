@@ -655,6 +655,18 @@ namespace NCalc.Tests
 
             Assert.Equal(11M, e.Evaluate());
         }
+
+        [InlineData("Min(2,1.97)",1.97)]
+        [InlineData("Max(2,2.33)",2.33)]
+        [Theory]
+        public void ShouldCheckPrecisionOfBothParametersForMaxAndMin(string expression, double expected)
+        {
+            var e=new Expression(expression);
+            
+            var result = e.Evaluate();
+
+            Assert.Equal(expected,result);
+        }
     }
 }
 
