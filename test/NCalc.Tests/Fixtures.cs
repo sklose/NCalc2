@@ -42,6 +42,81 @@ namespace NCalc.Tests
         }
 
         [Fact]
+        public void ExpressionShouldHandleNullRightParameters()
+        {
+            var e = new Expression("'a string' == null", EvaluateOptions.AllowNullParameter);
+
+            Assert.False((bool)e.Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionShouldHandleNullLeftParameters()
+        {
+            var e = new Expression("null == 'a string'", EvaluateOptions.AllowNullParameter);
+
+            Assert.False((bool)e.Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionShouldHandleNullBothParameters()
+        {
+            var e = new Expression("null == null", EvaluateOptions.AllowNullParameter);
+
+            Assert.True((bool)e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldCompareNullToNull()
+        {
+            var e = new Expression("[x] = null", EvaluateOptions.AllowNullParameter);
+
+            e.Parameters["x"] = null;
+
+            Assert.True((bool)e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldCompareNullableToNonNullable()
+        {
+            var e = new Expression("[x] = 5", EvaluateOptions.AllowNullParameter);
+
+            e.Parameters["x"] = (int?)5;
+            Assert.True((bool)e.Evaluate());
+
+            e.Parameters["x"] = (int?)6;
+            Assert.False((bool)e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldCompareNullToString()
+        {
+            var e = new Expression("[x] = 'foo'", EvaluateOptions.AllowNullParameter);
+
+            e.Parameters["x"] = null;
+
+            Assert.False((bool)e.Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionDoesNotDefineNullParameterWithoutNullOption()
+        {
+            var e = new Expression("'a string' == null");
+
+            var ex = Assert.Throws<ArgumentException>(() => e.Evaluate());
+            Assert.Contains("Parameter name: null", ex.Message);
+        }
+
+        [Fact]
+        public void ExpressionThrowsNullReferenceExceptionWithoutNullOption()
+        {
+            var e = new Expression("'a string' == null");
+
+            e.Parameters["null"] = null;
+
+            Assert.Throws<NullReferenceException>(() => e.Evaluate());
+        }
+
+        [Fact]
         public void ShouldParseValues()
         {
             Assert.Equal(123456, new Expression("123456").Evaluate());
