@@ -47,6 +47,11 @@ namespace NCalc
         /// <summary>
         ///     When using Abs(), return a double instead of a decimal.
         /// </summary>
-        UseDoubleForAbsFunction = 1 << 9
+        UseDoubleForAbsFunction = 1 << 9,
+
+        /// <summary>
+        /// Defines a "null" parameter and allows comparison of values to null.
+        /// </summary>
+        AllowNullParameter = 1 << 10
     }
 }
