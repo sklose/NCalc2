@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System;
+using Xunit;
 
 namespace NCalc.Tests
 {
@@ -16,13 +17,13 @@ namespace NCalc.Tests
             {
                 return a + b;
             }
-            
-            public string Test(string a, string b) 
+
+            public string Test(string a, string b)
             {
                 return a + b;
             }
 
-            public int Test(int a, int b, int c) 
+            public int Test(int a, int b, int c)
             {
                 return a + b + c;
             }
@@ -35,7 +36,7 @@ namespace NCalc.Tests
                 return msg + total;
             }
 
-            public int Sum(params int[] numbers) 
+            public int Sum(params int[] numbers)
             {
                 int total = 0;
                 foreach (var num in numbers) {
@@ -44,43 +45,43 @@ namespace NCalc.Tests
                 return total;
             }
 
-            public int Sum(TestObject1 obj1, TestObject2 obj2) 
+            public int Sum(TestObject1 obj1, TestObject2 obj2)
             {
                 return obj1.Count1 + obj2.Count2;
             }
 
-            public int Sum(TestObject2 obj1, TestObject1 obj2) 
+            public int Sum(TestObject2 obj1, TestObject1 obj2)
             {
                 return obj1.Count2 + obj2.Count1;
             }
 
-            public int Sum(TestObject1 obj1, TestObject1 obj2) 
+            public int Sum(TestObject1 obj1, TestObject1 obj2)
             {
                 return obj1.Count1 + obj2.Count1;
             }
 
-            public int Sum(TestObject2 obj1, TestObject2 obj2) 
+            public int Sum(TestObject2 obj1, TestObject2 obj2)
             {
                 return obj1.Count2 + obj2.Count2;
             }
 
-            public class TestObject1 
+            public class TestObject1
             {
                 public int Count1 { get; set; }
             }
 
-            public class TestObject2 
+            public class TestObject2
             {
                 public int Count2 { get; set; }
             }
 
-            
-            public TestObject1 CreateTestObject1(int count) 
+
+            public TestObject1 CreateTestObject1(int count)
             {
                 return new TestObject1() { Count1 = count };
             }
 
-            public TestObject2 CreateTestObject2(int count) 
+            public TestObject2 CreateTestObject2(int count)
             {
                 return new TestObject2() { Count2 = count };
             }
@@ -107,13 +108,13 @@ namespace NCalc.Tests
         {
             var expression = new Expression("[FieldA] > 5 && [FieldB] = 'test'");
             var sut = expression.ToLambda<Context, bool>();
-            var context = new Context {FieldA = 7, FieldB = "test"};
+            var context = new Context { FieldA = 7, FieldB = "test" };
 
             Assert.True(sut(context));
         }
 
         [Fact]
-        public void ShouldHandleOverloadingSameParamCount() 
+        public void ShouldHandleOverloadingSameParamCount()
         {
             var expression = new Expression("Test('Hello', ' world!')");
             var sut = expression.ToLambda<Context, string>();
@@ -123,7 +124,7 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ShouldHandleOverloadingDifferentParamCount() 
+        public void ShouldHandleOverloadingDifferentParamCount()
         {
             var expression = new Expression("Test(Test(1, 2), 3, 4)");
             var sut = expression.ToLambda<Context, int>();
@@ -133,7 +134,7 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ShouldHandleOverloadingObjectParameters() 
+        public void ShouldHandleOverloadingObjectParameters()
         {
             var expression = new Expression("Sum(CreateTestObject1(2), CreateTestObject2(2)) + Sum(CreateTestObject2(1), CreateTestObject1(5))");
             var sut = expression.ToLambda<Context, int>();
@@ -141,10 +142,10 @@ namespace NCalc.Tests
 
             Assert.Equal(10, sut(context));
         }
-        
+
 
         [Fact]
-        public void ShouldHandleParamsKeyword() 
+        public void ShouldHandleParamsKeyword()
         {
             var expression = new Expression("Sum(Test(1,1),2)");
             var sut = expression.ToLambda<Context, int>();
@@ -180,7 +181,7 @@ namespace NCalc.Tests
             {
                 var sut = expression.ToLambda<Context, int>();
             }
-            catch(System.MissingMethodException ex)
+            catch (System.MissingMethodException ex)
             {
 
                 System.Diagnostics.Debug.Write(ex);
@@ -242,5 +243,20 @@ namespace NCalc.Tests
 
             Assert.Equal(expected, sut(context));
         }
+
+        [Theory]
+        [InlineData("Min(3,2)",2)]
+        [InlineData("Min(3.2,6.3)", 3.2)]
+        [InlineData("Max(2.6,9.6)", 9.6)]
+        [InlineData("Max(9,6)", 9.0)]
+        [InlineData("Pow(5,2)", 25)]
+        public void ShouldHandleNumericBuiltInFunctions(string input, double expected)
+        {
+            var expression = new Expression(input);
+            var sut = expression.ToLambda<object>();
+            Assert.Equal(expected, sut());
+        }
+
+
     }
 }
