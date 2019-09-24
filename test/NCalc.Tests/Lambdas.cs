@@ -242,5 +242,21 @@ namespace NCalc.Tests
 
             Assert.Equal(expected, sut(context));
         }
+
+        [Theory]
+        [InlineData("Min(3,2)")]
+        [InlineData("Min(3.2,6.3)")]
+        [InlineData("Max(2.69,9.6)")]
+        [InlineData("Max(9,6)")]
+        [InlineData("Pow(5,2)")]
+        [InlineData("Pow(5,0.36)")]
+        public void ShouldHandleNumericBuiltInFunctions(string input)
+        {
+            var expression = new Expression(input);
+            var sut = expression.ToLambda<object>();
+            Assert.NotNull(sut());
+        }
+
+
     }
 }
