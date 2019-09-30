@@ -268,7 +268,6 @@ namespace NCalc
                 visitor.Parameters["null"] = null;
             }
 
-
             // if array evaluation, execute the same expression multiple times
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
             {
