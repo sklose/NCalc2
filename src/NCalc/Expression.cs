@@ -260,6 +260,14 @@ namespace NCalc
             visitor.EvaluateFunction += EvaluateFunction;
             visitor.EvaluateParameter += EvaluateParameter;
             visitor.Parameters = Parameters;
+			
+			// Add a "null" parameter which returns null if configured to do so
+            // Configured as an option to ensure no breaking changes for historical use
+            if ((Options & EvaluateOptions.AllowNullParameter) == EvaluateOptions.AllowNullParameter && !visitor.Parameters.ContainsKey("null"))
+            {
+                visitor.Parameters["null"] = null;
+            }
+
 
             // if array evaluation, execute the same expression multiple times
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
