@@ -131,20 +131,13 @@ namespace NCalc
                 {
                     try
                     {
-                        if (!_compiledExpressions.ContainsKey(expression))
+                        if (!_compiledExpressions.TryGetValue(expression, out var wr))
                         {
-                            _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
+                            _compiledExpressions.TryUpdate(expression, new WeakReference(logicalExpression), wr);
                         }
                         else
                         {
-                            if (_compiledExpressions.TryGetValue(expression, out var wr))
-                            {
-                                _compiledExpressions.TryUpdate(expression, new WeakReference(logicalExpression), wr);
-                            }
-                            else
-                            {
-                                _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
-                            }
+                            _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
                         }
                     }
                     finally
@@ -260,8 +253,8 @@ namespace NCalc
             visitor.EvaluateFunction += EvaluateFunction;
             visitor.EvaluateParameter += EvaluateParameter;
             visitor.Parameters = Parameters;
-			
-			// Add a "null" parameter which returns null if configured to do so
+
+            // Add a "null" parameter which returns null if configured to do so
             // Configured as an option to ensure no breaking changes for historical use
             if ((Options & EvaluateOptions.AllowNullParameter) == EvaluateOptions.AllowNullParameter && !visitor.Parameters.ContainsKey("null"))
             {
