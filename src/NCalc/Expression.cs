@@ -5,6 +5,7 @@ using NCalc.Domain;
 using Antlr.Runtime;
 using System.Diagnostics;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace NCalc
 {
@@ -47,8 +48,7 @@ namespace NCalc
 
         #region Cache management
         private static bool _cacheEnabled = true;
-        private static Dictionary<string, WeakReference> _compiledExpressions = new Dictionary<string, WeakReference>();
-        private static readonly ReaderWriterLockSlim Rwl = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private static ConcurrentDictionary<string, WeakReference> _compiledExpressions = new ConcurrentDictionary<string, WeakReference>();
 
         public static bool CacheEnabled
         {
@@ -60,7 +60,7 @@ namespace NCalc
                 if (!CacheEnabled)
                 {
                     // Clears cache
-                    _compiledExpressions = new Dictionary<string, WeakReference>();
+                    _compiledExpressions = new ConcurrentDictionary<string, WeakReference>();
                 }
             }
         }
@@ -70,11 +70,9 @@ namespace NCalc
         /// </summary>
         private static void CleanCache()
         {
-            var keysToRemove = new List<string>();
-
             try
             {
-                Rwl.EnterReadLock();
+                var keysToRemove = new List<string>();
                 foreach (var de in _compiledExpressions)
                 {
                     if (!de.Value.IsAlive)
@@ -83,16 +81,14 @@ namespace NCalc
                     }
                 }
 
-
                 foreach (string key in keysToRemove)
                 {
-                    _compiledExpressions.Remove(key);
-                    Debug.WriteLine("Cache entry released: " + key);
+                    _compiledExpressions.TryRemove(key, out _);
+                    //Debug.WriteLine("Cache entry released: " + key);
                 }
             }
             finally
             {
-                Rwl.ExitReadLock();
             }
         }
 
@@ -104,14 +100,11 @@ namespace NCalc
 
             if (_cacheEnabled && !nocache)
             {
-                try
+                if (_compiledExpressions.ContainsKey(expression))
                 {
-                    Rwl.EnterReadLock();
-
-                    if (_compiledExpressions.ContainsKey(expression))
+                    //Debug.WriteLine("Expression retrieved from cache: " + expression);
+                    if (_compiledExpressions.TryGetValue(expression, out var wr))
                     {
-                        Debug.WriteLine("Expression retrieved from cache: " + expression);
-                        var wr = _compiledExpressions[expression];
                         logicalExpression = wr.Target as LogicalExpression;
 
                         if (wr.IsAlive && logicalExpression != null)
@@ -119,10 +112,6 @@ namespace NCalc
                             return logicalExpression;
                         }
                     }
-                }
-                finally
-                {
-                    Rwl.ExitReadLock();
                 }
             }
 
@@ -142,17 +131,27 @@ namespace NCalc
                 {
                     try
                     {
-                        Rwl.EnterWriteLock();
-                        _compiledExpressions[expression] = new WeakReference(logicalExpression);
+                        if (!_compiledExpressions.ContainsKey(expression))
+                        {
+                            _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
+                        }
+                        else
+                        {
+                            if (_compiledExpressions.TryGetValue(expression, out var wr))
+                            {
+                                _compiledExpressions.TryUpdate(expression, new WeakReference(logicalExpression), wr);
+                            }
+                            else
+                            {
+                                _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
+                            }
+                        }
                     }
                     finally
                     {
-                        Rwl.ExitWriteLock();
+                        CleanCache();
                     }
-
-                    CleanCache();
-
-                    Debug.WriteLine("Expression added to cache: " + expression);
+                    //Debug.WriteLine("Expression added to cache: " + expression);
                 }
             }
 
@@ -176,7 +175,7 @@ namespace NCalc
                 // In case HasErrors() is called multiple times for the same expression
                 return ParsedExpression != null && Error != null;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Error = e.Message;
                 ErrorException = e;
@@ -235,9 +234,9 @@ namespace NCalc
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
-            if (body.Type != typeof (TResult))
+            if (body.Type != typeof(TResult))
             {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof (TResult));
+                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
             }
 
             var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
@@ -261,13 +260,6 @@ namespace NCalc
             visitor.EvaluateFunction += EvaluateFunction;
             visitor.EvaluateParameter += EvaluateParameter;
             visitor.Parameters = Parameters;
-
-            // Add a "null" parameter which returns null if configured to do so
-            // Configured as an option to ensure no breaking changes for historical use
-            if ((Options & EvaluateOptions.AllowNullParameter) == EvaluateOptions.AllowNullParameter && !visitor.Parameters.ContainsKey("null"))
-            {
-                visitor.Parameters["null"] = null;
-            }
 
             // if array evaluation, execute the same expression multiple times
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
