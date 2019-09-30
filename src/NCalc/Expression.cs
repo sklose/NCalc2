@@ -131,7 +131,7 @@ namespace NCalc
                 {
                     try
                     {
-                        if (!_compiledExpressions.TryGetValue(expression, out var wr))
+                        if (_compiledExpressions.TryGetValue(expression, out var wr))
                         {
                             _compiledExpressions.TryUpdate(expression, new WeakReference(logicalExpression), wr);
                         }
