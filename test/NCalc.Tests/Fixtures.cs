@@ -22,7 +22,7 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionShouldEvaluate()
         {
-            var expressions = new []
+            var expressions = new[]
             {
                 "2 + 3 + 5",
                 "2 * 3 + 5",
@@ -40,6 +40,83 @@ namespace NCalc.Tests
                 _output.WriteLine("{0} = {1}",
                     expression,
                     new Expression(expression).Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionShouldHandleNullRightParameters()
+        {
+            var e = new Expression("'a string' == null", EvaluateOptions.AllowNullParameter);
+
+            Assert.False((bool) e.Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionShouldHandleNullLeftParameters()
+        {
+            var e = new Expression("null == 'a string'", EvaluateOptions.AllowNullParameter);
+
+            Assert.False((bool) e.Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionShouldHandleNullBothParameters()
+        {
+            var e = new Expression("null == null", EvaluateOptions.AllowNullParameter);
+
+            Assert.True((bool) e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldCompareNullToNull()
+        {
+            var e = new Expression("[x] = null", EvaluateOptions.AllowNullParameter);
+
+            e.AddParameter("x", null);
+
+            Assert.True((bool) e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldCompareNullableToNonNullable()
+        {
+            var e = new Expression("[x] = 5", EvaluateOptions.AllowNullParameter);
+
+            e.AddParameter("x", (int?) 5);
+            Assert.True((bool) e.Evaluate());
+
+            e = new Expression("[x] = 5", EvaluateOptions.AllowNullParameter);
+            e.AddParameter("x", (int?) 6);
+            Assert.False((bool) e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldCompareNullToString()
+        {
+            var e = new Expression("[x] = 'foo'", EvaluateOptions.AllowNullParameter);
+
+            e.AddParameter("x", null);
+
+            Assert.False((bool) e.Evaluate());
+        }
+
+        [Fact]
+        public void ExpressionDoesNotDefineNullParameterWithoutNullOption()
+        {
+            var e = new Expression("'a string' == null");
+
+            var ex = Assert.Throws<ArgumentException>(() => e.Evaluate());
+            Assert.Contains("Parameter was not defined", ex.Message);
+            Assert.Contains(": null", ex.Message);
+        }
+
+        [Fact]
+        public void ExpressionThrowsNullReferenceExceptionWithoutNullOption()
+        {
+            var e = new Expression("'a string' == null");
+
+            e.AddParameter("null", null);
+
+            Assert.Throws<NullReferenceException>(() => e.Evaluate());
         }
 
         [Fact]
@@ -91,7 +168,7 @@ namespace NCalc.Tests
                 new Expression("(3 + 2").Evaluate();
                 throw new Exception();
             }
-            catch(EvaluationException e)
+            catch (EvaluationException e)
             {
                 _output.WriteLine("Error catched: " + e.Message);
             }
@@ -134,10 +211,10 @@ namespace NCalc.Tests
             var e = new Expression("SecretOperation(3, 6)");
 
             e.EvaluateFunction += delegate(string name, FunctionArgs args)
-                {
-                    if (name == "SecretOperation")
-                        args.Result = (int)args.Parameters[0].Evaluate() + (int)args.Parameters[1].Evaluate();
-                };
+            {
+                if (name == "SecretOperation")
+                    args.Result = (int) args.Parameters[0].Evaluate() + (int) args.Parameters[1].Evaluate();
+            };
 
             Assert.Equal(9, e.Evaluate());
         }
@@ -150,10 +227,10 @@ namespace NCalc.Tests
             e.AddParameter("f", 1);
 
             e.EvaluateFunction += delegate(string name, FunctionArgs args)
-                {
-                    if (name == "SecretOperation")
-                        args.Result = (int)args.Parameters[0].Evaluate() + (int)args.Parameters[1].Evaluate();
-                };
+            {
+                if (name == "SecretOperation")
+                    args.Result = (int) args.Parameters[0].Evaluate() + (int) args.Parameters[1].Evaluate();
+            };
 
             Assert.Equal(10, e.Evaluate());
         }
@@ -167,10 +244,10 @@ namespace NCalc.Tests
             e.AddParameter("X", 10);
 
             e.EvaluateParameter += delegate(string name, ParameterArgs args)
-                {
-                    if (name == "Pi")
-                        args.Result = 3.14;
-                };
+            {
+                if (name == "Pi")
+                    args.Result = 3.14;
+            };
 
             Assert.Equal(117.07, e.Evaluate());
         }
@@ -318,33 +395,80 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldSerializeExpression()
         {
-            Assert.Equal("True and False", new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true), new ValueExpression(false)).ToString());
-            Assert.Equal("1 / 2", new BinaryExpression(BinaryExpressionType.Div, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 = 2", new BinaryExpression(BinaryExpressionType.Equal, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 > 2", new BinaryExpression(BinaryExpressionType.Greater, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 >= 2", new BinaryExpression(BinaryExpressionType.GreaterOrEqual, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 < 2", new BinaryExpression(BinaryExpressionType.Lesser, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 <= 2", new BinaryExpression(BinaryExpressionType.LesserOrEqual, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 - 2", new BinaryExpression(BinaryExpressionType.Minus, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 % 2", new BinaryExpression(BinaryExpressionType.Modulo, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 != 2", new BinaryExpression(BinaryExpressionType.NotEqual, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("True or False", new BinaryExpression(BinaryExpressionType.Or, new ValueExpression(true), new ValueExpression(false)).ToString());
-            Assert.Equal("1 + 2", new BinaryExpression(BinaryExpressionType.Plus, new ValueExpression(1), new ValueExpression(2)).ToString());
-            Assert.Equal("1 * 2", new BinaryExpression(BinaryExpressionType.Times, new ValueExpression(1), new ValueExpression(2)).ToString());
+            Assert.Equal("True and False",
+                new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true), new ValueExpression(false))
+                    .ToString());
+            Assert.Equal("1 / 2",
+                new BinaryExpression(BinaryExpressionType.Div, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 = 2",
+                new BinaryExpression(BinaryExpressionType.Equal, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 > 2",
+                new BinaryExpression(BinaryExpressionType.Greater, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 >= 2",
+                new BinaryExpression(BinaryExpressionType.GreaterOrEqual, new ValueExpression(1),
+                    new ValueExpression(2)).ToString());
+            Assert.Equal("1 < 2",
+                new BinaryExpression(BinaryExpressionType.Lesser, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 <= 2",
+                new BinaryExpression(BinaryExpressionType.LesserOrEqual, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 - 2",
+                new BinaryExpression(BinaryExpressionType.Minus, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 % 2",
+                new BinaryExpression(BinaryExpressionType.Modulo, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 != 2",
+                new BinaryExpression(BinaryExpressionType.NotEqual, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("True or False",
+                new BinaryExpression(BinaryExpressionType.Or, new ValueExpression(true), new ValueExpression(false))
+                    .ToString());
+            Assert.Equal("1 + 2",
+                new BinaryExpression(BinaryExpressionType.Plus, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
+            Assert.Equal("1 * 2",
+                new BinaryExpression(BinaryExpressionType.Times, new ValueExpression(1), new ValueExpression(2))
+                    .ToString());
 
-            Assert.Equal("-(True and False)",new UnaryExpression(UnaryExpressionType.Negate, new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true), new ValueExpression(false))).ToString());
-            Assert.Equal("!(True and False)",new UnaryExpression(UnaryExpressionType.Not, new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true), new ValueExpression(false))).ToString());
+            Assert.Equal("-(True and False)",
+                new UnaryExpression(UnaryExpressionType.Negate,
+                    new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true),
+                        new ValueExpression(false))).ToString());
+            Assert.Equal("!(True and False)",
+                new UnaryExpression(UnaryExpressionType.Not,
+                    new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true),
+                        new ValueExpression(false))).ToString());
 
-            Assert.Equal("test(True and False, -(True and False))",new Function(new Identifier("test"), new LogicalExpression[] { new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true), new ValueExpression(false)), new UnaryExpression(UnaryExpressionType.Negate, new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true), new ValueExpression(false))) }).ToString());
+            Assert.Equal("test(True and False, -(True and False))",
+                new Function(new Identifier("test"),
+                    new LogicalExpression[]
+                    {
+                        new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true),
+                            new ValueExpression(false)),
+                        new UnaryExpression(UnaryExpressionType.Negate,
+                            new BinaryExpression(BinaryExpressionType.And, new ValueExpression(true),
+                                new ValueExpression(false)))
+                    }).ToString());
 
             Assert.Equal("True", new ValueExpression(true).ToString());
             Assert.Equal("False", new ValueExpression(false).ToString());
             Assert.Equal("1", new ValueExpression(1).ToString());
             Assert.Equal("1.234", new ValueExpression(1.234).ToString());
             Assert.Equal("'hello'", new ValueExpression("hello").ToString());
-            Assert.Equal("#" + new DateTime(2009, 1, 1) + "#", new ValueExpression(new DateTime(2009, 1, 1)).ToString());
+            Assert.Equal("#" + new DateTime(2009, 1, 1) + "#",
+                new ValueExpression(new DateTime(2009, 1, 1)).ToString());
 
-            Assert.Equal("Sum(1 + 2)", new Function(new Identifier("Sum"), new LogicalExpression[] { new BinaryExpression(BinaryExpressionType.Plus, new ValueExpression(1), new ValueExpression(2))}).ToString());
+            Assert.Equal("Sum(1 + 2)",
+                new Function(new Identifier("Sum"),
+                    new LogicalExpression[]
+                    {
+                        new BinaryExpression(BinaryExpressionType.Plus, new ValueExpression(1), new ValueExpression(2))
+                    }).ToString());
         }
 
         [Fact]
@@ -415,8 +539,8 @@ namespace NCalc.Tests
         {
             try
             {
-                var r1 = new Random((int)DateTime.Now.Ticks);
-                var r2 = new Random((int)DateTime.Now.Ticks);
+                var r1 = new Random((int) DateTime.Now.Ticks);
+                var r2 = new Random((int) DateTime.Now.Ticks);
                 int n1 = r1.Next(10);
                 int n2 = r2.Next(10);
 
@@ -488,7 +612,7 @@ namespace NCalc.Tests
                 }
             };
 
-            e.EvaluateParameter += delegate (string name, ParameterArgs arg)
+            e.EvaluateParameter += delegate(string name, ParameterArgs arg)
             {
                 switch (name)
                 {
@@ -523,9 +647,9 @@ namespace NCalc.Tests
         public void ShouldEvaluateArrayParameters()
         {
             var e = new Expression("x * x", EvaluateOptions.IterateParameters);
-            e.AddParameter("x", new[] { 0, 1, 2, 3, 4 });
+            e.AddParameter("x", new[] {0, 1, 2, 3, 4});
 
-            var result = (IList)e.Evaluate();
+            var result = (IList) e.Evaluate();
 
             Assert.Equal(0, result[0]);
             Assert.Equal(1, result[1]);
@@ -673,6 +797,17 @@ namespace NCalc.Tests
 
             Assert.Equal(11M, e.Evaluate());
         }
+
+        [InlineData("Min(2,1.97)", 1.97)]
+        [InlineData("Max(2,2.33)", 2.33)]
+        [Theory]
+        public void ShouldCheckPrecisionOfBothParametersForMaxAndMin(string expression, double expected)
+        {
+            var e = new Expression(expression);
+
+            var result = e.Evaluate();
+
+            Assert.Equal(expected, result);
+        }
     }
 }
-

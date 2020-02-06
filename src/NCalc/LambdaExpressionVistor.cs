@@ -260,6 +260,21 @@ namespace NCalc
                     var r = L.Expression.Call(smi, L.Expression.Convert(items, typeof(Array)), L.Expression.Convert(functionArgs[0], typeof(object)));
                     Result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
                     break;
+                case "min":
+                    var min_arg0 = L.Expression.Convert(functionArgs[0], typeof(double));
+                    var min_arg1 = L.Expression.Convert(functionArgs[1], typeof(double));
+                    Result = L.Expression.Condition(L.Expression.LessThan(min_arg0, min_arg1), min_arg0, min_arg1);
+                    break;
+                case "max":
+                    var max_arg0 = L.Expression.Convert(functionArgs[0], typeof(double));
+                    var max_arg1 = L.Expression.Convert(functionArgs[1], typeof(double));
+                    Result = L.Expression.Condition(L.Expression.GreaterThan(max_arg0, max_arg1), max_arg0, max_arg1);
+                    break;
+                case "pow":
+                    var pow_arg0 = L.Expression.Convert(functionArgs[0], typeof(double));
+                    var pow_arg1 = L.Expression.Convert(functionArgs[1], typeof(double));
+                    Result = L.Expression.Power(pow_arg0, pow_arg1);
+                    break;
                 default:
                     if (_dynamicContext != null)
                     {
@@ -390,13 +405,12 @@ namespace NCalc
             {
                 var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
                 var argument = arguments[i];
-                var argumentType = argument.Type.ToTypeCode();
+                var argumentType = argument.Type;
                 var parameterType = isParamsElement ? paramsElementType : parameters[i].ParameterType;
-                var parameterTypeCode = parameterType.ToTypeCode();
-                if (argumentType != parameterTypeCode && !CanConvert(argumentType, parameterTypeCode)) return null;
+                if (argumentType != parameterType && !CanConvert(argumentType.ToTypeCode(), parameterType.ToTypeCode())) return null;
                 if (!isParamsElement)
                 {
-                    if (argumentType != parameterTypeCode)
+                    if (argumentType != parameterType)
                     {
                         newArguments[i] = L.Expression.Convert(argument, parameterType);
                     }

@@ -1776,32 +1776,32 @@ namespace NCalc
                 return a;
             }
 
-            TypeCode typeCodeA = a.GetTypeCode();
+            TypeCode typeCode = ConvertToHighestPrecision(ref a, ref b);
 
-            switch (typeCodeA)
+            switch (typeCode)
             {
                 case TypeCode.Byte:
-                    return Math.Max((Byte)a, Convert.ToByte(b));
+                    return Math.Max((Byte)a, (Byte)b);
                 case TypeCode.SByte:
-                    return Math.Max((SByte)a, Convert.ToSByte(b));
+                    return Math.Max((SByte)a, (SByte)b);
                 case TypeCode.Int16:
-                    return Math.Max((Int16)a, Convert.ToInt16(b));
+                    return Math.Max((Int16)a, (Int16)b);
                 case TypeCode.UInt16:
-                    return Math.Max((UInt16)a, Convert.ToUInt16(b));
+                    return Math.Max((UInt16)a, (UInt16)b);
                 case TypeCode.Int32:
-                    return Math.Max((Int32)a, Convert.ToInt32(b));
+                    return Math.Max((Int32)a, (Int32)b);
                 case TypeCode.UInt32:
-                    return Math.Max((UInt32)a, Convert.ToUInt32(b));
+                    return Math.Max((UInt32)a, (UInt32)b);
                 case TypeCode.Int64:
-                    return Math.Max((Int64)a, Convert.ToInt64(b));
+                    return Math.Max((Int64)a, (Int64)b);
                 case TypeCode.UInt64:
-                    return Math.Max((UInt64)a, Convert.ToUInt64(b));
+                    return Math.Max((UInt64)a, (UInt64)b);
                 case TypeCode.Single:
-                    return Math.Max((Single)a, Convert.ToSingle(b));
+                    return Math.Max((Single)a, (Single)b);
                 case TypeCode.Double:
-                    return Math.Max((Double)a, Convert.ToDouble(b));
+                    return Math.Max((Double)a, (Double)b);
                 case TypeCode.Decimal:
-                    return Math.Max((Decimal)a, Convert.ToDecimal(b));
+                    return Math.Max((Decimal)a, (Decimal)b);
             }
 
             return null;
@@ -1826,32 +1826,144 @@ namespace NCalc
                 return a;
             }
 
-            TypeCode typeCodeA = a.GetTypeCode();
+            TypeCode typeCode = ConvertToHighestPrecision(ref a,ref b);
 
-            switch (typeCodeA)
+            switch (typeCode)
             {
                 case TypeCode.Byte:
-                    return Math.Min((Byte)a, Convert.ToByte(b));
+                    return Math.Min((Byte)a, (Byte)b);
                 case TypeCode.SByte:
-                    return Math.Min((SByte)a, Convert.ToSByte(b));
+                    return Math.Min((SByte)a, (SByte)b);
                 case TypeCode.Int16:
-                    return Math.Min((Int16)a, Convert.ToInt16(b));
+                    return Math.Min((Int16)a, (Int16)b);
                 case TypeCode.UInt16:
-                    return Math.Min((UInt16)a, Convert.ToUInt16(b));
+                    return Math.Min((UInt16)a, (UInt16)b);
                 case TypeCode.Int32:
-                    return Math.Min((Int32)a, Convert.ToInt32(b));
+                    return Math.Min((Int32)a, (Int32)b);
                 case TypeCode.UInt32:
-                    return Math.Min((UInt32)a, Convert.ToUInt32(b));
+                    return Math.Min((UInt32)a, (UInt32)b);
                 case TypeCode.Int64:
-                    return Math.Min((Int64)a, Convert.ToInt64(b));
+                    return Math.Min((Int64)a, (Int64)b);
                 case TypeCode.UInt64:
-                    return Math.Min((UInt64)a, Convert.ToUInt64(b));
+                    return Math.Min((UInt64)a, (UInt64)b);
                 case TypeCode.Single:
-                    return Math.Min((Single)a, Convert.ToSingle(b));
+                    return Math.Min((Single)a, (Single)b);
                 case TypeCode.Double:
-                    return Math.Min((Double)a, Convert.ToDouble(b));
+                    return Math.Min((Double)a, (Double)b);
                 case TypeCode.Decimal:
-                    return Math.Min((Decimal)a, Convert.ToDecimal(b));
+                    return Math.Min((Decimal)a, (Decimal)b);
+            }
+
+            return null;
+        }
+
+
+        private static TypeCode ConvertToHighestPrecision(ref object a, ref object b)
+        {
+            TypeCode typeCodeA = a.GetTypeCode();
+            TypeCode typeCodeB = b.GetTypeCode();
+            
+            if (typeCodeA==typeCodeB)
+                return typeCodeA;
+
+            if (!(TypeCodeBitSize(typeCodeA, out bool floatingPointA) is int bitSizeA))
+                return TypeCode.Empty;
+            if (!(TypeCodeBitSize(typeCodeB, out bool floatingPointB) is int bitSizeB))
+                return TypeCode.Empty;
+
+            if (floatingPointA != floatingPointB)
+            {
+                if (floatingPointA)
+                {
+                    b = ConvertTo(b, typeCodeA);
+
+                    return typeCodeA;
+                }
+                else
+                {
+                    a = ConvertTo(a, typeCodeB);
+
+                    return typeCodeB;
+                }
+            }
+
+            if (bitSizeA > bitSizeB)
+            {
+                b = ConvertTo(b, typeCodeA);
+
+                return typeCodeA;
+            }
+            else
+            {
+                a = ConvertTo(a, typeCodeB);
+
+                return typeCodeB;
+            }
+                
+        }
+
+        private static int? TypeCodeBitSize(TypeCode typeCode,out bool floatingPoint)
+        {
+            floatingPoint = false;
+            switch (typeCode)
+            {
+                case TypeCode.SByte: return 8;
+                case TypeCode.Byte: return 8;
+                case TypeCode.Int16: return 16;
+                case TypeCode.UInt16: return 16;
+                case TypeCode.Int32: return 32;
+                case TypeCode.UInt32: return 32;
+                case TypeCode.Int64: return 64;
+                case TypeCode.UInt64: return 64;
+                case TypeCode.Single:
+                    floatingPoint = true;
+                    return 32;
+                case TypeCode.Double:
+                    floatingPoint = true;
+                    return 64;
+                case TypeCode.Decimal:
+                    floatingPoint = true;
+                    return 128;
+                default: return null;
+            }
+        }
+
+        private static object  ConvertTo(object value, TypeCode toType)
+        {
+            switch (toType)
+            {
+                case TypeCode.Byte:
+                    return Convert.ToByte(value);
+
+                case TypeCode.SByte:
+                    return Convert.ToSByte(value);
+
+                case TypeCode.Int16:
+                    return Convert.ToInt16(value);
+
+                case TypeCode.UInt16:
+                    return Convert.ToUInt16(value);
+
+                case TypeCode.Int32:
+                    return Convert.ToInt32(value);
+
+                case TypeCode.UInt32:
+                    return Convert.ToUInt32(value);
+
+                case TypeCode.Int64:
+                    return Convert.ToInt64(value);
+
+                case TypeCode.UInt64:
+                    return Convert.ToUInt64(value);
+
+                case TypeCode.Single:
+                    return Convert.ToSingle(value);
+
+                case TypeCode.Double:
+                    return Convert.ToDouble(value);
+
+                case TypeCode.Decimal:
+                    return Convert.ToDecimal(value);
             }
 
             return null;

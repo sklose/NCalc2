@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace NCalc.Domain
@@ -53,12 +52,15 @@ namespace NCalc.Domain
                 }
             }
 
-            return a;
+            return a ?? b;
         }
 
         public int CompareUsingMostPreciseType(object a, object b)
         {
-            Type mpt = GetMostPreciseType(a.GetType(), b.GetType());
+            var allowNull = (_options & EvaluateOptions.AllowNullParameter) == EvaluateOptions.AllowNullParameter;
+
+            Type mpt = allowNull ? GetMostPreciseType(a?.GetType(), b?.GetType()) ?? typeof(object) : GetMostPreciseType(a.GetType(), b.GetType());
+
             a = Convert.ChangeType(a, mpt);
             b = Convert.ChangeType(b, mpt);
 
@@ -71,6 +73,12 @@ namespace NCalc.Domain
                 }
                 else return StringComparer.CurrentCultureIgnoreCase.Compare(a?.ToString(), b?.ToString());
             }
+
+            if (ReferenceEquals(a, b))
+            {
+                return 0;
+            }
+
             var cmp = a as IComparable;
             if (cmp != null)
                 return cmp.CompareTo(b);
@@ -294,9 +302,19 @@ namespace NCalc.Domain
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Abs() takes exactly 1 argument");
 
-                    Result = Math.Abs(Convert.ToDecimal(
-                        Evaluate(function.Expressions[0]))
+                    bool useDouble = (_options & EvaluateOptions.UseDoubleForAbsFunction) == EvaluateOptions.UseDoubleForAbsFunction;
+                    if (useDouble)
+                    {
+                        Result = Math.Abs(Convert.ToDouble(
+                                                  Evaluate(function.Expressions[0]))
                         );
+                    }
+                    else
+                    {
+                        Result = Math.Abs(Convert.ToDecimal(
+                                                  Evaluate(function.Expressions[0]))
+                        );
+                    }
 
                     break;
 

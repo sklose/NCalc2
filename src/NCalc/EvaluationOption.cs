@@ -42,6 +42,16 @@ namespace NCalc
         /// <summary>
         ///     Allow calculation with boolean values.
         /// </summary>
-        BooleanCalculation = 1 << 8
+        BooleanCalculation = 1 << 8,
+
+        /// <summary>
+        ///     When using Abs(), return a double instead of a decimal.
+        /// </summary>
+        UseDoubleForAbsFunction = 1 << 9,
+
+        /// <summary>
+        /// Defines a "null" parameter and allows comparison of values to null.
+        /// </summary>
+        AllowNullParameter = 1 << 10
     }
 }
