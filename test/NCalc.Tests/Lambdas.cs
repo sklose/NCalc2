@@ -1,5 +1,7 @@
 ﻿using System;
+using FluentAssertions;
 using Xunit;
+using LQ = System.Linq.Expressions;
 
 namespace NCalc.Tests
 {
@@ -28,20 +30,25 @@ namespace NCalc.Tests
                 return a + b + c;
             }
 
-            public string Sum(string msg, params int[] numbers) {
+            public string Sum(string msg, params int[] numbers)
+            {
                 int total = 0;
-                foreach (var num in numbers) {
+                foreach (var num in numbers)
+                {
                     total += num;
                 }
+
                 return msg + total;
             }
 
             public int Sum(params int[] numbers)
             {
                 int total = 0;
-                foreach (var num in numbers) {
+                foreach (var num in numbers)
+                {
                     total += num;
                 }
+
                 return total;
             }
 
@@ -155,12 +162,21 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ShouldHandleMixedParamsKeyword() {
+        public void ShouldHandleMixedParamsKeyword()
+        {
             var expression = new Expression("Sum('Your total is: ', Test(1,1), 2, 3)");
             var sut = expression.ToLambda<Context, string>();
             var context = new Context();
 
             Assert.Equal("Your total is: 7", sut(context));
+        }
+
+        [Fact]
+        public void ThrowUnknownParameter()
+        {
+            var expression = new Expression("3*PI");
+            var action = new Action(() => expression.ToLambda<double>());
+            action.Should().Throw<ArgumentException>();
         }
 
         [Fact]
@@ -170,7 +186,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 6);
+            Assert.Equal(6, sut(context));
         }
 
         [Fact]
@@ -188,6 +204,7 @@ namespace NCalc.Tests
                 Assert.True(true);
                 return;
             }
+
             Assert.True(false);
 
         }
@@ -199,7 +216,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 1);
+            Assert.Equal(1, sut(context));
         }
 
         [Fact]
@@ -211,12 +228,68 @@ namespace NCalc.Tests
             decimal a = 6m;
             decimal b = 7m;
 
-            expr.Parameters["x"] = x;
-            expr.Parameters["a"] = a;
-            expr.Parameters["b"] = b;
+            expr.AddParameter("x", x);
+            expr.AddParameter("a", a);
+            expr.AddParameter("b", b);
 
             var f = expr.ToLambda<float>(); // Here it throws System.ArgumentNullException. Parameter name: expression
-            Assert.Equal(f(), -14);
+            Assert.Equal(-14, f());
+        }
+
+        [Fact]
+        public void Issue13Single()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<float>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal) 3);
+            Assert.Equal(5, f());
+        }
+
+        [Fact]
+        public void Issue13Double()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<double>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal)3);
+            Assert.Equal(5, f());
+        }
+
+        [Fact]
+        public void Issue13Int32()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<int>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal)3);
+            Assert.Equal(5, f());
+        }
+
+        [Fact]
+        public void Issue13Byte()
+        {
+            var expr = new Expression("a + b");
+            var index = expr.AddParameter("a", (decimal)1);
+            expr.AddParameter("b", (decimal)2);
+
+            var f = expr.ToLambda<byte>();
+            Assert.Equal(3, f());
+
+            expr.SetParameter(index, (decimal)3);
+            Assert.Equal(5, f());
         }
 
         [Theory]
@@ -227,6 +300,42 @@ namespace NCalc.Tests
             var expression = new Expression(input);
             var sut = expression.ToLambda<bool>();
             Assert.True(sut());
+        }
+
+        [Fact]
+        public void ShouldHandleExtendedParameters()
+        {
+            var expression = new Expression("PI");
+            expression.EvaluateParameterExpression += (sender, args) =>
+            {
+                if (args.Name == "PI")
+                {
+                    args.Result = LQ.Expression.Constant(3.1415);
+                }
+            };
+
+            var sut = expression.ToLambda<double>();
+            sut().Should().BeApproximately(3.1415, 0.001);
+        }
+
+        [Fact]
+        public void ShouldHandleExtendedFunctions()
+        {
+            var expression = new Expression("MyFunc(X1)");
+            expression.AddParameter("X1", 1);
+            expression.EvaluateFunctionExpression += (sender, args) =>
+            {
+                if (args.Name == "MyFunc")
+                {
+                    args.Result = LQ.Expression.Add(args.ArgumentExpressions[0], LQ.Expression.Constant((long)1));
+                }
+            };
+
+            var sut = expression.ToLambda<int>();
+            sut().Should().Be(2);
+
+            expression.SetParameter("X1", 2);
+            sut().Should().Be(3);
         }
 
         [Theory]
