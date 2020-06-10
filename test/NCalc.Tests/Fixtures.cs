@@ -731,6 +731,46 @@ namespace NCalc.Tests
             Assert.Equal(11M, e.Evaluate());
         }
 
+        [Fact]
+        public void ShouldSubtractDoubleAndDecimal()
+        {
+            var e = new Expression("[double] - [decimal]");
+            e.Parameters["double"] = 2D;
+            e.Parameters["decimal"] = 2m;
+
+            Assert.Equal(0m, e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldMultiplyDoubleAndDecimal()
+        {
+            var e = new Expression("[double] * [decimal]");
+            e.Parameters["double"] = 2D;
+            e.Parameters["decimal"] = 2m;
+
+            Assert.Equal(4m, e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldDivideDoubleAndDecimal()
+        {
+            var e = new Expression("[double] / [decimal]");
+            e.Parameters["double"] = 2D;
+            e.Parameters["decimal"] = 2m;
+
+            Assert.Equal(1m, e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldModDoubleAndDecimal()
+        {
+            var e = new Expression("[double] % [decimal]");
+            e.Parameters["double"] = 2D;
+            e.Parameters["decimal"] = 2m;
+
+            Assert.Equal(0m, e.Evaluate());
+        }
+
         [InlineData("Min(2,1.97)",1.97)]
         [InlineData("Max(2,2.33)",2.33)]
         [Theory]
