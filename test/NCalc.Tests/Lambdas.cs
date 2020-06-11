@@ -257,6 +257,16 @@ namespace NCalc.Tests
             Assert.Equal(expected, sut());
         }
 
-
+        [Theory]
+        [InlineData("if(true, 1, 0.0)", 1.0)]
+        [InlineData("if(true, 1.0, 0)", 1.0)]
+        [InlineData("if(true, 1, 0)", 1.0)]
+        [InlineData("if(true, 1.0, 0.0)", 1.0)]
+        public void ShouldHandleIfFunction(string input, double expected)
+        {
+            var expression = new Expression(input);
+            var sut = expression.ToLambda<object>();
+            Assert.Equal(expected, sut());
+        }
     }
 }
