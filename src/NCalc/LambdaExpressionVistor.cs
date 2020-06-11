@@ -159,8 +159,16 @@ namespace NCalc
             switch (function.Identifier.Name.ToLowerInvariant())
             {
                 case "if":
-                    var if_arg1 = args[1].Type == typeof(bool) ? args[1] : L.Expression.Convert(args[1], typeof(double));
-                    var if_arg2 = args[2].Type == typeof(bool) ? args[2] : L.Expression.Convert(args[2], typeof(double));
+                    var if_arg1 = args[1];
+                    var if_arg2 = args[2];
+                    if (if_arg1.Type == typeof(int) && if_arg2.Type == typeof(double))
+                    {
+                        if_arg1 = L.Expression.Convert(if_arg1, typeof(double));
+                    }
+                    else if (if_arg1.Type == typeof(double) && if_arg2.Type == typeof(int))
+                    {
+                        if_arg2 = L.Expression.Convert(if_arg2, typeof(double));
+                    }
                     _result = L.Expression.Condition(args[0], if_arg1, if_arg2);
                     break;
                 case "in":
