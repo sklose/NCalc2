@@ -159,17 +159,15 @@ namespace NCalc
             switch (function.Identifier.Name.ToLowerInvariant())
             {
                 case "if":
-                    var if_arg1 = args[1];
-                    var if_arg2 = args[2];
-                    if (if_arg1.Type == typeof(int) && if_arg2.Type == typeof(double))
+                    var numberTypePriority = new Type[] { typeof(double), typeof(float), typeof(long), typeof(int), typeof(short) };
+                    var index1 = Array.IndexOf(numberTypePriority, args[1].Type);
+                    var index2 = Array.IndexOf(numberTypePriority, args[2].Type);
+                    if (index1 >= 0 && index2 >= 0 && index1 != index2)
                     {
-                        if_arg1 = L.Expression.Convert(if_arg1, typeof(double));
+                        args[1] = L.Expression.Convert(args[1], numberTypePriority[Math.Min(index1, index2)]);
+                        args[2] = L.Expression.Convert(args[2], numberTypePriority[Math.Min(index1, index2)]);
                     }
-                    else if (if_arg1.Type == typeof(double) && if_arg2.Type == typeof(int))
-                    {
-                        if_arg2 = L.Expression.Convert(if_arg2, typeof(double));
-                    }
-                    _result = L.Expression.Condition(args[0], if_arg1, if_arg2);
+                    _result = L.Expression.Condition(args[0], args[1], args[2]);
                     break;
                 case "in":
                     var items = L.Expression.NewArrayInit(args[0].Type,
