@@ -159,6 +159,14 @@ namespace NCalc
             switch (function.Identifier.Name.ToLowerInvariant())
             {
                 case "if":
+                    var numberTypePriority = new Type[] { typeof(double), typeof(float), typeof(long), typeof(int), typeof(short) };
+                    var index1 = Array.IndexOf(numberTypePriority, args[1].Type);
+                    var index2 = Array.IndexOf(numberTypePriority, args[2].Type);
+                    if (index1 >= 0 && index2 >= 0 && index1 != index2)
+                    {
+                        args[1] = L.Expression.Convert(args[1], numberTypePriority[Math.Min(index1, index2)]);
+                        args[2] = L.Expression.Convert(args[2], numberTypePriority[Math.Min(index1, index2)]);
+                    }
                     _result = L.Expression.Condition(args[0], args[1], args[2]);
                     break;
                 case "in":
