@@ -30,6 +30,12 @@ namespace NCalc
             _options = options;
         }
 
+        public event EvaluateFunctionHandler EvaluateFunction;
+
+        public event EvaluateParameterHandler EvaluateParameter;
+
+        public Dictionary<string, object> Parameters { get; set; }
+
         public L.Expression Result => _result;
 
         public override void Visit(LogicalExpression expression)
@@ -184,11 +190,37 @@ namespace NCalc
                     _result = L.Expression.Power(pow_arg0, pow_arg1);
                     break;
                 default:
+                    var functionArgs = new FunctionArgs
+                    {
+                        Parameters = new Expression[function.Expressions.Length]
+                    };
+
+                    // Don't call parameters right now, instead let the function do it as needed.
+                    // Some parameters shouldn't be called, for instance, in a if(), the "not" value might be a division by zero
+                    // Evaluating every value could produce unexpected behaviour
+                    for (int i = 0; i < function.Expressions.Length; i++ )
+                    {
+                        functionArgs.Parameters[i] =  new Expression(function.Expressions[i], _options);
+                        functionArgs.Parameters[i].EvaluateFunction += EvaluateFunction;
+                        functionArgs.Parameters[i].EvaluateParameter += EvaluateParameter;
+
+                        // Assign the parameters of the Expression to the arguments so that custom Functions and Parameters can use them
+                        functionArgs.Parameters[i].Parameters = Parameters;
+                    }
+
+                    OnEvaluateFunction(IgnoreCaseString ? function.Identifier.Name.ToLower() : function.Identifier.Name, functionArgs);
+                    if (functionArgs.HasResult)
+                    {
+                        _result = L.Expression.Constant(functionArgs.Result);
+                        break;
+                    }
+
                     var mi = FindMethod(function.Identifier.Name, args);
                     _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
                     break;
             }
         }
+
 
         public override void Visit(Identifier function)
         {
@@ -353,5 +385,8 @@ namespace NCalc
 
             return expression;
         }
+
+        private void OnEvaluateFunction(string name, FunctionArgs args)
+            => EvaluateFunction?.Invoke(name, args);
     }
 }
