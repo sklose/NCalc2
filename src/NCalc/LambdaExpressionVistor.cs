@@ -221,7 +221,6 @@ namespace NCalc
             }
         }
 
-
         public override void Visit(Identifier function)
         {
             if (_context == null)
@@ -230,6 +229,14 @@ namespace NCalc
             }
             else
             {
+                var args = new ParameterArgs();
+                OnEvaluateParameter(function.Name, args);
+                if (args.HasResult)
+                {
+                    _result = L.Expression.Constant(args.Result);
+                    return;
+                }
+
                 _result = L.Expression.PropertyOrField(_context, function.Name);
             }
         }
@@ -388,5 +395,8 @@ namespace NCalc
 
         private void OnEvaluateFunction(string name, FunctionArgs args)
             => EvaluateFunction?.Invoke(name, args);
+
+        private void OnEvaluateParameter(string name, ParameterArgs args) =>
+            EvaluateParameter?.Invoke(name, args);
     }
 }
