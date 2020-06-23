@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
+using NCalc.Domain;
 using Xunit;
+using ValueType = NCalc.Domain.ValueType;
 
 namespace NCalc.Tests
 {
@@ -353,6 +357,49 @@ namespace NCalc.Tests
         }
 
         [Theory]
+        [InlineData("Bar(1.23)", 1.23)]
+        public void ShouldHandleContextualFunctionWithFloatingPointParametersWhenCallingToLambdaWithContext(
+            string input,
+            decimal expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                args.Parameters = args.Parameters.Select(ConvertToDecimal)
+                    .ToArray();
+            };
+
+            var sut = expression.ToLambda<Foo, decimal>();
+            var context = new Foo();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        private static Expression ConvertToDecimal(Expression expression)
+        {
+            if (!(expression.ParsedExpression is ValueExpression ve))
+            {
+                return expression;
+            }
+
+            if (ve.Value.GetType() != typeof(double))
+            {
+                return expression;
+            }
+
+            ve.Type = ValueType.Float;
+            ve.Value = Convert.ToDecimal(
+                ve.Value,
+                CultureInfo.InvariantCulture);
+            return expression;
+        }
+
+        [Theory]
         [InlineData("MyFunction(MyParam + 3, 2)", 6)]
         public void ShouldHandleExternalFunctionWithDynamicExpressionWhenCallingToLambdaWithContext(
             string input,
@@ -477,6 +524,11 @@ namespace NCalc.Tests
 
             // Assert
             Assert.Equal(expected, actual);
+        }
+
+        public class Foo
+        {
+            public decimal Bar(decimal d) => d;
         }
     }
 }
