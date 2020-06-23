@@ -257,6 +257,226 @@ namespace NCalc.Tests
             Assert.Equal(expected, sut());
         }
 
+        [Theory]
+        [InlineData("MyFunction()", 2.0)]
+        public void ShouldHandleExternalFunctionWhenCallingToLambdaWithContext(
+            string input,
+            double expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction")
+                {
+                    return;
+                }
 
+                args.Result = expected;
+            };
+            var sut = expression.ToLambda<object, double>();
+            var context = new object();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("MyFunction(1,2)", 3)]
+        public void ShouldHandleExternalFunctionWithStaticParametersWhenCallingToLambdaWithContext(
+            string input,
+            int expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction")
+                {
+                    return;
+                }
+
+                var fst = (int) args.Parameters[0].Evaluate();
+                var snd = (int) args.Parameters[1].Evaluate();
+                args.Result = fst + snd;
+            };
+            var sut = expression.ToLambda<object, int>();
+            var context = new object();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("MyFunction(MyParam,2)", 3)]
+        public void ShouldHandleExternalFunctionWithDynamicParametersWhenCallingToLambdaWithContext(
+            string input,
+            int expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction")
+                {
+                    return;
+                }
+
+                var fst = (int) args.Parameters[0].Evaluate();
+                var snd = (int) args.Parameters[1].Evaluate();
+                args.Result = fst + snd;
+            };
+            expression.EvaluateParameter += (name, args) =>
+            {
+                if (name != "MyParam")
+                {
+                    return;
+                }
+
+                args.Result = 1;
+            };
+
+            var sut = expression.ToLambda<object, int>();
+            var context = new object();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("MyFunction(MyParam + 3, 2)", 6)]
+        public void ShouldHandleExternalFunctionWithDynamicExpressionWhenCallingToLambdaWithContext(
+            string input,
+            int expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction")
+                {
+                    return;
+                }
+
+                var fst = (int) args.Parameters[0].Evaluate();
+                var snd = (int) args.Parameters[1].Evaluate();
+                args.Result = fst + snd;
+            };
+            expression.EvaluateParameter += (name, args) =>
+            {
+                if (name != "MyParam")
+                {
+                    return;
+                }
+
+                args.Result = 1;
+            };
+
+            var sut = expression.ToLambda<object, int>();
+            var context = new object();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("MyFunction(MyFunction2() + 3, 2)", 6)]
+        public void ShouldHandleExternalFunctionWithNestedExpressionWhenCallingToLambdaWithContext(
+            string input,
+            int expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction")
+                {
+                    return;
+                }
+
+                var fst = (int) args.Parameters[0].Evaluate();
+                var snd = (int) args.Parameters[1].Evaluate();
+                args.Result = fst + snd;
+            };
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction2")
+                {
+                    return;
+                }
+
+                args.Result = 1;
+            };
+
+            var sut = expression.ToLambda<object, int>();
+            var context = new object();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("MyFunction(MyFunction2(MyParam) + 3, 2)", 6)]
+        public void ShouldHandleExternalFunctionWithNestedExpressionWithDynamicParameterWhenCallingToLambdaWithContext(
+            string input,
+            int expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction")
+                {
+                    return;
+                }
+
+                var fst = (int) args.Parameters[0].Evaluate();
+                var snd = (int) args.Parameters[1].Evaluate();
+                args.Result = fst + snd;
+            };
+            expression.EvaluateFunction += (name, args) =>
+            {
+                if (name != "MyFunction2")
+                {
+                    return;
+                }
+
+                var param = (int) args.Parameters[0].Evaluate();
+                args.Result = param;
+            };
+            expression.EvaluateParameter += (name, args) =>
+            {
+                if (name != "MyParam")
+                {
+                    return;
+                }
+
+                args.Result = 1;
+            };
+
+            var sut = expression.ToLambda<object, int>();
+            var context = new object();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
     }
 }

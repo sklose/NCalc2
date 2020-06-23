@@ -224,6 +224,10 @@ namespace NCalc
 
             var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
             var visitor = new LambdaExpressionVistor(parameter, Options);
+            visitor.EvaluateFunction += EvaluateFunction;
+            visitor.EvaluateParameter += EvaluateParameter;
+            visitor.Parameters = Parameters;
+
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
