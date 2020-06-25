@@ -88,6 +88,15 @@ namespace NCalc.Tests
         }
 
         [Fact]
+        public void ShouldCompareNullableNullToNonNullable()
+        {
+            var e = new Expression("[x] = 5", EvaluateOptions.AllowNullParameter);
+
+            e.Parameters["x"] = null;
+            Assert.False((bool)e.Evaluate());
+        }
+
+        [Fact]
         public void ShouldCompareNullToString()
         {
             var e = new Expression("[x] = 'foo'", EvaluateOptions.AllowNullParameter);

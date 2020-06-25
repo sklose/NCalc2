@@ -62,6 +62,16 @@ namespace NCalc.Domain
 
             Type mpt = allowNull ? GetMostPreciseType(a?.GetType(), b?.GetType()) ?? typeof(object) : GetMostPreciseType(a.GetType(), b.GetType());
 
+            if (a == null && b == null)
+            {
+                return 0;
+            }
+
+            if (a == null || b == null)
+            {
+                return -1;
+            }
+
             a = Convert.ChangeType(a, mpt);
             b = Convert.ChangeType(b, mpt);
 
