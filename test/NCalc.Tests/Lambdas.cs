@@ -380,6 +380,66 @@ namespace NCalc.Tests
             Assert.Equal(expected, actual);
         }
 
+        [Theory]
+        [InlineData("Abs(4)")]
+        [InlineData("Abs(4.0)")]
+        [InlineData("Acos(0.5)")]
+        [InlineData("Acos(0)")]
+        [InlineData("Asin(0.5)")]
+        [InlineData("Asin(1)")]
+        [InlineData("Atan(0.5)")]
+        [InlineData("Atan(1)")]
+        [InlineData("Ceiling(1.5)")]
+        [InlineData("Ceiling(1)")]
+        [InlineData("Cos(0.5)")]
+        [InlineData("Cos(1)")]
+        [InlineData("Exp(0.5)")]
+        [InlineData("Exp(1)")]
+        [InlineData("Floor(1.5)")]
+        [InlineData("Floor(1)")]
+        [InlineData("IEEERemainder(1.5, 2.3)")]
+        [InlineData("IEEERemainder(1, 2)")]
+        [InlineData("Log(10, 2)")]
+        [InlineData("Log(1.5, 2.3)")]
+        [InlineData("Log10(10)")]
+        [InlineData("Log10(1.5)")]
+        [InlineData("Pow(10, 2)")]
+        [InlineData("Pow(1.5, 2.3)")]
+        [InlineData("Round(10.2, 2)")]
+        [InlineData("Round(1.5, 2)")]
+        [InlineData("Sin(0.5)")]
+        [InlineData("Sin(1)")]
+        [InlineData("Sqrt(4)")]
+        [InlineData("Sqrt(4.0)")]
+        [InlineData("Tan(4)")]
+        [InlineData("Tan(4.0)")]
+        [InlineData("Truncate(4)")]
+        [InlineData("Truncate(4.0)")]
+        [InlineData("Max(3, 4)")]
+        [InlineData("Max(4.0, 5.5)")]
+        [InlineData("Min(3, 4)")]
+        [InlineData("Min(4.0, 5.5)")]
+        public void ShouldBeAbleToCallMathFunctionsWhenCallingToLambdaWithContext(
+            string input)
+        {
+            // Arrange
+            var expression = new Expression(input);
+            expression.EvaluateFunction += (name, args) =>
+            {
+                args.Parameters = args.Parameters.Select(ConvertToDecimal)
+                    .ToArray();
+            };
+
+            var sut = expression.ToLambda<Foo, decimal>();
+            var context = new Foo();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.NotEqual(default, actual);
+        }
+
         private static Expression ConvertToDecimal(Expression expression)
         {
             if (!(expression.ParsedExpression is ValueExpression ve))
