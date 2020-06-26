@@ -184,6 +184,220 @@ namespace NCalc
 
             switch (function.Identifier.Name.ToLowerInvariant())
             {
+                case "abs":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Abs() takes exactly 1 argument");
+
+                    var useDouble = _options.HasFlag(
+                        EvaluateOptions.UseDoubleForAbsFunction);
+
+                    MethodInfo absMethod;
+                    L.Expression absArg0;
+                    if (useDouble)
+                    {
+                        absMethod = typeof(Math).GetRuntimeMethod(
+                            nameof(Math.Abs),
+                            new[] { typeof(double) });
+                        absArg0 = L.Expression.Convert(args[0], typeof(double));
+                    }
+                    else
+                    {
+                        absMethod = typeof(Math).GetRuntimeMethod(
+                            nameof(Math.Abs),
+                            new[] { typeof(decimal) });
+                        absArg0 = L.Expression.Convert(args[0], typeof(decimal));
+                    }
+
+                    _result = L.Expression.Call(absMethod, absArg0);
+                    break;
+                case "acos":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Acos() takes exactly 1 argument");
+
+                    var acosMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Acos),
+                        new[] { typeof(double) });
+                    var acosArg0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(acosMethod, acosArg0);
+                    break;
+                case "asin":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Asin() takes exactly 1 argument");
+
+                    var asinMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Asin),
+                        new[] { typeof(double) });
+                    var asinArg0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(asinMethod, asinArg0);
+                    break;
+                case "atan":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Atan() takes exactly 1 argument");
+
+                    var atanMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Atan),
+                        new[] { typeof(double) });
+                    var atanArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(atanMethod, atanArgs0);
+                    break;
+                case "ceiling":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Ceiling() takes exactly 1 argument");
+
+                    var ceilingMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Ceiling),
+                        new[] { typeof(double) });
+                    var ceilingArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(ceilingMethod, ceilingArgs0);
+                    break;
+                case "cos":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Cos() takes exactly 1 argument");
+
+                    var cosMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Cos),
+                        new[] { typeof(double) });
+                    var cosArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(cosMethod, cosArgs0);
+                    break;
+                case "exp":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Exp() takes exactly 1 argument");
+
+                    var expMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Exp),
+                        new[] { typeof(double) });
+                    var expArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(expMethod, expArgs0);
+                    break;
+                case "floor":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Floor() takes exactly 1 argument");
+
+                    var floorMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Floor),
+                        new[] { typeof(double) });
+                    var floorArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(floorMethod, floorArgs0);
+                    break;
+                case "ieeeremainder":
+                    if (function.Expressions.Length != 2)
+                        throw new ArgumentException("IEEEReaminer() takes exactly 2 arguments");
+
+                    var ieeeMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.IEEERemainder),
+                        new[] { typeof(double), typeof(double) });
+                    var ieeeMethodArgs0 = L.Expression.Convert(
+                        args[0],
+                        typeof(double));
+                    var ieeeMethodArgs1 = L.Expression.Convert(
+                        args[1],
+                        typeof(double));
+                    _result = L.Expression.Call(ieeeMethod, ieeeMethodArgs0, ieeeMethodArgs1);
+                    break;
+                case "log":
+                    if (function.Expressions.Length != 2)
+                        throw new ArgumentException("Log() takes exactly 2 arguments");
+
+                    var logMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Log),
+                        new[] { typeof(double), typeof(double) });
+                    var logMethodArgs0 = L.Expression.Convert(
+                        args[0],
+                        typeof(double));
+                    var logMethodArgs1 = L.Expression.Convert(
+                        args[1],
+                        typeof(double));
+                    _result = L.Expression.Call(logMethod, logMethodArgs0, logMethodArgs1);
+                    break;
+                case "log10":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Log10() takes exactly 1 argument");
+
+                    var log10Method = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Log10),
+                        new[] { typeof(double) });
+                    var log10Args0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(log10Method, log10Args0);
+                    break;
+                case "round":
+                    if (function.Expressions.Length != 2)
+                        throw new ArgumentException("Round() takes exactly 2 arguments");
+
+                    var rounding =
+                        _options.HasFlag(EvaluateOptions.RoundAwayFromZero)
+                            ? MidpointRounding.AwayFromZero
+                            : MidpointRounding.ToEven;
+
+                    var roundMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Round),
+                        new[]
+                        {
+                            typeof(double), typeof(int),
+                            typeof(MidpointRounding)
+                        });
+                    var roundMethodArg0 = L.Expression.Convert(
+                        args[0],
+                        typeof(double));
+                    var roundMethodArg1 = L.Expression.Convert(
+                        args[1],
+                        typeof(int));
+                    _result = L.Expression.Call(
+                        roundMethod,
+                        roundMethodArg0,
+                        roundMethodArg1,
+                        L.Expression.Constant(rounding));
+                    break;
+                case "sign":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Sign() takes exactly 1 argument");
+
+                    var signMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Sign),
+                        new[] { typeof(double) });
+                    var signArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(signMethod, signArgs0);
+                    break;
+                case "sin":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Sin() takes exactly 1 argument");
+
+                    var sinMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Sin),
+                        new[] { typeof(double) });
+                    var sinArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(sinMethod, sinArgs0);
+                    break;
+                case "sqrt":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Sqrt() takes exactly 1 argument");
+
+                    var sqrtMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Sqrt),
+                        new[] { typeof(double) });
+                    var sqrtArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(sqrtMethod, sqrtArgs0);
+                    break;
+                case "tan":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Tan() takes exactly 1 argument");
+
+                    var tanMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Tan),
+                        new[] { typeof(double) });
+                    var tanArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(tanMethod, tanArgs0);
+                    break;
+                case "truncate":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Truncate() takes exactly 1 argument");
+
+                    var truncateMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Truncate),
+                        new[] { typeof(double) });
+                    var truncateArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(truncateMethod, truncateArgs0);
+                    break;
                 case "if":
                     _result = L.Expression.Condition(args[0], args[1], args[2]);
                     break;
