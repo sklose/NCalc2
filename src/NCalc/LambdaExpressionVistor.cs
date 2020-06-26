@@ -348,6 +348,16 @@ namespace NCalc
                         roundMethodArg1,
                         L.Expression.Constant(rounding));
                     break;
+                case "sign":
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Sign() takes exactly 1 argument");
+
+                    var signMethod = typeof(Math).GetRuntimeMethod(
+                        nameof(Math.Sign),
+                        new[] { typeof(double) });
+                    var signArgs0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(signMethod, signArgs0);
+                    break;
                 case "sin":
                     if (function.Expressions.Length != 1)
                         throw new ArgumentException("Sin() takes exactly 1 argument");

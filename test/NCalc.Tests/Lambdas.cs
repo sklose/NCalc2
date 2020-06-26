@@ -407,6 +407,8 @@ namespace NCalc.Tests
         [InlineData("Pow(1.5, 2.3)")]
         [InlineData("Round(10.2, 2)")]
         [InlineData("Round(1.5, 2)")]
+        [InlineData("Sign(2)")]
+        [InlineData("Sign(1.4)")]
         [InlineData("Sin(0.5)")]
         [InlineData("Sin(1)")]
         [InlineData("Sqrt(4)")]
