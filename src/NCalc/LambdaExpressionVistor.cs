@@ -399,7 +399,9 @@ namespace NCalc
                     _result = L.Expression.Call(truncateMethod, truncateArgs0);
                     break;
                 case "if":
-                    _result = L.Expression.Condition(args[0], args[1], args[2]);
+                    var (args1, args2) =
+                        AlignFloatingPointTypes(args[1], args[2]);
+                    _result = L.Expression.Condition(args[0], args1, args2);
                     break;
                 case "in":
                     var items = L.Expression.NewArrayInit(args[0].Type,
@@ -434,6 +436,26 @@ namespace NCalc
                     _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
                     break;
             }
+        }
+
+        private static (L.Expression trueExpression, L.Expression falseExpression)
+            AlignFloatingPointTypes(
+                L.Expression originalTrue,
+                L.Expression originalFalse)
+        {
+            if (originalTrue.Type != typeof(decimal) &&
+                originalFalse.Type != typeof(decimal))
+            {
+                return (originalTrue, originalFalse);
+            }
+
+            var newTrueExpression = originalTrue.Type == typeof(decimal)
+                ? originalTrue
+                : L.Expression.Convert(originalTrue, typeof(decimal));
+            var newFalseExpression = originalFalse.Type == typeof(decimal)
+                ? originalFalse
+                : L.Expression.Convert(originalFalse, typeof(decimal));
+            return (newTrueExpression, newFalseExpression);
         }
 
         public override void Visit(Identifier function)
