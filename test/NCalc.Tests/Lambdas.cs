@@ -588,9 +588,35 @@ namespace NCalc.Tests
             Assert.Equal(expected, actual);
         }
 
+        [Theory]
+        [InlineData("If(false, MyDecimal, 2.5)")]
+        [InlineData("If(false, 1, 2)")]
+        [InlineData("If(true, MyDecimal, MyDouble)")]
+        [InlineData("If(true, MyDecimal + 3.2, MyDouble)")]
+        [InlineData("If(true, MyDecimal, MyDouble * 4)")]
+        public void
+            ShouldReturnSuccessfullyWithBranchesReturningTwoDifferentFloatingPointTypes(string s)
+        {
+            // Arrange
+            var expression = new Expression(s);
+            var context = new Foo();
+
+            var sut = expression.ToLambda<Foo, decimal>();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.NotEqual(0, actual);
+        }
+
         public class Foo
         {
             public decimal Bar(decimal d) => d;
+
+            public decimal MyDecimal { get; set; } = 42.3m;
+
+            public double MyDouble { get; set; } = 32.4;
         }
     }
 }
