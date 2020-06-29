@@ -590,6 +590,7 @@ namespace NCalc.Tests
 
         [Theory]
         [InlineData("If(false, MyDecimal, 2.5)")]
+        [InlineData("If(false, 1, 2.9)")]
         [InlineData("If(false, 1, 2)")]
         [InlineData("If(true, MyDecimal, MyDouble)")]
         [InlineData("If(true, MyDecimal + 3.2, MyDouble)")]
@@ -608,6 +609,22 @@ namespace NCalc.Tests
 
             // Assert
             Assert.NotEqual(0, actual);
+        }
+
+        [Theory]
+        [InlineData("If(true, 'Hi', 1)")]
+        public void
+            ShouldThrowWithBranchesReturningTwoDifferentFloatingPointTypesIfNotConvertible(string s)
+        {
+            // Arrange
+            var expression = new Expression(s);
+
+            // Act
+            var exception = Record.Exception(expression.ToLambda<Foo, decimal>);
+
+            // Assert
+            Assert.NotNull(exception);
+            Assert.IsType<ArgumentException>(exception);
         }
 
         public class Foo
