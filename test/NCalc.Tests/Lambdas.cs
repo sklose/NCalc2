@@ -104,7 +104,7 @@ namespace NCalc.Tests
             var expression = new Expression(input);
             var sut = expression.ToLambda<int>();
 
-            Assert.Equal(sut(), expected);
+            Assert.Equal(expected, sut());
         }
 
         [Fact]
@@ -174,26 +174,16 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 6);
+            Assert.Equal(6, sut(context));
         }
 
         [Fact]
         public void MissingMethod()
         {
             var expression = new Expression("MissingMethod(1)");
-            try
-            {
-                var sut = expression.ToLambda<Context, int>();
-            }
-            catch (System.MissingMethodException ex)
-            {
 
-                System.Diagnostics.Debug.Write(ex);
-                Assert.True(true);
-                return;
-            }
-            Assert.True(false);
-
+            Assert.Throws<MissingMethodException>(
+                expression.ToLambda<Context, int>);
         }
 
         [Fact]
@@ -203,7 +193,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 1);
+            Assert.Equal(1, sut(context));
         }
 
         [Fact]
@@ -220,7 +210,7 @@ namespace NCalc.Tests
             expr.Parameters["b"] = b;
 
             var f = expr.ToLambda<float>(); // Here it throws System.ArgumentNullException. Parameter name: expression
-            Assert.Equal(f(), -14);
+            Assert.Equal(-14, f());
         }
 
         [Theory]
