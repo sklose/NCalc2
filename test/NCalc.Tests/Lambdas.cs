@@ -591,6 +591,7 @@ namespace NCalc.Tests
         [Theory]
         [InlineData("If(false, MyDecimal, 2.5)")]
         [InlineData("If(false, 1, 2.9)")]
+        [InlineData("If(true, 3.14, 2)")]
         [InlineData("If(false, 1, 2)")]
         [InlineData("If(true, MyDecimal, MyDouble)")]
         [InlineData("If(true, MyDecimal + 3.2, MyDouble)")]
