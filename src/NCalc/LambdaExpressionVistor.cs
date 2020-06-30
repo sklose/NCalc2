@@ -443,19 +443,44 @@ namespace NCalc
                 L.Expression originalTrue,
                 L.Expression originalFalse)
         {
-            if (originalTrue.Type != typeof(decimal) &&
-                originalFalse.Type != typeof(decimal))
+            bool TryConvert(L.Expression from, Type to, out L.Expression converted)
+            {
+                try
+                {
+                    converted = L.Expression.Convert(from, to);
+                    return true;
+                }
+                catch (InvalidOperationException)
+                {
+                    converted = null;
+                    return false;
+                }
+            }
+
+            var (originalTrueType, originalFalseType) =
+                (originalTrue.Type, originalFalse.Type);
+            if (originalTrueType == originalFalseType)
             {
                 return (originalTrue, originalFalse);
             }
 
-            var newTrueExpression = originalTrue.Type == typeof(decimal)
-                ? originalTrue
-                : L.Expression.Convert(originalTrue, typeof(decimal));
-            var newFalseExpression = originalFalse.Type == typeof(decimal)
-                ? originalFalse
-                : L.Expression.Convert(originalFalse, typeof(decimal));
-            return (newTrueExpression, newFalseExpression);
+            if (TryConvert(
+                originalTrue,
+                originalFalseType,
+                out var convertedTrue))
+            {
+                return (convertedTrue, originalFalse);
+            }
+
+            if (TryConvert(
+                originalFalse,
+                originalTrueType,
+                out var convertedFalse))
+            {
+                return (originalTrue, convertedFalse);
+            }
+
+            return (originalTrue, originalFalse);
         }
 
         public override void Visit(Identifier function)
