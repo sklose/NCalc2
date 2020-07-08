@@ -408,19 +408,16 @@ namespace NCalc.Tests
         [InlineData("Truncate(4)")]
         [InlineData("Truncate(4.0)")]
         [InlineData("Max(3, 4)")]
+        [InlineData("Max(3, 4.5)")]
         [InlineData("Max(4.0, 5.5)")]
         [InlineData("Min(3, 4)")]
+        [InlineData("Min(4.3, 2)")]
         [InlineData("Min(4.0, 5.5)")]
         public void ShouldBeAbleToCallMathFunctionsWhenCallingToLambdaWithContext(
             string input)
         {
             // Arrange
             var expression = new Expression(input);
-            expression.EvaluateFunction += (name, args) =>
-            {
-                args.Parameters = args.Parameters.Select(ConvertToDecimal)
-                    .ToArray();
-            };
 
             var sut = expression.ToLambda<Foo, decimal>();
             var context = new Foo();
@@ -618,6 +615,19 @@ namespace NCalc.Tests
             Assert.IsType<ArgumentException>(exception);
         }
 
+        [Fact]
+        public void ShouldAllowValueTypesAsContext()
+        {
+            var expression = new Expression("Foo * 2.2");
+            var context = new FooStruct();
+
+            var lambda = expression.ToLambda<FooStruct, decimal>();
+
+            var actual = lambda(context);
+
+            Assert.Equal(4.84m, actual);
+        }
+
         public class Foo
         {
             public decimal Bar(decimal d) => d;
@@ -625,6 +635,11 @@ namespace NCalc.Tests
             public decimal MyDecimal { get; set; } = 42.3m;
 
             public double MyDouble { get; set; } = 32.4;
+        }
+
+        public struct FooStruct
+        {
+            public decimal Foo => 2.2m;
         }
     }
 }
