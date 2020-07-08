@@ -285,5 +285,26 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<object>();
             Assert.Equal(expected, sut());
         }
+
+        [Fact]
+        public void ShouldAllowValueTypeContexts()
+        {
+            // Arrange
+            const decimal expected = 6.908m;
+            var expression = new Expression("Foo * 3.14");
+            var sut = expression.ToLambda<FooStruct, decimal>();
+            var context = new FooStruct();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        internal struct FooStruct
+        {
+            public double Foo => 2.2;
+        }
     }
 }
