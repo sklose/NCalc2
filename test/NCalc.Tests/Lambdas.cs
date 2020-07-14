@@ -395,6 +395,7 @@ namespace NCalc.Tests
         [InlineData("Log10(1.5)")]
         [InlineData("Pow(10, 2)")]
         [InlineData("Pow(1.5, 2.3)")]
+        [InlineData("Round(10.3)")]
         [InlineData("Round(10.2, 2)")]
         [InlineData("Round(1.5, 2)")]
         [InlineData("Sign(2)")]
