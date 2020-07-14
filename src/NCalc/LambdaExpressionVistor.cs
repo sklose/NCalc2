@@ -321,32 +321,56 @@ namespace NCalc
                     _result = L.Expression.Call(log10Method, log10Args0);
                     break;
                 case "round":
-                    if (function.Expressions.Length != 2)
-                        throw new ArgumentException("Round() takes exactly 2 arguments");
+                    var roundParameterCount = function.Expressions.Length;
+                    if (roundParameterCount == 0 || roundParameterCount > 2)
+                        throw new ArgumentException("Round() takes exactly 1 or 2 arguments");
 
                     var rounding =
                         _options.HasFlag(EvaluateOptions.RoundAwayFromZero)
                             ? MidpointRounding.AwayFromZero
                             : MidpointRounding.ToEven;
 
-                    var roundMethod = typeof(Math).GetRuntimeMethod(
-                        nameof(Math.Round),
-                        new[]
-                        {
-                            typeof(double), typeof(int),
-                            typeof(MidpointRounding)
-                        });
-                    var roundMethodArg0 = L.Expression.Convert(
-                        args[0],
-                        typeof(double));
-                    var roundMethodArg1 = L.Expression.Convert(
-                        args[1],
-                        typeof(int));
-                    _result = L.Expression.Call(
-                        roundMethod,
-                        roundMethodArg0,
-                        roundMethodArg1,
-                        L.Expression.Constant(rounding));
+                    if (roundParameterCount == 1)
+                    {
+                        var roundMethod = typeof(Math).GetRuntimeMethod(
+                            nameof(Math.Round),
+                            new[]
+                            {
+                                typeof(double),
+                                typeof(MidpointRounding)
+                            });
+
+                        var roundMethodArg0 = L.Expression.Convert(
+                            args[0],
+                            typeof(double));
+
+                        _result = L.Expression.Call(
+                            roundMethod,
+                            roundMethodArg0,
+                            L.Expression.Constant(rounding));
+                    }
+                    else
+                    {
+                        var roundMethod = typeof(Math).GetRuntimeMethod(
+                            nameof(Math.Round),
+                            new[]
+                            {
+                                typeof(double), typeof(int),
+                                typeof(MidpointRounding)
+                            });
+                        var roundMethodArg0 = L.Expression.Convert(
+                            args[0],
+                            typeof(double));
+                        var roundMethodArg1 = L.Expression.Convert(
+                            args[1],
+                            typeof(int));
+                        _result = L.Expression.Call(
+                            roundMethod,
+                            roundMethodArg0,
+                            roundMethodArg1,
+                            L.Expression.Constant(rounding));
+                    }
+
                     break;
                 case "sign":
                     if (function.Expressions.Length != 1)

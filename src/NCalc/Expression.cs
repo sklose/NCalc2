@@ -210,7 +210,7 @@ namespace NCalc
             return lambda.Compile();
         }
 
-        public Func<TContext, TResult> ToLambda<TContext, TResult>() where TContext : class
+        public Func<TContext, TResult> ToLambda<TContext, TResult>()
         {
             if (HasErrors())
             {
