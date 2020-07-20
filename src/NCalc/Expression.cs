@@ -6,6 +6,7 @@ using Antlr.Runtime;
 using System.Diagnostics;
 using System.Threading;
 using System.Collections.Concurrent;
+using FastExpressionCompiler;
 
 namespace NCalc
 {
@@ -237,7 +238,7 @@ namespace NCalc
             }
 
             var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
-            return lambda.Compile();
+            return lambda.CompileFast();
         }
 
         public object Evaluate()
