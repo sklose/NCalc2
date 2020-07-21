@@ -241,7 +241,7 @@ namespace NCalc
             var lambda =
                 FastExpressionCompiler.LightExpression.Expression
                     .Lambda<Func<TContext, TResult>>(body, parameter);
-            return lambda.CompileFast(ifFastFailedReturnNull: true);
+            return lambda.CompileFast();
         }
 
         public object Evaluate()
