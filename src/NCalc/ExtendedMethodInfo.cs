@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using L = System.Linq.Expressions;
+using L = FastExpressionCompiler.LightExpression;
 
 namespace NCalc 
 {

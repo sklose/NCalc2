@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using NCalc.Domain;
-using L = System.Linq.Expressions;
+using L = FastExpressionCompiler.LightExpression;
 using System.Collections.Generic;
 
 namespace NCalc
@@ -429,7 +429,7 @@ namespace NCalc
                     break;
                 case "in":
                     var items = L.Expression.NewArrayInit(args[0].Type,
-                        new ArraySegment<L.Expression>(args, 1, args.Length - 1));
+                        new ArraySegment<L.Expression>(args, 1, args.Length - 1).ToArray());
                     var smi = typeof (Array).GetRuntimeMethod("IndexOf", new[] { typeof(Array), typeof(object) });
                     var r = L.Expression.Call(smi, L.Expression.Convert(items, typeof(Array)), L.Expression.Convert(args[0], typeof(object)));
                     _result = L.Expression.GreaterThanOrEqual(r, L.Expression.Constant(0));
@@ -645,10 +645,10 @@ namespace NCalc
             L.Expression comparer = null;
             if (IgnoreCaseString)
             {
-                if (Ordinal) comparer = L.Expression.Property(null, typeof(StringComparer), "OrdinalIgnoreCase");
-                else comparer = L.Expression.Property(null, typeof(StringComparer), "CurrentCultureIgnoreCase");
+                if (Ordinal) comparer = L.Expression.Property(null, typeof(StringComparer).GetProperty("OrdinalIgnoreCase"));
+                else comparer = L.Expression.Property(null, typeof(StringComparer).GetProperty("CurrentCultureIgnoreCase"));
             }
-            else comparer = L.Expression.Property(null, typeof(StringComparer), "Ordinal");
+            else comparer = L.Expression.Property(null, typeof(StringComparer).GetProperty("Ordinal"));
 
             if (comparer != null && (typeof(string).Equals(left.Type) || typeof(string).Equals(right.Type)))
             {

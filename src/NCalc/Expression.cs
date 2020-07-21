@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Collections.Concurrent;
 using FastExpressionCompiler;
+using FastExpressionCompiler.LightExpression;
 
 namespace NCalc
 {
@@ -204,11 +205,11 @@ namespace NCalc
             var body = visitor.Result;
             if (body.Type != typeof(TResult))
             {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+                body = FastExpressionCompiler.LightExpression.Expression.Convert(body, typeof(TResult));
             }
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
-            return lambda.Compile();
+            var lambda = FastExpressionCompiler.LightExpression.Expression.Lambda<Func<TResult>>(body);
+            return lambda.CompileFast();
         }
 
         public Func<TContext, TResult> ToLambda<TContext, TResult>()
@@ -223,7 +224,7 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
+            var parameter = FastExpressionCompiler.LightExpression.Expression.Parameter(typeof(TContext), "ctx");
             var visitor = new LambdaExpressionVistor(parameter, Options);
             visitor.EvaluateFunction += EvaluateFunction;
             visitor.EvaluateParameter += EvaluateParameter;
@@ -234,11 +235,13 @@ namespace NCalc
             var body = visitor.Result;
             if (body.Type != typeof(TResult))
             {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+                body = FastExpressionCompiler.LightExpression.Expression.Convert(body, typeof(TResult));
             }
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
-            return lambda.CompileFast();
+            var lambda =
+                FastExpressionCompiler.LightExpression.Expression
+                    .Lambda<Func<TContext, TResult>>(body, parameter);
+            return lambda.CompileFast(ifFastFailedReturnNull: true);
         }
 
         public object Evaluate()
