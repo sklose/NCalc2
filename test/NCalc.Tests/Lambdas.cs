@@ -85,8 +85,29 @@ namespace NCalc.Tests
             {
                 return new TestObject2() { Count2 = count };
             }
+        }
 
+        private class SubContext : Context 
+        {
+            public int Multiply(int a, int b) 
+            {
+                return a * b;
+            }
 
+            public new int Test(int a, int b) 
+            {
+                return base.Test(a,b) / 2;
+            }
+
+            public int Test(int a, int b, int c, int d) 
+            {
+                return a + b + c + d;
+            }
+
+            public int Sum(TestObject1 obj1, TestObject2 obj2, TestObject2 obj3) 
+            {
+                return obj1.Count1 + obj2.Count2 + obj3.Count2 + 100;
+            }
         }
 
         [Theory]
@@ -171,6 +192,21 @@ namespace NCalc.Tests
             var context = new Context();
 
             Assert.Equal(sut(context), 6);
+        }
+
+        [Fact]
+        public void ShouldHandleContextInheritance()
+        {
+            var lambda1 = new Expression("Multiply(5, 2)").ToLambda<SubContext, int>();
+            var lambda2 = new Expression("Test(5, 5)").ToLambda<SubContext, int>();
+            var lambda3 = new Expression("Test(1,2,3,4)").ToLambda<SubContext, int>();
+            var lambda4 = new Expression("Sum(CreateTestObject1(100), CreateTestObject2(100), CreateTestObject2(100))").ToLambda<SubContext, int>();
+            
+            var context = new SubContext();
+            Assert.Equal(10, lambda1(context));
+            Assert.Equal(5, lambda2(context));
+            Assert.Equal(10, lambda3(context));
+            Assert.Equal(400, lambda4(context));
         }
 
         [Fact]
