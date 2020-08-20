@@ -212,18 +212,21 @@ namespace NCalc
 
         private ExtendedMethodInfo FindMethod(string methodName, L.Expression[] methodArgs) 
         {
-            var methods = _context.Type.GetTypeInfo().DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && !m.IsStatic);
-            foreach (var potentialMethod in methods) 
+            TypeInfo contextTypeInfo = _context.Type.GetTypeInfo();
+            TypeInfo objectTypeInfo = typeof(object).GetTypeInfo();
+            do 
             {
-                var methodParams = potentialMethod.GetParameters();
-                var newArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
+                var methods = contextTypeInfo.DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && !m.IsStatic);
+                foreach (var potentialMethod in methods) {
+                    var methodParams = potentialMethod.GetParameters();
+                    var newArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
 
-                if (newArguments != null) 
-                {
-                    return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newArguments };
+                    if (newArguments != null) {
+                        return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newArguments };
+                    }
                 }
-            }
-
+                contextTypeInfo = contextTypeInfo.BaseType.GetTypeInfo();
+            } while (contextTypeInfo != objectTypeInfo);
             throw new MissingMethodException($"method not found: {methodName}");
         }
 
