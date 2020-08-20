@@ -7,6 +7,6 @@ namespace NCalc
     {
         public MethodInfo BaseMethodInfo { get; set; }
         public L.Expression[] PreparedArguments { get; set; }
-
+        public int Score { get; set; }
     }
 }

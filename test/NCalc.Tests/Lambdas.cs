@@ -28,6 +28,11 @@ namespace NCalc.Tests
                 return a + b + c;
             }
 
+            public double Test(double a, double b, double c) 
+            {
+                return a + b + c;
+            }
+
             public string Sum(string msg, params int[] numbers) {
                 int total = 0;
                 foreach (var num in numbers) {
@@ -207,6 +212,17 @@ namespace NCalc.Tests
             Assert.Equal(5, lambda2(context));
             Assert.Equal(10, lambda3(context));
             Assert.Equal(400, lambda4(context));
+        }
+
+        [Theory]
+        [InlineData("Test(1, 1, 1)")]
+        [InlineData("Test(1.0, 1.0, 1.0)")]
+        [InlineData("Test(1.0, 1, 1.0)")]
+        public void ShouldHandleImplicitConversion(string input) {
+            var lambda = new Expression(input).ToLambda<Context, int>();
+
+            var context = new Context();
+            Assert.Equal(3, lambda(context));
         }
 
         [Fact]
