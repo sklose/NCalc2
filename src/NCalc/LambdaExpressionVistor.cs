@@ -13,6 +13,18 @@ namespace NCalc
         private L.Expression _result;
         private readonly L.Expression _context;
         private readonly EvaluateOptions _options = EvaluateOptions.None;
+        private readonly Dictionary<Type, HashSet<Type>> _implicitPrimitiveConversionTable = new Dictionary<Type, HashSet<Type>>() {
+            { typeof(sbyte), new HashSet<Type> { typeof(short), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(byte), new HashSet<Type> { typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(short), new HashSet<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(ushort), new HashSet<Type> { typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(int), new HashSet<Type> { typeof(long), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(uint), new HashSet<Type> { typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(long), new HashSet<Type> { typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(char), new HashSet<Type> { typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal) }},
+            { typeof(float), new HashSet<Type> { typeof(double) }},
+            { typeof(ulong), new HashSet<Type> { typeof(float), typeof(double), typeof(decimal) }},
+        };
 
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
         private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
@@ -217,24 +229,39 @@ namespace NCalc
             do 
             {
                 var methods = contextTypeInfo.DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && !m.IsStatic);
+                var candidates = new List<ExtendedMethodInfo>();
                 foreach (var potentialMethod in methods) {
                     var methodParams = potentialMethod.GetParameters();
-                    var newArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
+                    var preparedArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
 
-                    if (newArguments != null) {
-                        return new ExtendedMethodInfo() { BaseMethodInfo = potentialMethod, PreparedArguments = newArguments };
+                    if (preparedArguments != null) {
+                        var candidate = new ExtendedMethodInfo() {
+                            BaseMethodInfo = potentialMethod,
+                            PreparedArguments = preparedArguments.Item2,
+                            Score = preparedArguments.Item1
+                        };
+                        if (candidate.Score == 0) return candidate;
+                        candidates.Add(candidate);
                     }
                 }
+                if (candidates.Any()) return candidates.OrderBy(method => method.Score).First();
                 contextTypeInfo = contextTypeInfo.BaseType.GetTypeInfo();
             } while (contextTypeInfo != objectTypeInfo);
             throw new MissingMethodException($"method not found: {methodName}");
         }
 
-        private L.Expression[] PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments) 
+        /// <summary>
+        /// Returns a tuple where the first item is a score, and the second is a list of prepared arguments. 
+        /// Score is a simplified indicator of how close the arguments' types are to the parameters'. A score of 0 indicates a perfect match between arguments and parameters. 
+        /// Prepared arguments refers to having the arguments implicitly converted where necessary, and "params" arguments collated into one array.
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        private Tuple<int, L.Expression[]> PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments) 
         {
-            if (!parameters.Any() && !arguments.Any()) return arguments;
+            if (!parameters.Any() && !arguments.Any()) return Tuple.Create (0, arguments);
             if (!parameters.Any()) return null;
-            bool paramsMatchArguments = true;
 
             var lastParameter = parameters.Last();
             bool hasParamsKeyword = lastParameter.IsDefined(typeof(ParamArrayAttribute));
@@ -245,8 +272,7 @@ namespace NCalc
             int paramsParameterPosition = 0;
             if (!hasParamsKeyword) 
             {
-                paramsMatchArguments &= parameters.Length == arguments.Length;
-                if (!paramsMatchArguments) return null;
+                if (parameters.Length != arguments.Length) return null;
             } 
             else 
             {
@@ -254,21 +280,27 @@ namespace NCalc
                 paramsElementType = lastParameter.ParameterType.GetElementType();
                 paramsKeywordArgument = new L.Expression[arguments.Length - parameters.Length + 1];
             }
-            
+
+            int functionMemberScore = 0;
             for (int i = 0; i < arguments.Length; i++) 
             {
                 var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
-                var argumentType = arguments[i].Type;
+                var argument = arguments[i];
+                var argumentType = argument.Type;
                 var parameterType = isParamsElement ? paramsElementType : parameters[i].ParameterType;
-                paramsMatchArguments &= argumentType == parameterType;
-                if (!paramsMatchArguments) return null;
+                if (argumentType != parameterType)
+                {
+                    bool canCastImplicitly = TryCastImplicitly(argumentType, parameterType, ref argument);
+                    if (!canCastImplicitly) return null;
+                    functionMemberScore++;
+                }
                 if (!isParamsElement) 
                 {
-                    newArguments[i] = arguments[i];
+                    newArguments[i] = argument;
                 } 
                 else 
                 {
-                    paramsKeywordArgument[i - paramsParameterPosition] = arguments[i];
+                    paramsKeywordArgument[i - paramsParameterPosition] = argument;
                 }
             }
 
@@ -276,7 +308,18 @@ namespace NCalc
             {
                 newArguments[paramsParameterPosition] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
             }
-            return newArguments;
+            return Tuple.Create(functionMemberScore, newArguments);
+        }
+
+        private bool TryCastImplicitly(Type from, Type to, ref L.Expression argument)
+        {
+            bool convertingFromPrimitiveType = _implicitPrimitiveConversionTable.TryGetValue(from, out var possibleConversions);
+            if (!convertingFromPrimitiveType || !possibleConversions.Contains(to)) {
+                argument = null;
+                return false;
+            }
+            argument = L.Expression.Convert(argument, to);
+            return true;
         }
 
         private L.Expression WithCommonNumericType(L.Expression left, L.Expression right,
