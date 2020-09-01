@@ -354,11 +354,11 @@ namespace NCalc.Tests
         {
             // Arrange
             var expression = new Expression(input);
-            expression.EvaluateFunction += (name, args) =>
-            {
-                args.Parameters = args.Parameters.Select(ConvertToDecimal)
-                    .ToArray();
-            };
+            // expression.EvaluateFunction += (name, args) =>
+            // {
+            //     args.Parameters = args.Parameters.Select(ConvertToDecimal)
+            //         .ToArray();
+            // };
 
             var sut = expression.ToLambda<Foo, decimal>();
             var context = new Foo();
@@ -598,22 +598,6 @@ namespace NCalc.Tests
 
             // Assert
             Assert.NotEqual(0, actual);
-        }
-
-        [Theory]
-        [InlineData("If(true, 'Hi', 1)")]
-        public void
-            ShouldThrowWithBranchesReturningTwoDifferentFloatingPointTypesIfNotConvertible(string s)
-        {
-            // Arrange
-            var expression = new Expression(s);
-
-            // Act
-            var exception = Record.Exception(expression.ToLambda<Foo, decimal>);
-
-            // Assert
-            Assert.NotNull(exception);
-            Assert.IsType<ArgumentException>(exception);
         }
 
         [Fact]

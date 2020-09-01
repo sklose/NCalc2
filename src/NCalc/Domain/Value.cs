@@ -15,18 +15,24 @@ namespace NCalc.Domain
         {
             switch (value.GetTypeCode())
             {
-                case TypeCode.Boolean :
+                case TypeCode.Boolean:
                     Type = ValueType.Boolean;
+                    Value = value;
+
                     break;
 
-                case TypeCode.DateTime :
+                case TypeCode.DateTime:
                     Type = ValueType.DateTime;
+                    Value = value;
+
                     break;
 
                 case TypeCode.Decimal:
                 case TypeCode.Double:
                 case TypeCode.Single:
                     Type = ValueType.Float;
+                    Value = Convert.ToDecimal(value);
+
                     break;
 
                 case TypeCode.Byte:
@@ -34,21 +40,28 @@ namespace NCalc.Domain
                 case TypeCode.Int16:
                 case TypeCode.Int32:
                 case TypeCode.Int64:
+                    Type = ValueType.Integer;
+                    Value = Convert.ToInt64(value);
+
+                    break;
                 case TypeCode.UInt16:
                 case TypeCode.UInt32:
                 case TypeCode.UInt64:
                     Type = ValueType.Integer;
+                    Value = value;
+
                     break;
 
                 case TypeCode.String:
                     Type = ValueType.String;
+                    Value = value;
+
                     break;
 
                 default:
-                    throw new EvaluationException("This value could not be handled: " + value);
+                    throw new EvaluationException(
+                        "This value could not be handled: " + value);
             }
-
-            Value = value;
         }
 
         public ValueExpression(string value)
