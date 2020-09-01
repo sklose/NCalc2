@@ -17,7 +17,7 @@ namespace NCalc.Tests
             public decimal? FieldD { get; set; }
             public int? FieldE { get; set; }
 
-            public int Test(int a, int b)
+            public long Test(long a, long b)
             {
                 return a + b;
             }
@@ -27,65 +27,58 @@ namespace NCalc.Tests
                 return a + b;
             }
 
-            public int Test(int a, int b, int c)
+            public long Test(long a, long b, long c)
             {
                 return a + b + c;
             }
 
-            public string Sum(string msg, params int[] numbers) {
-                int total = 0;
-                foreach (var num in numbers) {
-                    total += num;
-                }
-                return msg + total;
-            }
-
-            public int Sum(params int[] numbers)
+            public string Sum(string msg, params long[] numbers)
             {
-                int total = 0;
-                foreach (var num in numbers) {
-                    total += num;
-                }
-                return total;
+                return msg + numbers.Sum();
             }
 
-            public int Sum(TestObject1 obj1, TestObject2 obj2)
+            public long Sum(params long[] numbers)
+            {
+                return numbers.Sum();
+            }
+
+            public long Sum(TestObject1 obj1, TestObject2 obj2)
             {
                 return obj1.Count1 + obj2.Count2;
             }
 
-            public int Sum(TestObject2 obj1, TestObject1 obj2)
+            public long Sum(TestObject2 obj1, TestObject1 obj2)
             {
                 return obj1.Count2 + obj2.Count1;
             }
 
-            public int Sum(TestObject1 obj1, TestObject1 obj2)
+            public long Sum(TestObject1 obj1, TestObject1 obj2)
             {
                 return obj1.Count1 + obj2.Count1;
             }
 
-            public int Sum(TestObject2 obj1, TestObject2 obj2)
+            public long Sum(TestObject2 obj1, TestObject2 obj2)
             {
                 return obj1.Count2 + obj2.Count2;
             }
 
             public class TestObject1
             {
-                public int Count1 { get; set; }
+                public long Count1 { get; set; }
             }
 
             public class TestObject2
             {
-                public int Count2 { get; set; }
+                public long Count2 { get; set; }
             }
 
 
-            public TestObject1 CreateTestObject1(int count)
+            public TestObject1 CreateTestObject1(long count)
             {
                 return new TestObject1() { Count1 = count };
             }
 
-            public TestObject2 CreateTestObject2(int count)
+            public TestObject2 CreateTestObject2(long count)
             {
                 return new TestObject2() { Count2 = count };
             }
@@ -174,7 +167,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(6, sut(context));
+            Assert.Equal(6L, sut(context));
         }
 
         [Fact]
@@ -279,10 +272,10 @@ namespace NCalc.Tests
         }
 
         [Theory]
-        [InlineData("MyFunction(1,2)", 3)]
+        [InlineData("MyFunction(1,2)", 3L)]
         public void ShouldHandleExternalFunctionWithStaticParametersWhenCallingToLambdaWithContext(
             string input,
-            int expected)
+            long expected)
         {
             // Arrange
             var expression = new Expression(input);
@@ -293,11 +286,11 @@ namespace NCalc.Tests
                     return;
                 }
 
-                var fst = (int) args.Parameters[0].Evaluate();
-                var snd = (int) args.Parameters[1].Evaluate();
+                var fst = (long) args.Parameters[0].Evaluate();
+                var snd = (long) args.Parameters[1].Evaluate();
                 args.Result = fst + snd;
             };
-            var sut = expression.ToLambda<object, int>();
+            var sut = expression.ToLambda<object, long>();
             var context = new object();
 
             // Act
@@ -322,8 +315,8 @@ namespace NCalc.Tests
                     return;
                 }
 
-                var fst = (int) args.Parameters[0].Evaluate();
-                var snd = (int) args.Parameters[1].Evaluate();
+                var fst = (long) args.Parameters[0].Evaluate();
+                var snd = (long) args.Parameters[1].Evaluate();
                 args.Result = fst + snd;
             };
             expression.EvaluateParameter += (name, args) =>
@@ -333,10 +326,10 @@ namespace NCalc.Tests
                     return;
                 }
 
-                args.Result = 1;
+                args.Result = 1L;
             };
 
-            var sut = expression.ToLambda<object, int>();
+            var sut = expression.ToLambda<object, long>();
             var context = new object();
 
             // Act
@@ -348,19 +341,33 @@ namespace NCalc.Tests
 
         [Theory]
         [InlineData("Bar(1.23)", 1.23)]
-        public void ShouldHandleContextualFunctionWithFloatingPointParametersWhenCallingToLambdaWithContext(
+        public void ShouldTreatFloatingPointNumbersAsDecimalWhenCallingToLambdaWithContext(
             string input,
             decimal expected)
         {
             // Arrange
             var expression = new Expression(input);
-            // expression.EvaluateFunction += (name, args) =>
-            // {
-            //     args.Parameters = args.Parameters.Select(ConvertToDecimal)
-            //         .ToArray();
-            // };
 
             var sut = expression.ToLambda<Foo, decimal>();
+            var context = new Foo();
+
+            // Act
+            var actual = sut(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("Baz(42)", 42L)]
+        public void ShouldTreatIntegralNumbersAsLongWhenCallingToLambdaWithContext(
+            string input,
+            long expected)
+        {
+            // Arrange
+            var expression = new Expression(input);
+
+            var sut = expression.ToLambda<Foo, long>();
             var context = new Foo();
 
             // Act
@@ -430,25 +437,6 @@ namespace NCalc.Tests
             Assert.NotEqual(default, actual);
         }
 
-        private static Expression ConvertToDecimal(Expression expression)
-        {
-            if (!(expression.ParsedExpression is ValueExpression ve))
-            {
-                return expression;
-            }
-
-            if (ve.Value.GetType() != typeof(double))
-            {
-                return expression;
-            }
-
-            ve.Type = ValueType.Float;
-            ve.Value = Convert.ToDecimal(
-                ve.Value,
-                CultureInfo.InvariantCulture);
-            return expression;
-        }
-
         [Theory]
         [InlineData("MyFunction(MyParam + 3, 2)", 6)]
         public void ShouldHandleExternalFunctionWithDynamicExpressionWhenCallingToLambdaWithContext(
@@ -464,8 +452,8 @@ namespace NCalc.Tests
                     return;
                 }
 
-                var fst = (int) args.Parameters[0].Evaluate();
-                var snd = (int) args.Parameters[1].Evaluate();
+                var fst = (long) args.Parameters[0].Evaluate();
+                var snd = (long) args.Parameters[1].Evaluate();
                 args.Result = fst + snd;
             };
             expression.EvaluateParameter += (name, args) =>
@@ -478,7 +466,7 @@ namespace NCalc.Tests
                 args.Result = 1;
             };
 
-            var sut = expression.ToLambda<object, int>();
+            var sut = expression.ToLambda<object, long>();
             var context = new object();
 
             // Act
@@ -503,8 +491,8 @@ namespace NCalc.Tests
                     return;
                 }
 
-                var fst = (int) args.Parameters[0].Evaluate();
-                var snd = (int) args.Parameters[1].Evaluate();
+                var fst = (long) args.Parameters[0].Evaluate();
+                var snd = (long) args.Parameters[1].Evaluate();
                 args.Result = fst + snd;
             };
             expression.EvaluateFunction += (name, args) =>
@@ -517,7 +505,7 @@ namespace NCalc.Tests
                 args.Result = 1;
             };
 
-            var sut = expression.ToLambda<object, int>();
+            var sut = expression.ToLambda<object, long>();
             var context = new object();
 
             // Act
@@ -528,10 +516,10 @@ namespace NCalc.Tests
         }
 
         [Theory]
-        [InlineData("MyFunction(MyFunction2(MyParam) + 3, 2)", 6)]
+        [InlineData("MyFunction(MyFunction2(MyParam) + 3, 2)", 6L)]
         public void ShouldHandleExternalFunctionWithNestedExpressionWithDynamicParameterWhenCallingToLambdaWithContext(
             string input,
-            int expected)
+            long expected)
         {
             // Arrange
             var expression = new Expression(input);
@@ -542,8 +530,8 @@ namespace NCalc.Tests
                     return;
                 }
 
-                var fst = (int) args.Parameters[0].Evaluate();
-                var snd = (int) args.Parameters[1].Evaluate();
+                var fst = (long) args.Parameters[0].Evaluate();
+                var snd = (long) args.Parameters[1].Evaluate();
                 args.Result = fst + snd;
             };
             expression.EvaluateFunction += (name, args) =>
@@ -553,7 +541,7 @@ namespace NCalc.Tests
                     return;
                 }
 
-                var param = (int) args.Parameters[0].Evaluate();
+                var param = (long) args.Parameters[0].Evaluate();
                 args.Result = param;
             };
             expression.EvaluateParameter += (name, args) =>
@@ -563,10 +551,10 @@ namespace NCalc.Tests
                     return;
                 }
 
-                args.Result = 1;
+                args.Result = 1L;
             };
 
-            var sut = expression.ToLambda<object, int>();
+            var sut = expression.ToLambda<object, long>();
             var context = new object();
 
             // Act
@@ -616,6 +604,8 @@ namespace NCalc.Tests
         public class Foo
         {
             public decimal Bar(decimal d) => d;
+
+            public long Baz(long l) => l;
 
             public decimal MyDecimal { get; set; } = 42.3m;
 

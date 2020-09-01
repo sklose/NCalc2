@@ -125,7 +125,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldParseValues()
         {
-            Assert.Equal(123456, new Expression("123456").Evaluate());
+            Assert.Equal(123456L, new Expression("123456").Evaluate());
             Assert.Equal(new DateTime(2001, 01, 01), new Expression("#01/01/2001#").Evaluate());
             Assert.Equal(123.456m, new Expression("123.456").Evaluate());
             Assert.True((bool)new Expression("true").Evaluate());
@@ -210,10 +210,10 @@ namespace NCalc.Tests
             e.EvaluateFunction += delegate(string name, FunctionArgs args)
                 {
                     if (name == "SecretOperation")
-                        args.Result = (int)args.Parameters[0].Evaluate() + (int)args.Parameters[1].Evaluate();
+                        args.Result = (long)args.Parameters[0].Evaluate() + (long)args.Parameters[1].Evaluate();
                 };
 
-            Assert.Equal(9, e.Evaluate());
+            Assert.Equal(9L, e.Evaluate());
         }
 
         [Fact]
@@ -223,18 +223,18 @@ namespace NCalc.Tests
             {
                 Parameters =
                 {
-                    ["e"] = 3,
-                    ["f"] = 1
+                    ["e"] = 3L,
+                    ["f"] = 1L
                 }
             };
 
             e.EvaluateFunction += delegate(string name, FunctionArgs args)
                 {
                     if (name == "SecretOperation")
-                        args.Result = (int)args.Parameters[0].Evaluate() + (int)args.Parameters[1].Evaluate();
+                        args.Result = (long)args.Parameters[0].Evaluate() + (long)args.Parameters[1].Evaluate();
                 };
 
-            Assert.Equal(10, e.Evaluate());
+            Assert.Equal(10L, e.Evaluate());
         }
 
         [Fact]
@@ -282,7 +282,7 @@ namespace NCalc.Tests
                     ["divided"] = 5
                 }
             };
-            Assert.Equal(0, eif.Evaluate());
+            Assert.Equal(0L, eif.Evaluate());
         }
 
         [Fact]
@@ -342,11 +342,11 @@ namespace NCalc.Tests
         [Theory]
         [InlineData("!true", false)]
         [InlineData("not false", true)]
-        [InlineData("2 * 3", 6)]
+        [InlineData("2 * 3", 6L)]
         [InlineData("6 / 2", 3d)]
-        [InlineData("7 % 2", 1)]
-        [InlineData("2 + 3", 5)]
-        [InlineData("2 - 1", 1)]
+        [InlineData("7 % 2", 1L)]
+        [InlineData("2 + 3", 5L)]
+        [InlineData("2 - 1", 1L)]
         [InlineData("1 < 2", true)]
         [InlineData("1 > 2", false)]
         [InlineData("1 <= 2", true)]
@@ -367,8 +367,8 @@ namespace NCalc.Tests
         [InlineData("true and false", false)]
         [InlineData("true || false", true)]
         [InlineData("true or false", true)]
-        [InlineData("if(true, 0, 1)", 0)]
-        [InlineData("if(false, 0, 1)", 1)]
+        [InlineData("if(true, 0, 1)", 0L)]
+        [InlineData("if(false, 0, 1)", 1L)]
         public void ShouldEvaluateOperators(string expression, object expected)
         {
             var actual = new Expression(expression).Evaluate();
@@ -377,13 +377,12 @@ namespace NCalc.Tests
         }
 
         [Theory]
-        [InlineData("2+2+2+2", 8)]
-        [InlineData("2*2*2*2", 16)]
-        [InlineData("2*2+2", 6)]
-        [InlineData("2+2*2", 6)]
+        [InlineData("2+2+2+2", 8L)]
+        [InlineData("2*2*2*2", 16L)]
+        [InlineData("2*2+2", 6L)]
+        [InlineData("2+2*2", 6L)]
         [InlineData("1 + 2 + 3 * 4 / 2", 9d)]
         [InlineData("18/2/2*3", 13.5)]
-
         public void ShouldHandleOperatorsPriority(string expression, object expected)
         {
             var actual = new Expression(expression).Evaluate();
@@ -418,7 +417,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldEvaluateTernaryExpression()
         {
-            Assert.Equal(1, new Expression("1+2<3 ? 3+4 : 1").Evaluate());
+            Assert.Equal(1L, new Expression("1+2<3 ? 3+4 : 1").Evaluate());
         }
 
         [Fact]
@@ -523,13 +522,13 @@ namespace NCalc.Tests
             {
                 var r1 = new Random((int)DateTime.Now.Ticks);
                 var r2 = new Random((int)DateTime.Now.Ticks);
-                int n1 = r1.Next(10);
-                int n2 = r2.Next(10);
+                long n1 = r1.Next(10);
+                long n2 = r2.Next(10);
 
                 // Constructs a simple addition randomly. Odds are that the same expression gets constructed multiple times by different threads
                 var exp = n1 + " + " + n2;
                 var e = new Expression(exp);
-                Assert.True(e.Evaluate().Equals(n1 + n2));
+                Assert.Equal(n1 + n2, e.Evaluate());
             }
             catch (Exception e)
             {
@@ -709,7 +708,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleLongValues()
         {
-            Assert.Equal(40000000000 + 1f, new Expression("40000000000+1").Evaluate());
+            Assert.Equal(40000000000 + 1m, new Expression("40000000000+1").Evaluate());
         }
 
         [Fact]

@@ -72,13 +72,13 @@ namespace NCalc.Domain
 
         public ValueExpression(int value)
         {
-            Value = value;
+            Value = Convert.ToInt64(value);
             Type = ValueType.Integer;
         }
 
         public ValueExpression(float value)
         {
-            Value = value;
+            Value = Convert.ToDecimal(value);
             Type = ValueType.Float;
         }
 

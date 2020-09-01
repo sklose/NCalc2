@@ -10,10 +10,10 @@ namespace NCalc.Tests
 
         private class Context
         {
-            public int Param1 { get; set; }
-            public int Param2 { get; set; }
+            public long Param1 { get; set; }
+            public long Param2 { get; set; }
 
-            public int Foo(int a, int b)
+            public long Foo(long a, long b)
             {
                 return Math.Min(a, b);
             }
@@ -88,7 +88,7 @@ namespace NCalc.Tests
                 if (name == "Foo")
                 {
                     var param = args.EvaluateParameters();
-                    args.Result = context.Foo((int) param[0], (int) param[1]);
+                    args.Result = context.Foo((long) param[0], (long) param[1]);
                 }
             };
 
