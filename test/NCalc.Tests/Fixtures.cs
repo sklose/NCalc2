@@ -127,7 +127,7 @@ namespace NCalc.Tests
         {
             Assert.Equal(123456, new Expression("123456").Evaluate());
             Assert.Equal(new DateTime(2001, 01, 01), new Expression("#01/01/2001#").Evaluate());
-            Assert.Equal(123.456d, new Expression("123.456").Evaluate());
+            Assert.Equal(123.456m, new Expression("123.456").Evaluate());
             Assert.True((bool)new Expression("true").Evaluate());
             Assert.Equal("true", new Expression("'true'").Evaluate());
             Assert.Equal("azerty", new Expression("'azerty'").Evaluate());
@@ -620,11 +620,12 @@ namespace NCalc.Tests
         [InlineData(0.01d, "1e-2")]
         [InlineData(0.001d, ".1e-2")]
         [InlineData(10000000000d, "1e10")]
-        public void ShouldParseScientificNotation(double expected, string expression)
+        public void ShouldParseScientificNotation(object expected, string expression)
         {
+            expected = Convert.ToDecimal(expected);
             var actual = new Expression(expression).Evaluate();
 
-            Assert.IsType<double>(actual);
+            Assert.IsType<decimal>(actual);
             Assert.Equal(expected, actual);
         }
 
@@ -857,16 +858,19 @@ namespace NCalc.Tests
             Assert.Equal(0m, e.Evaluate());
         }
 
-        [InlineData("Min(2,1.97)",1.97)]
-        [InlineData("Max(2,2.33)",2.33)]
+        [InlineData("Min(2,1.97)", 1.97)]
+        [InlineData("Max(2,2.33)", 2.33)]
         [Theory]
-        public void ShouldCheckPrecisionOfBothParametersForMaxAndMin(string expression, double expected)
+        public void ShouldCheckPrecisionOfBothParametersForMaxAndMin(
+            string expression,
+            object expected)
         {
-            var e=new Expression(expression);
-            
+            expected = Convert.ToDecimal(expected);
+            var e = new Expression(expression);
+
             var result = e.Evaluate();
 
-            Assert.Equal(expected,result);
+            Assert.Equal(expected, result);
         }
     }
 }
