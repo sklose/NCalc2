@@ -708,7 +708,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleLongValues()
         {
-            Assert.Equal(40000000000 + 1m, new Expression("40000000000+1").Evaluate());
+            Assert.Equal(40000000000 + 1L, new Expression("40000000000+1").Evaluate());
         }
 
         [Fact]
@@ -870,6 +870,19 @@ namespace NCalc.Tests
             var result = e.Evaluate();
 
             Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void IfTest()
+        {
+            const decimal expected = 9999999999.0m;
+            var expression = $"if(true, {expected:f1}, 0.0)";
+            var e = new Expression(expression);
+
+            var actual = e.Evaluate();
+
+            Assert.Equal(expected, actual);
         }
     }
 }

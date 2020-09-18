@@ -601,6 +601,24 @@ namespace NCalc.Tests
             Assert.Equal(4.84m, actual);
         }
 
+        [Fact]
+        public void IfTest2()
+        {
+            // Arrange
+            const long expected = 9999999999L;
+            var expression = $"if(true, {expected}, 0)";
+            var e = new Expression(expression);
+            var context = new object();
+
+            var lambda = e.ToLambda<object, long>();
+
+            // Act
+            var actual = lambda(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
         public class Foo
         {
             public decimal Bar(decimal d) => d;

@@ -2587,7 +2587,7 @@ public partial class NCalcParser : Antlr.Runtime.Parser
 				adaptor.AddChild(root_0, INTEGER35_tree);
 
 				DebugLocation(208, 14);
-				 try { retval.value = new ValueExpression(int.Parse((INTEGER35!=null?INTEGER35.Text:null))); } catch(System.OverflowException) { retval.value = new ValueExpression(long.Parse((INTEGER35!=null?INTEGER35.Text:null))); } 
+				 try { retval.value = new ValueExpression(int.Parse((INTEGER35!=null?INTEGER35.Text:null))); } catch(System.OverflowException) { retval.value = new ValueExpression((object)long.Parse((INTEGER35!=null?INTEGER35.Text:null))); }
 
 				}
 				break;
