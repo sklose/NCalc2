@@ -353,6 +353,25 @@ namespace NCalc.Tests
             // Assert
             Assert.Equal(expected, actual);
         }
+        
+        // https://github.com/sklose/NCalc2/issues/54
+        [Fact]
+        public void Issue54()
+        {
+            // Arrange
+            const long expected = 9999999999L;
+            var expression = $"if(true, {expected}, 0)";
+            var e = new Expression(expression);
+            var context = new object();
+
+            var lambda = e.ToLambda<object, long>();
+
+            // Act
+            var actual = lambda(context);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
 
         internal struct FooStruct
         {
