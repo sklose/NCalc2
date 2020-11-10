@@ -663,7 +663,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleLongValues()
         {
-            Assert.Equal(40000000000 + 1f, new Expression("40000000000+1").Evaluate());
+            Assert.Equal(40000000000 + 1L, new Expression("40000000000+1").Evaluate());
         }
 
         [Fact]
@@ -790,6 +790,20 @@ namespace NCalc.Tests
             var result = e.Evaluate();
 
             Assert.Equal(expected,result);
+        }
+        
+        // https://github.com/sklose/NCalc2/issues/54
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Issue54()
+        {
+            const long expected = 9999999999L;
+            var expression = $"if(true, {expected}, 0)";
+            var e = new Expression(expression);
+
+            var actual = e.Evaluate();
+
+            Assert.Equal(expected, actual);
         }
     }
 }
