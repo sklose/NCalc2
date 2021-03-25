@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>This is a port of NCalc for .NET Core applications.</Description>
     <AssemblyTitle>CoreCLR-NCalc</AssemblyTitle>
-    <Version>3.11.0</Version>
+    <Version>3.12.0</Version>
     <IsPackable>true</IsPackable>
     <Authors>Sebastian Klose</Authors>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -13,7 +13,6 @@
     <PackageProjectUrl>https://github.com/sklose/NCalc2</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/sklose/NCalc2</RepositoryUrl>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.3' ">1.6.0</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -24,15 +23,6 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
   </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.1.1" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FastExpressionCompiler.LightExpression" Version="3.0.0" />
