@@ -2,6 +2,9 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/ugw4wg1iws3far9m?svg=true)](https://ci.appveyor.com/project/sklose/ncalc2) [![NuGet](https://img.shields.io/nuget/v/CoreCLR-NCalc.svg)](https://www.nuget.org/packages/CoreCLR-NCalc) [![NuGet](https://img.shields.io/nuget/dt/CoreCLR-NCalc.svg)](https://www.nuget.org/packages/CoreCLR-NCalc)
 
+| :warning: This repository is currently only passively maintained. If there are fully fledged PRs, I will occasional merge those in and publish new versions. If you would like to become a maintainer and work on some of the open issues, please reply here https://github.com/sklose/NCalc2/issues/61
+| --- |
+
 A clone of NCalc from http://ncalc.codeplex.com/ with the following changes:
 - added support for CoreCLR (.NET Standard 1.3+)
 - embedded portable version of Antlr (no extra library/dependency required)
