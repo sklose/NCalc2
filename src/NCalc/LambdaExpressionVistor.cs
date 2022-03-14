@@ -188,7 +188,7 @@ namespace NCalc
                 return;
             }
 
-            //Context methods take prcedence over built-in functions because they're user-customisable.
+            //Context methods take precedence over built-in functions because they're user-customisable.
             var mi = FindMethod(function.Identifier.Name, args);
             if (mi != null) {
                 _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
