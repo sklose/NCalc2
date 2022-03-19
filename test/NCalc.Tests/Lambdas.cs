@@ -70,6 +70,14 @@ namespace NCalc.Tests
                 return obj1.Count2 + obj2.Count2;
             }
 
+            public double Max(TestObject1 obj1, TestObject1 obj2) {
+                return Math.Max(obj1.Count1, obj2.Count1);
+            }
+
+            public double Min(TestObject1 obj1, TestObject1 obj2) {
+                return Math.Min(obj1.Count1, obj2.Count1);
+            }
+
             public class TestObject1
             {
                 public int Count1 { get; set; }
@@ -279,6 +287,19 @@ namespace NCalc.Tests
             var expression = new Expression(input);
             var sut = expression.ToLambda<bool>();
             Assert.True(sut());
+        }
+
+        [Theory]
+        [InlineData("Min(CreateTestObject1(1), CreateTestObject1(2))", 1)]
+        [InlineData("Max(CreateTestObject1(1), CreateTestObject1(2))", 2)]
+        [InlineData("Min(1, 2)", 1)]
+        [InlineData("Max(1, 2)", 2)]
+        public void ShouldProritiseContextFunctions(string input, double expected) {
+            var expression = new Expression(input);
+            var lambda = expression.ToLambda<Context, double>();
+            var context = new Context();
+            var actual = lambda(context);
+            Assert.Equal(expected, actual);
         }
 
         [Theory]
