@@ -34,7 +34,7 @@ namespace NCalc.Domain
 
         private static Type[] CommonTypes = new[] { typeof(Int64), typeof(Double), typeof(Boolean), typeof(String), typeof(Decimal) };
 
-    /// <summary>
+        /// <summary>
         /// Gets the the most precise type.
         /// </summary>
         /// <param name="a">Type a.</param>
@@ -278,16 +278,16 @@ namespace NCalc.Domain
         public override void Visit(Function function)
         {
             var args = new FunctionArgs
-                           {
-                               Parameters = new Expression[function.Expressions.Length]
-                           };
+            {
+                Parameters = new Expression[function.Expressions.Length]
+            };
 
             // Don't call parameters right now, instead let the function do it as needed.
             // Some parameters shouldn't be called, for instance, in a if(), the "not" value might be a division by zero
             // Evaluating every value could produce unexpected behaviour
-            for (int i = 0; i < function.Expressions.Length; i++ )
+            for (int i = 0; i < function.Expressions.Length; i++)
             {
-                args.Parameters[i] =  new Expression(function.Expressions[i], _options);
+                args.Parameters[i] = new Expression(function.Expressions[i], _options);
                 args.Parameters[i].EvaluateFunction += EvaluateFunction;
                 args.Parameters[i].EvaluateParameter += EvaluateParameter;
 
