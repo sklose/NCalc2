@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace NCalc.Domain
 {
-
-
     public class EvaluationVisitor : LogicalExpressionVisitor
     {
         private delegate T Func<T>();
