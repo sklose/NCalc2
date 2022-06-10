@@ -112,7 +112,7 @@ namespace NCalc.Tests
             var e = new Expression("'a string' == null");
 
             var ex = Assert.Throws<ArgumentException>(() => e.Evaluate());
-            Assert.Contains("Parameter name: null", ex.Message);
+            Assert.Contains("Parameter was not defined", ex.Message);
         }
 
         [Fact]
