@@ -611,6 +611,7 @@ namespace NCalc.Domain
 
                 #region if
                 case string n when n.Equals("if", StringComparison.OrdinalIgnoreCase):
+
                     CheckCase("if", function.Identifier.Name);
 
                     if (function.Expressions.Length != 3)
