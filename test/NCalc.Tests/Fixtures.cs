@@ -6,6 +6,7 @@ using System.Collections;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using System.Linq;
 
 namespace NCalc.Tests
 {
@@ -124,6 +125,36 @@ namespace NCalc.Tests
 
             Assert.Throws<NullReferenceException>(() => e.Evaluate());
         }
+
+        [Fact]
+        public void ShouldEvaluateExcessiveNulls()
+        {
+            var e = new Expression(GetNullsFormula(), EvaluateOptions.AllowNullParameter);
+
+            Assert.Null(e.Evaluate());
+        }
+
+        [Fact]
+        public void ShouldEvaluateExcessiveNullsInReasonableTime()
+        {
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
+            const int iterations = 1000;
+            var formula = GetNullsFormula();
+
+            for(int i = 0; i < iterations; i++)
+            {
+                new Expression(formula, EvaluateOptions.AllowNullParameter).Evaluate();
+            }
+
+            stopwatch.Stop();
+
+            const int targetMilliseconds = 100;
+            Assert.True((stopwatch.ElapsedMilliseconds / iterations ) <= targetMilliseconds, "Evaluation did not meet performance expectations");
+        }
+
+        private static string GetNullsFormula(int number = 100, string op = "+") => string.Join(op, Enumerable.Repeat("null", number));
 
         [Fact]
         public void ShouldParseValues()

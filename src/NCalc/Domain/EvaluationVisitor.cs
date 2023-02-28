@@ -121,24 +121,28 @@ namespace NCalc.Domain
         {
             // simulate Lazy<Func<>> behavior for late evaluation
             object leftValue = null;
+            bool leftEvaluated = false;
             Func<object> left = () =>
                                  {
-                                     if (leftValue == null)
+                                     if (!leftEvaluated)
                                      {
                                          expression.LeftExpression.Accept(this);
                                          leftValue = Result;
+                                         leftEvaluated = true;
                                      }
                                      return leftValue;
                                  };
 
             // simulate Lazy<Func<>> behavior for late evaluation
             object rightValue = null;
+            bool rightEvaluated = false;
             Func<object> right = () =>
             {
-                if (rightValue == null)
+                if (!rightEvaluated)
                 {
                     expression.RightExpression.Accept(this);
                     rightValue = Result;
+                    rightEvaluated = true;
                 }
                 return rightValue;
             };
