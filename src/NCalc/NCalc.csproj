@@ -56,7 +56,7 @@
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="antlr4.exe -Dlanguage=CSharp &quot;$(SolutionDir)\grammer\NCalc.g&quot; -o &quot;$(ProjectDir)\Generated&quot;" />
+		<Exec Command="antlr4.exe -Dlanguage=CSharp &quot;../../grammer/NCalc.g&quot; -o &quot;./Generated/&quot;" />
 	</Target>
 
 	<PropertyGroup>
