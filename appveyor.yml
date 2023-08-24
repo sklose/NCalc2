@@ -1,5 +1,5 @@
-version: '2.2.{build}'
-image: Visual Studio 2017
+version: '3.0.{build}'
+image: Visual Studio 2019
 configuration: Release
 branches:
   only:
@@ -10,6 +10,7 @@ skip_commits:
 init:
   - cmd: git config --global core.autocrlf true
 before_build:
+  - cmd: pip install antlr4-tools
   - cmd: dotnet --version
   - cmd: dotnet restore --verbosity m
 build_script:
