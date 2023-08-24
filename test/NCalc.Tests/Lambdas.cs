@@ -8,7 +8,7 @@ namespace NCalc.Tests
         private class Context
         {
             public int FieldA { get; set; }
-            public string FieldB { get; set; }
+            public string? FieldB { get; set; }
             public decimal FieldC { get; set; }
             public decimal? FieldD { get; set; }
             public int? FieldE { get; set; }
@@ -204,7 +204,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 6);
+            Assert.Equal(6, sut(context));
         }
 
         [Fact]
@@ -259,7 +259,7 @@ namespace NCalc.Tests
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
-            Assert.Equal(sut(context), 1);
+            Assert.Equal(1, sut(context));
         }
 
         [Fact]
@@ -276,7 +276,7 @@ namespace NCalc.Tests
             expr.Parameters["b"] = b;
 
             var f = expr.ToLambda<float>(); // Here it throws System.ArgumentNullException. Parameter name: expression
-            Assert.Equal(f(), -14);
+            Assert.Equal(-14, f());
         }
 
         [Theory]

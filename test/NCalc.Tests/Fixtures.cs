@@ -162,7 +162,7 @@ namespace NCalc.Tests
             Assert.Equal(123456, new Expression("123456").Evaluate());
             Assert.Equal(new DateTime(2001, 01, 01), new Expression("#01/01/2001#").Evaluate());
             Assert.Equal(123.456d, new Expression("123.456").Evaluate());
-            Assert.Equal(true, new Expression("true").Evaluate());
+            Assert.Equal((object)true, new Expression("true").Evaluate());
             Assert.Equal("true", new Expression("'true'").Evaluate());
             Assert.Equal("azerty", new Expression("'azerty'").Evaluate());
         }
@@ -317,18 +317,18 @@ namespace NCalc.Tests
             ein.Parameters["1"] = 2;
             ein.Parameters["2"] = 5;
 
-            Assert.Equal(true, ein.Evaluate());
+            Assert.Equal((object)true, ein.Evaluate());
 
             var eout = new Expression("in((2 + 2), [1], [2], 1 + 2, 3)");
             eout.Parameters["1"] = 2;
             eout.Parameters["2"] = 5;
 
-            Assert.Equal(false, eout.Evaluate());
+            Assert.Equal((object)false, eout.Evaluate());
 
             // Should work with strings
             var estring = new Expression("in('to' + 'to', 'titi', 'toto')");
 
-            Assert.Equal(true, estring.Evaluate());
+            Assert.Equal((object)true, estring.Evaluate());
 
         }
 
@@ -410,7 +410,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldNotRoundDecimalValues()
         {
-            Assert.Equal(false, new Expression("0 <= -0.6").Evaluate());
+            Assert.Equal((object)false, new Expression("0 <= -0.6").Evaluate());
         }
 
         [Fact]
@@ -513,7 +513,7 @@ namespace NCalc.Tests
             }
         }
 
-        private List<Exception> _exceptions;
+        private List<Exception> _exceptions = new();
 
         private void WorkerThread()
         {
@@ -645,7 +645,7 @@ namespace NCalc.Tests
                 Assert.True(args.HasResult);
             };
 
-            Assert.Equal(null, e.Evaluate());
+            Assert.Null(e.Evaluate());
         }
 
         [Fact]
@@ -661,14 +661,14 @@ namespace NCalc.Tests
                 Assert.True(args.HasResult);
             };
 
-            Assert.Equal(null, e.Evaluate());
+            Assert.Null(e.Evaluate());
         }
 
         [Fact]
         public void ShouldCompareDates()
         {
-            Assert.Equal(true, new Expression("#1/1/2009#==#1/1/2009#").Evaluate());
-            Assert.Equal(false, new Expression("#2/1/2009#==#1/1/2009#").Evaluate());
+            Assert.Equal((object)true, new Expression("#1/1/2009#==#1/1/2009#").Evaluate());
+            Assert.Equal((object)false, new Expression("#2/1/2009#==#1/1/2009#").Evaluate());
         }
 
         [Fact]
@@ -700,7 +700,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldCompareLongValues()
         {
-            Assert.Equal(false, new Expression("(0=1500000)||(((0+2200000000)-1500000)<0)").Evaluate());
+            Assert.Equal((object)false, new Expression("(0=1500000)||(((0+2200000000)-1500000)<0)").Evaluate());
         }
 
         [Fact]
@@ -759,7 +759,7 @@ namespace NCalc.Tests
             var e = new Expression("([a] != 0) && ([b]/[a]>2)");
             e.Parameters["a"] = 0;
 
-            Assert.Equal(false, e.Evaluate());
+            Assert.Equal((object)false, e.Evaluate());
         }
 
         [Fact]
