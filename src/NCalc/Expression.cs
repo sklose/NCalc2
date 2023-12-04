@@ -2,10 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using NCalc.Domain;
-using Antlr.Runtime;
+using Antlr4.Runtime;
 using System.Diagnostics;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace NCalc
 {
@@ -117,14 +118,23 @@ namespace NCalc
 
             if (logicalExpression == null)
             {
-                var lexer = new NCalcLexer(new ANTLRStringStream(expression));
+                var lexer = new NCalcLexer(CharStreams.fromString(expression));
+                var lexerErrorListener = new ErrorListener<int>();
+                lexer.AddErrorListener(lexerErrorListener);
                 var parser = new NCalcParser(new CommonTokenStream(lexer));
+                var parserErrorListener = new ErrorListener<IToken>();
+                parser.AddErrorListener(parserErrorListener);
 
                 logicalExpression = parser.ncalcExpression().value;
 
-                if (parser.Errors != null && parser.Errors.Count > 0)
+                if (parserErrorListener.Errors.Count > 0 || lexerErrorListener.Errors.Count > 0)
                 {
-                    throw new EvaluationException(String.Join(Environment.NewLine, parser.Errors.ToArray()));
+                    var errors = string.Join(Environment.NewLine,
+                        lexerErrorListener.Errors.Select(e => e.ToString()).Union(
+                        parserErrorListener.Errors.Select(e => e.ToString()))
+                    );
+
+                    throw new EvaluationException(errors);
                 }
 
                 if (_cacheEnabled && !nocache)
