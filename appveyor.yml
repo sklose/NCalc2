@@ -13,9 +13,9 @@ environment:
 init:
   - cmd: git config --global core.autocrlf true
 before_build:
-  - cmd: echo JAVA_HOME=%JAVA_HOME%
   - cmd: pip install antlr4-tools
   - cmd: echo JAVA_HOME=%JAVA_HOME%
+  - cmd: echo PATH=%PATH%
   - cmd: dotnet --version
   - cmd: dotnet restore --verbosity m
 build_script:
