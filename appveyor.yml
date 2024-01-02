@@ -15,8 +15,6 @@ init:
   - cmd: set PATH=%JAVA_HOME%\bin;%PATH%
 before_build:
   - cmd: pip install antlr4-tools
-  - cmd: echo JAVA_HOME=%JAVA_HOME%
-  - cmd: echo PATH=%PATH%
   - cmd: dotnet --version
   - cmd: dotnet restore --verbosity m
 build_script:
