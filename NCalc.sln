@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34003.232
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCalc", "src\NCalc\NCalc.csproj", "{F3E0F86D-52E4-4B30-9131-A5AE87C9269C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCalc.Tests", "test\NCalc.Tests\NCalc.Tests.csproj", "{00EE17CD-D198-48C3-AED8-1CE6A816C01B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCalc.Play", "src\NCalc.Play\NCalc.Play.csproj", "{396170ED-4A6E-45F6-A1DB-614E55E84D40}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{848BEACC-B4ED-420D-AA06-52167B60C2FA}"
+	ProjectSection(SolutionItems) = preProject
+		grammer\NCalc.g = grammer\NCalc.g
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

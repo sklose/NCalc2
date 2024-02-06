@@ -1,17 +1,7 @@
 grammar NCalc;
 
-options
-{
-	output=AST;
-	ASTLabelType=CommonTree;
-	language=CSharp3;
-}
-
 @header {
-using System;
-using System.Text;
 using System.Globalization;
-using System.Collections.Generic;
 using NCalc.Domain;
 }
 
@@ -41,7 +31,7 @@ private string extractString(string text) {
             case 't': sb.Remove(slashIndex, 2).Insert(slashIndex, '\t'); break;
             case '\'': sb.Remove(slashIndex, 2).Insert(slashIndex, '\''); break;
             case '\\': sb.Remove(slashIndex, 2).Insert(slashIndex, '\\'); break;
-            default: throw new RecognitionException("Unvalid escape sequence: \\" + escapeType);
+            default: throw new RecognitionException(null, CharStreams.fromString("Unvalid escape sequence: \\" + escapeType));
         }
 
         startIndex = slashIndex + 1;
@@ -54,21 +44,7 @@ private string extractString(string text) {
     return sb.ToString();
 }
 
-public List<string> Errors { get; private set; }
-
-public override void DisplayRecognitionError(String[] tokenNames, RecognitionException e) {
-    
-    base.DisplayRecognitionError(tokenNames, e);
-    
-    if(Errors == null)
-    {
-    	Errors = new List<string>();
-    }
-    
-    String hdr = GetErrorHeader(e);
-    String msg = GetErrorMessage(e, tokenNames);
-    Errors.Add(msg + " at " + hdr);
-}
+public System.Collections.Generic.List<string> Errors { get; private set; }
 }
 
 @init {
@@ -76,7 +52,7 @@ public override void DisplayRecognitionError(String[] tokenNames, RecognitionExc
 }
 
 ncalcExpression returns [LogicalExpression value]
-	: logicalExpression EOF! {$value = $logicalExpression.value; }
+	: logicalExpression EOF {$value = $logicalExpression.value; }
 	;
 
 logicalExpression returns [LogicalExpression value]
@@ -183,7 +159,7 @@ multiplicativeExpression returns [LogicalExpression value]
 @init {
 BinaryExpressionType type = BinaryExpressionType.Unknown;
 }
-	:	left=unaryExpression { $value = $left.value); } (
+	:	left=unaryExpression { $value = $left.value; } (
 			( '*' { type = BinaryExpressionType.Times; } 
 			| '/' { type = BinaryExpressionType.Div; } 
 			| '%' { type = BinaryExpressionType.Modulo; } ) 
@@ -201,11 +177,11 @@ unaryExpression returns [LogicalExpression value]
 		
 primaryExpression returns [LogicalExpression value]
 	:	'(' logicalExpression ')' 	{ $value = $logicalExpression.value; }
-	|	expr=value		{ $value = $expr.value; }
+	|	expr=valueExpression		{ $value = $expr.value; }
 	|	identifier {$value = (LogicalExpression) $identifier.value; } (arguments {$value = new Function($identifier.value, ($arguments.value).ToArray()); })?
 	;
 
-value returns [ValueExpression value]
+valueExpression returns [ValueExpression value]
 	: 	INTEGER		{ try { $value = new ValueExpression(int.Parse($INTEGER.text)); } catch(System.OverflowException) { $value = new ValueExpression((object)long.Parse($INTEGER.text)); } }
 	|	FLOAT		{ $value = new ValueExpression(double.Parse($FLOAT.text, NumberStyles.Float, numberFormatInfo)); }
 	|	STRING		{ $value = new ValueExpression(extractString($STRING.text)); }
@@ -256,14 +232,14 @@ FLOAT
 	;
 
 STRING
-    	:  	'\'' ( EscapeSequence | (options {greedy=false;} : ~('\u0000'..'\u001f' | '\\' | '\'' ) ) )* '\''
-    	;
+	:  	'\'' ( EscapeSequence | ( ~('\u0000'..'\u001f' | '\\' | '\'' ) ).*? )* '\''
+	;
 
 DATETIME 
- 	:	'#' (options {greedy=false;} : ~('#')*) '#'
-        ;
+ 	:	'#' ~('#')* '#'
+	;
 
-NAME	:	'[' (options {greedy=false;} : ~(']')*) ']'
+NAME	:	'[' ~(']')* ']'
 	;
 	
 E	:	('E'|'e') ('+'|'-')? DIGIT+ 
@@ -296,9 +272,9 @@ fragment HexDigit
 
 
 fragment UnicodeEscape
-    	:    	'u' HexDigit HexDigit HexDigit HexDigit 
-    	;
+	:    	'u' HexDigit HexDigit HexDigit HexDigit 
+	;
 
 /* Ignore white spaces */	
-WS	:  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=Hidden;}
+WS	:  (' '|'\r'|'\t'|'\u000C'|'\n') -> channel(HIDDEN)
 	;

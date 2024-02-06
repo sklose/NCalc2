@@ -6,8 +6,7 @@
 | --- |
 
 A clone of NCalc from http://ncalc.codeplex.com/ with the following changes:
-- added support for CoreCLR (.NET Standard 1.3+)
-- embedded portable version of Antlr (no extra library/dependency required)
+- added support for .NET Standard 2.0+
 - added compilation of expressions to actual CLR lambdas
 
 # Installation
