@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using NCalc.Domain;
 using Antlr4.Runtime;
-using System.Diagnostics;
-using System.Threading;
 using System.Collections.Concurrent;
 using System.Linq;
+using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Atn;
 
 namespace NCalc
 {
@@ -121,11 +121,28 @@ namespace NCalc
                 var lexer = new NCalcLexer(CharStreams.fromString(expression));
                 var lexerErrorListener = new ErrorListener<int>();
                 lexer.AddErrorListener(lexerErrorListener);
-                var parser = new NCalcParser(new CommonTokenStream(lexer));
-                var parserErrorListener = new ErrorListener<IToken>();
-                parser.AddErrorListener(parserErrorListener);
 
-                logicalExpression = parser.ncalcExpression().value;
+                var parser = new NCalcParser(new CommonTokenStream(lexer));
+                parser.Interpreter.PredictionMode = PredictionMode.SLL;
+                var parserErrorListener = new ErrorListener<IToken>();
+
+                parser.RemoveErrorListeners();
+                parser.ErrorHandler = new BailErrorStrategy();
+
+                try
+                {
+                    logicalExpression = parser.ncalcExpression().value;
+                }
+                catch(ParseCanceledException)
+                {
+                    lexer.Reset();
+
+                    parser.Reset();
+                    parser.ErrorHandler = new DefaultErrorStrategy();
+                    parser.Interpreter.PredictionMode = PredictionMode.LL;
+                    parser.AddErrorListener(parserErrorListener);
+                    logicalExpression = parser.ncalcExpression().value;
+                }
 
                 if (parserErrorListener.Errors.Count > 0 || lexerErrorListener.Errors.Count > 0)
                 {
