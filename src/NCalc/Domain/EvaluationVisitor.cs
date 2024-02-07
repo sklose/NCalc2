@@ -661,20 +661,8 @@ namespace NCalc.Domain
 
         private void CheckCase(string function, string called)
         {
-            if (IgnoreCase)
-            {
-                if (function.Equals(called, StringComparison.OrdinalIgnoreCase))
-                {
-                    return;
-                }
-
-                throw new ArgumentException("Function not found", called);
-            }
-
-            if (function != called)
-            {
-                throw new ArgumentException(String.Format("Function not found {0}. Try {1} instead.", called, function));
-            }
+            if (!IgnoreCase && function != called)
+                throw new ArgumentException($"Function not found {called}. Try {function} instead.");
         }
 
         public event EvaluateFunctionHandler EvaluateFunction;
