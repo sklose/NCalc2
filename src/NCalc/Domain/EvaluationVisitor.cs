@@ -19,7 +19,7 @@ namespace NCalc.Domain
             _options = options;
         }
 
-        public object Result { get; private set; }
+        public object Result { get; protected set; }
 
         private object Evaluate(LogicalExpression expression)
         {
