@@ -8,42 +8,6 @@ namespace NCalc.Domain
     {
         const char BS = '\\';
 
-        private static string extractString(string text)
-        {
-
-            StringBuilder sb = new StringBuilder(text);
-            int startIndex = 1; // Skip initial quote
-            int slashIndex = -1;
-
-            while ((slashIndex = sb.ToString().IndexOf(BS, startIndex)) != -1)
-            {
-                char escapeType = sb[slashIndex + 1];
-                switch (escapeType)
-                {
-                    case 'u':
-                        string hcode = String.Concat(sb[slashIndex + 4], sb[slashIndex + 5]);
-                        string lcode = String.Concat(sb[slashIndex + 2], sb[slashIndex + 3]);
-                        char unicodeChar = Encoding.Unicode.GetChars(new byte[] { System.Convert.ToByte(hcode, 16), System.Convert.ToByte(lcode, 16) })[0];
-                        sb.Remove(slashIndex, 6).Insert(slashIndex, unicodeChar);
-                        break;
-                    case 'n': sb.Remove(slashIndex, 2).Insert(slashIndex, '\n'); break;
-                    case 'r': sb.Remove(slashIndex, 2).Insert(slashIndex, '\r'); break;
-                    case 't': sb.Remove(slashIndex, 2).Insert(slashIndex, '\t'); break;
-                    case '\'': sb.Remove(slashIndex, 2).Insert(slashIndex, '\''); break;
-                    case '\\': sb.Remove(slashIndex, 2).Insert(slashIndex, '\\'); break;
-                    default: throw new Exception("Unvalid escape sequence: \\" + escapeType);
-                }
-
-                startIndex = slashIndex + 1;
-
-            }
-
-            sb.Remove(0, 1);
-            sb.Remove(sb.Length - 1, 1);
-
-            return sb.ToString();
-        }
-
         public BinaryExpression And(LogicalExpression operand)
         {
             return new BinaryExpression(BinaryExpressionType.And, this, operand);
