@@ -1,7 +1,3 @@
-using System;
-using Antlr4.Runtime.Tree;
-using System.Text;
-
 namespace NCalc.Domain
 {
     public abstract class LogicalExpression
