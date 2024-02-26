@@ -168,7 +168,7 @@ namespace NCalc.Domain
                     // (since anything between 1 and 0 is not int and 0 is an exception anyway
                     Result = IsReal(left()) || IsReal(right())
                                  ? Numbers.Divide(left(), right(), _options, _cultureInfo)
-                                 : Numbers.Divide(left(), right(), _options, _cultureInfo);
+                                 : Numbers.Divide(Convert.ToDouble(left()), right(), _options, _cultureInfo);
                     break;
 
                 case BinaryExpressionType.Equal:
