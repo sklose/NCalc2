@@ -2,8 +2,6 @@ namespace NCalc.Domain
 {
     public abstract class LogicalExpression
     {
-        const char BS = '\\';
-
         public BinaryExpression And(LogicalExpression operand)
         {
             return new BinaryExpression(BinaryExpressionType.And, this, operand);

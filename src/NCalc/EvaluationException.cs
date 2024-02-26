@@ -2,6 +2,7 @@
 
 namespace NCalc
 {
+    [Serializable]
     public class EvaluationException : Exception
     {
         public EvaluationException(string message)

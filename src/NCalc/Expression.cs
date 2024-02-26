@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using NCalc.Domain;
-using Antlr4.Runtime;
-using System.Collections.Concurrent;
-using System.Linq;
-using Antlr4.Runtime.Misc;
+﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Atn;
+using Antlr4.Runtime.Misc;
+using NCalc.Domain;
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NCalc
 {
@@ -27,7 +27,7 @@ namespace NCalc
         {
             if (String.IsNullOrEmpty(expression))
                 throw new
-                    ArgumentException("Expression can't be empty", "expression");
+                    ArgumentException("Expression can't be empty", nameof(expression));
 
             OriginalExpression = expression;
             Options = options;
@@ -41,7 +41,7 @@ namespace NCalc
         {
             if (expression == null)
                 throw new
-                    ArgumentException("Expression can't be null", "expression");
+                    ArgumentException("Expression can't be null", nameof(expression));
 
             ParsedExpression = expression;
             Options = options;
@@ -133,7 +133,7 @@ namespace NCalc
                 {
                     logicalExpression = parser.ncalcExpression().value;
                 }
-                catch(ParseCanceledException)
+                catch (ParseCanceledException)
                 {
                     lexer.Reset();
 
