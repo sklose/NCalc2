@@ -18,7 +18,7 @@ namespace NCalc.Domain
 
         public EvaluationVisitor(EvaluateOptions options) : this(options, CultureInfo.CurrentCulture) { }
 
-        private EvaluationVisitor(EvaluateOptions options, CultureInfo cultureInfo)
+        public EvaluationVisitor(EvaluateOptions options, CultureInfo cultureInfo)
         {
             _options = options;
             _cultureInfo = cultureInfo;
