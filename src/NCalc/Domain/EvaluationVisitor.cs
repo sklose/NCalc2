@@ -296,7 +296,7 @@ namespace NCalc.Domain
             // Evaluating every value could produce unexpected behaviour
             for (int i = 0; i < function.Expressions.Length; i++)
             {
-                args.Parameters[i] = new Expression(function.Expressions[i], _options);
+                args.Parameters[i] = new Expression(function.Expressions[i], _options, _cultureInfo);
                 args.Parameters[i].EvaluateFunction += EvaluateFunction;
                 args.Parameters[i].EvaluateParameter += EvaluateParameter;
 
