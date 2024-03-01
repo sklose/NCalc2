@@ -198,7 +198,7 @@ namespace NCalc.Domain
 
                 case BinaryExpressionType.Minus:
                     Result = Checked
-                        ? Numbers.SoustractChecked(left(), right(), _options, _cultureInfo)
+                        ? Numbers.SubtractChecked(left(), right(), _options, _cultureInfo)
                         : Numbers.Subtract(left(), right(), _options, _cultureInfo);
                     break;
 

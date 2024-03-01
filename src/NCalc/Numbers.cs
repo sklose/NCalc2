@@ -745,12 +745,24 @@ namespace NCalc
             return null;
         }
 
+        [Obsolete("This method will be removed in the next major update. Use SubtractChecked method instead")]
         public static object SoustractChecked(object a, object b, EvaluateOptions options)
         {
-            return SoustractChecked(a, b, options, CultureInfo.CurrentCulture);
+            return SubtractChecked(a, b, options, CultureInfo.CurrentCulture);
         }
 
+        [Obsolete("This method will be removed in the next major update. Use SubtractChecked method instead")]
         public static object SoustractChecked(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            return SubtractChecked(a, b, options, cultureInfo);
+        }
+
+        public static object SubtractChecked(object a, object b, EvaluateOptions options)
+        {
+            return SubtractChecked(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object SubtractChecked(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
         {
             a = ConvertIfString(a, cultureInfo);
             b = ConvertIfString(b, cultureInfo);
