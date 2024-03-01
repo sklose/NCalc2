@@ -696,14 +696,12 @@ namespace NCalc.Domain
 
         public override void Visit(Identifier parameter)
         {
+            // The parameter is defined in the hashtable
             if (Parameters.TryGetValue(parameter.Name, out object value))
             {
-                // The parameter is defined in the hashtable
-                if (value is Expression)
+                // The parameter is itself another Expression
+                if (value is Expression expression)
                 {
-                    // The parameter is itself another Expression
-                    var expression = (Expression)value;
-
                     // Overloads parameters
                     foreach (var p in Parameters)
                     {
@@ -713,7 +711,7 @@ namespace NCalc.Domain
                     expression.EvaluateFunction += EvaluateFunction;
                     expression.EvaluateParameter += EvaluateParameter;
 
-                    Result = ((Expression)value).Evaluate();
+                    Result = expression.Evaluate();
                 }
                 else
                     Result = value;
