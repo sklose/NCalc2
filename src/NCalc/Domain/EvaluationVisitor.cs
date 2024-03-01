@@ -10,6 +10,7 @@ namespace NCalc.Domain
 
         private readonly EvaluateOptions _options = EvaluateOptions.None;
         private readonly CultureInfo _cultureInfo = CultureInfo.CurrentCulture;
+        private readonly StringComparer _comparer;
 
         private bool IgnoreCase { get { return (_options & EvaluateOptions.IgnoreCase) == EvaluateOptions.IgnoreCase; } }
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
@@ -22,6 +23,11 @@ namespace NCalc.Domain
         {
             _options = options;
             _cultureInfo = cultureInfo;
+
+            if (Ordinal)
+                _comparer = IgnoreCaseString ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            else
+                _comparer = StringComparer.Create(_cultureInfo, IgnoreCaseString);
         }
 
         public object Result { get; protected set; }
@@ -78,14 +84,7 @@ namespace NCalc.Domain
             b = Convert.ChangeType(b, mpt, _cultureInfo);
 
             if (mpt.Equals(typeof(string)) && (Ordinal || IgnoreCaseString))
-            {
-                if (Ordinal)
-                {
-                    if (IgnoreCaseString) return StringComparer.OrdinalIgnoreCase.Compare(a?.ToString(), b?.ToString());
-                    else StringComparer.Ordinal.Compare(a?.ToString(), b?.ToString());
-                }
-                else return StringComparer.CurrentCultureIgnoreCase.Compare(a?.ToString(), b?.ToString());
-            }
+                return _comparer.Compare(a?.ToString(), b?.ToString());
 
             if (ReferenceEquals(a, b))
             {
