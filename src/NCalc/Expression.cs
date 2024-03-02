@@ -49,7 +49,7 @@ namespace NCalc
             CultureInfo = cultureInfo;
         }
 
-        public Expression(LogicalExpression expression, EvaluateOptions options): this(expression, options, CultureInfo.CurrentCulture) 
+        public Expression(LogicalExpression expression, EvaluateOptions options) : this(expression, options, CultureInfo.CurrentCulture)
         {
         }
 
@@ -121,14 +121,13 @@ namespace NCalc
                 if (_compiledExpressions.ContainsKey(expression))
                 {
                     //Debug.WriteLine("Expression retrieved from cache: " + expression);
-                    if (_compiledExpressions.TryGetValue(expression, out var wr))
-                    {
-                        logicalExpression = wr.Target as LogicalExpression;
 
-                        if (wr.IsAlive && logicalExpression != null)
-                        {
-                            return logicalExpression;
-                        }
+                    var wr = _compiledExpressions[expression];
+                    logicalExpression = wr.Target as LogicalExpression;
+
+                    if (wr.IsAlive && logicalExpression != null)
+                    {
+                        return logicalExpression;
                     }
                 }
             }
