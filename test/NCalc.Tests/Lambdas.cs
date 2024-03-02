@@ -137,7 +137,7 @@ namespace NCalc.Tests
         [InlineData("7%2", 1)]
         public void ShouldHandleIntegers(string input, int expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<int>();
 
             Assert.Equal(sut(), expected);
@@ -146,7 +146,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleParameters()
         {
-            var expression = new Expression("[FieldA] > 5 && [FieldB] = 'test'", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("[FieldA] > 5 && [FieldB] = 'test'");
             var sut = expression.ToLambda<Context, bool>();
             var context = new Context { FieldA = 7, FieldB = "test" };
 
@@ -156,7 +156,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleOverloadingSameParamCount()
         {
-            var expression = new Expression("Test('Hello', ' world!')", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Test('Hello', ' world!')");
             var sut = expression.ToLambda<Context, string>();
             var context = new Context();
 
@@ -166,7 +166,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleOverloadingDifferentParamCount()
         {
-            var expression = new Expression("Test(Test(1, 2), 3, 4)", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Test(Test(1, 2), 3, 4)");
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
@@ -176,7 +176,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleOverloadingObjectParameters()
         {
-            var expression = new Expression("Sum(CreateTestObject1(2), CreateTestObject2(2)) + Sum(CreateTestObject2(1), CreateTestObject1(5))", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Sum(CreateTestObject1(2), CreateTestObject2(2)) + Sum(CreateTestObject2(1), CreateTestObject1(5))");
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
@@ -187,7 +187,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleParamsKeyword()
         {
-            var expression = new Expression("Sum(Test(1,1),2)", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Sum(Test(1,1),2)");
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
@@ -197,7 +197,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleMixedParamsKeyword()
         {
-            var expression = new Expression("Sum('Your total is: ', Test(1,1), 2, 3)", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Sum('Your total is: ', Test(1,1), 2, 3)");
             var sut = expression.ToLambda<Context, string>();
             var context = new Context();
 
@@ -207,7 +207,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleCustomFunctions()
         {
-            var expression = new Expression("Test(Test(1, 2), 3)", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Test(Test(1, 2), 3)");
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
@@ -217,10 +217,10 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleContextInheritance()
         {
-            var lambda1 = new Expression("Multiply(5, 2)", CultureInfo.InvariantCulture).ToLambda<SubContext, int>();
-            var lambda2 = new Expression("Test(5, 5)", CultureInfo.InvariantCulture).ToLambda<SubContext, int>();
-            var lambda3 = new Expression("Test(1,2,3,4)", CultureInfo.InvariantCulture).ToLambda<SubContext, int>();
-            var lambda4 = new Expression("Sum(CreateTestObject1(100), CreateTestObject2(100), CreateTestObject2(100))", CultureInfo.InvariantCulture)
+            var lambda1 = Extensions.CreateExpression("Multiply(5, 2)").ToLambda<SubContext, int>();
+            var lambda2 = Extensions.CreateExpression("Test(5, 5)").ToLambda<SubContext, int>();
+            var lambda3 = Extensions.CreateExpression("Test(1,2,3,4)").ToLambda<SubContext, int>();
+            var lambda4 = Extensions.CreateExpression("Sum(CreateTestObject1(100), CreateTestObject2(100), CreateTestObject2(100))")
                 .ToLambda<SubContext, int>();
 
             var context = new SubContext();
@@ -236,7 +236,7 @@ namespace NCalc.Tests
         [InlineData("Test(1.0, 1, 1.0)")]
         public void ShouldHandleImplicitConversion(string input)
         {
-            var lambda = new Expression(input, CultureInfo.InvariantCulture).ToLambda<Context, int>();
+            var lambda = Extensions.CreateExpression(input).ToLambda<Context, int>();
 
             var context = new Context();
             Assert.Equal(3, lambda(context));
@@ -245,7 +245,7 @@ namespace NCalc.Tests
         [Fact]
         public void MissingMethod()
         {
-            var expression = new Expression("MissingMethod(1)", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("MissingMethod(1)");
             try
             {
                 var sut = expression.ToLambda<Context, int>();
@@ -264,7 +264,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleTernaryOperator()
         {
-            var expression = new Expression("Test(1, 2) = 3 ? 1 : 2", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Test(1, 2) = 3 ? 1 : 2");
             var sut = expression.ToLambda<Context, int>();
             var context = new Context();
 
@@ -274,7 +274,7 @@ namespace NCalc.Tests
         [Fact]
         public void Issue1()
         {
-            var expr = new Expression("2 + 2 - a - b - x", CultureInfo.InvariantCulture);
+            var expr = Extensions.CreateExpression("2 + 2 - a - b - x");
 
             decimal x = 5m;
             decimal a = 6m;
@@ -293,7 +293,7 @@ namespace NCalc.Tests
         [InlineData("in(3, 1, 2, 3, 4)")]
         public void ShouldHandleBuiltInFunctions(string input)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<bool>();
             Assert.True(sut());
         }
@@ -305,7 +305,7 @@ namespace NCalc.Tests
         [InlineData("Max(1, 2)", 2)]
         public void ShouldProritiseContextFunctions(string input, double expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var lambda = expression.ToLambda<Context, double>();
             var context = new Context();
             var actual = lambda(context);
@@ -320,7 +320,7 @@ namespace NCalc.Tests
         [InlineData("[FieldD] > 0", false)]
         public void ShouldHandleDataConversions(string input, bool expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<Context, bool>();
             var context = new Context { FieldA = 7, FieldB = "test", FieldC = 2.4m, FieldE = 2 };
 
@@ -335,7 +335,7 @@ namespace NCalc.Tests
         [InlineData("Pow(5,2)", 25)]
         public void ShouldHandleNumericBuiltInFunctions(string input, double expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<object>();
             Assert.Equal(expected, sut());
         }
@@ -346,7 +346,7 @@ namespace NCalc.Tests
         [InlineData("if(true, 1.0, 0.0)", 1.0)]
         public void ShouldHandleFloatIfFunction(string input, double expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<object>();
             Assert.Equal(expected, sut());
         }
@@ -355,7 +355,7 @@ namespace NCalc.Tests
         [InlineData("if(true, 1, 0)", 1)]
         public void ShouldHandleIntIfFunction(string input, int expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<object>();
             Assert.Equal(expected, sut());
         }
@@ -364,7 +364,7 @@ namespace NCalc.Tests
         [InlineData("if(true, 'a', 'b')", "a")]
         public void ShouldHandleStringIfFunction(string input, string expected)
         {
-            var expression = new Expression(input, CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression(input);
             var sut = expression.ToLambda<object>();
             Assert.Equal(expected, sut());
         }
@@ -374,7 +374,7 @@ namespace NCalc.Tests
         {
             // Arrange
             const decimal expected = 6.908m;
-            var expression = new Expression("Foo * 3.14", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("Foo * 3.14");
             var sut = expression.ToLambda<FooStruct, decimal>();
             var context = new FooStruct();
 
@@ -392,7 +392,7 @@ namespace NCalc.Tests
             // Arrange
             const long expected = 9999999999L;
             var expression = $"if(true, {expected}, 0)";
-            var e = new Expression(expression, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression(expression);
             var context = new object();
 
             var lambda = e.ToLambda<object, long>();

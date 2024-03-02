@@ -40,13 +40,13 @@ namespace NCalc.Tests
             foreach (string expression in expressions)
                 _output.WriteLine("{0} = {1}",
                     expression,
-                    new Expression(expression, CultureInfo.InvariantCulture).Evaluate());
+                    Extensions.CreateExpression(expression).Evaluate());
         }
 
         [Fact]
         public void ExpressionShouldHandleNullRightParameters()
         {
-            var e = new Expression("'a string' == null", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("'a string' == null", EvaluateOptions.AllowNullParameter);
 
             Assert.False((bool)e.Evaluate());
         }
@@ -54,7 +54,7 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionShouldHandleNullLeftParameters()
         {
-            var e = new Expression("null == 'a string'", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("null == 'a string'", EvaluateOptions.AllowNullParameter);
 
             Assert.False((bool)e.Evaluate());
         }
@@ -62,7 +62,7 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionShouldHandleNullBothParameters()
         {
-            var e = new Expression("null == null", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("null == null", EvaluateOptions.AllowNullParameter);
 
             Assert.True((bool)e.Evaluate());
         }
@@ -70,7 +70,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldCompareNullToNull()
         {
-            var e = new Expression("[x] = null", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[x] = null", EvaluateOptions.AllowNullParameter);
 
             e.Parameters["x"] = null;
 
@@ -80,7 +80,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldCompareNullableToNonNullable()
         {
-            var e = new Expression("[x] = 5", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[x] = 5", EvaluateOptions.AllowNullParameter);
 
             e.Parameters["x"] = (int?)5;
             Assert.True((bool)e.Evaluate());
@@ -92,7 +92,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldCompareNullableNullToNonNullable()
         {
-            var e = new Expression("[x] = 5", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[x] = 5", EvaluateOptions.AllowNullParameter);
 
             e.Parameters["x"] = null;
             Assert.False((bool)e.Evaluate());
@@ -101,7 +101,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldCompareNullToString()
         {
-            var e = new Expression("[x] = 'foo'", EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[x] = 'foo'", EvaluateOptions.AllowNullParameter);
 
             e.Parameters["x"] = null;
 
@@ -111,7 +111,7 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionDoesNotDefineNullParameterWithoutNullOption()
         {
-            var e = new Expression("'a string' == null", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("'a string' == null");
 
             var ex = Assert.Throws<ArgumentException>(() => e.Evaluate());
             Assert.Contains("Parameter was not defined", ex.Message);
@@ -120,7 +120,7 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionThrowsNullReferenceExceptionWithoutNullOption()
         {
-            var e = new Expression("'a string' == null", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("'a string' == null");
 
             e.Parameters["null"] = null;
 
@@ -130,7 +130,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldEvaluateExcessiveNulls()
         {
-            var e = new Expression(GetNullsFormula(), EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression(GetNullsFormula(), EvaluateOptions.AllowNullParameter);
 
             Assert.Null(e.Evaluate());
         }
@@ -146,7 +146,7 @@ namespace NCalc.Tests
 
             for (int i = 0; i < iterations; i++)
             {
-                new Expression(formula, EvaluateOptions.AllowNullParameter, CultureInfo.InvariantCulture).Evaluate();
+                Extensions.CreateExpression(formula, EvaluateOptions.AllowNullParameter).Evaluate();
             }
 
             stopwatch.Stop();
@@ -160,12 +160,12 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldParseValues()
         {
-            Assert.Equal(123456, new Expression("123456", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(new DateTime(2001, 01, 01), new Expression("#01/01/2001#", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(123.456d, new Expression("123.456", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal((object)true, new Expression("true", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("true", new Expression("'true'", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("azerty", new Expression("'azerty'", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(123456, Extensions.CreateExpression("123456").Evaluate());
+            Assert.Equal(new DateTime(2001, 01, 01), Extensions.CreateExpression("#01/01/2001#").Evaluate());
+            Assert.Equal(123.456d, Extensions.CreateExpression("123.456").Evaluate());
+            Assert.Equal((object)true, Extensions.CreateExpression("true").Evaluate());
+            Assert.Equal("true", Extensions.CreateExpression("'true'").Evaluate());
+            Assert.Equal("azerty", Extensions.CreateExpression("'azerty'").Evaluate());
         }
 
         [Fact]
@@ -173,7 +173,7 @@ namespace NCalc.Tests
         {
             // small decimals starting with 0 resulting in scientific notation did not work in original NCalc
             var equation = "0.000001";
-            var testExpression = new Expression(equation, CultureInfo.InvariantCulture);
+            var testExpression = Extensions.CreateExpression(equation);
             testExpression.Evaluate();
             Assert.Equal(equation, testExpression.ParsedExpression.ToString());
         }
@@ -181,18 +181,18 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleUnicode()
         {
-            Assert.Equal("経済協力開発機構", new Expression("'経済協力開発機構'", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("Hello", new Expression(@"'\u0048\u0065\u006C\u006C\u006F'", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("だ", new Expression(@"'\u3060'", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("\u0100", new Expression(@"'\u0100'", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal("経済協力開発機構", Extensions.CreateExpression("'経済協力開発機構'").Evaluate());
+            Assert.Equal("Hello", Extensions.CreateExpression(@"'\u0048\u0065\u006C\u006C\u006F'").Evaluate());
+            Assert.Equal("だ", Extensions.CreateExpression(@"'\u3060'").Evaluate());
+            Assert.Equal("\u0100", Extensions.CreateExpression(@"'\u0100'").Evaluate());
         }
 
         [Fact]
         public void ShouldEscapeCharacters()
         {
-            Assert.Equal("'hello'", new Expression(@"'\'hello\''", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(" ' hel lo ' ", new Expression(@"' \' hel lo \' '", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("hel\nlo", new Expression(@"'hel\nlo'", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal("'hello'", Extensions.CreateExpression(@"'\'hello\''").Evaluate());
+            Assert.Equal(" ' hel lo ' ", Extensions.CreateExpression(@"' \' hel lo \' '").Evaluate());
+            Assert.Equal("hel\nlo", Extensions.CreateExpression(@"'hel\nlo'").Evaluate());
         }
 
         [Fact]
@@ -200,7 +200,7 @@ namespace NCalc.Tests
         {
             try
             {
-                new Expression("(3 + 2", CultureInfo.InvariantCulture).Evaluate();
+                Extensions.CreateExpression("(3 + 2").Evaluate();
                 throw new Exception();
             }
             catch (EvaluationException e)
@@ -212,30 +212,30 @@ namespace NCalc.Tests
         [Fact]
         public void Maths()
         {
-            Assert.Equal(1M, new Expression("Abs(-1)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Acos(1)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Asin(0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Atan(0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(2d, new Expression("Ceiling(1.5)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(1d, new Expression("Cos(0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(1d, new Expression("Exp(0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(1d, new Expression("Floor(1.5)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(-1d, new Expression("IEEERemainder(3,2)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Log(1,10)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Log10(1)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(9d, new Expression("Pow(3,2)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(3.22d, new Expression("Round(3.222,2)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(-1, new Expression("Sign(-10)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Sin(0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(2d, new Expression("Sqrt(4)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0d, new Expression("Tan(0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(1d, new Expression("Truncate(1.7)", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(1M, Extensions.CreateExpression("Abs(-1)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Acos(1)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Asin(0)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Atan(0)").Evaluate());
+            Assert.Equal(2d, Extensions.CreateExpression("Ceiling(1.5)").Evaluate());
+            Assert.Equal(1d, Extensions.CreateExpression("Cos(0)").Evaluate());
+            Assert.Equal(1d, Extensions.CreateExpression("Exp(0)").Evaluate());
+            Assert.Equal(1d, Extensions.CreateExpression("Floor(1.5)").Evaluate());
+            Assert.Equal(-1d, Extensions.CreateExpression("IEEERemainder(3,2)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Log(1,10)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Log10(1)").Evaluate());
+            Assert.Equal(9d, Extensions.CreateExpression("Pow(3,2)").Evaluate());
+            Assert.Equal(3.22d, Extensions.CreateExpression("Round(3.222,2)").Evaluate());
+            Assert.Equal(-1, Extensions.CreateExpression("Sign(-10)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Sin(0)").Evaluate());
+            Assert.Equal(2d, Extensions.CreateExpression("Sqrt(4)").Evaluate());
+            Assert.Equal(0d, Extensions.CreateExpression("Tan(0)").Evaluate());
+            Assert.Equal(1d, Extensions.CreateExpression("Truncate(1.7)").Evaluate());
         }
 
         [Fact]
         public void ExpressionShouldEvaluateCustomFunctions()
         {
-            var e = new Expression("SecretOperation(3, 6)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("SecretOperation(3, 6)");
 
             e.EvaluateFunction += delegate (string name, FunctionArgs args)
                 {
@@ -249,7 +249,7 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionShouldEvaluateCustomFunctionsWithParameters()
         {
-            var e = new Expression("SecretOperation([e], 6) + f", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("SecretOperation([e], 6) + f");
             e.Parameters["e"] = 3;
             e.Parameters["f"] = 1;
 
@@ -265,9 +265,9 @@ namespace NCalc.Tests
         [Fact]
         public void ExpressionShouldEvaluateParameters()
         {
-            var e = new Expression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("Round(Pow(Pi, 2) + Pow([Pi Squared], 2) + [X], 2)");
 
-            e.Parameters["Pi Squared"] = new Expression("Pi * [Pi]", CultureInfo.InvariantCulture);
+            e.Parameters["Pi Squared"] = Extensions.CreateExpression("Pi * [Pi]");
             e.Parameters["X"] = 10;
 
             e.EvaluateParameter += delegate (string name, ParameterArgs args)
@@ -282,13 +282,13 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldEvaluateConditionnal()
         {
-            var eif = new Expression("if([divider] <> 0, [divided] / [divider], 0)", CultureInfo.InvariantCulture);
+            var eif = Extensions.CreateExpression("if([divider] <> 0, [divided] / [divider], 0)");
             eif.Parameters["divider"] = 5;
             eif.Parameters["divided"] = 5;
 
             Assert.Equal(1d, eif.Evaluate());
 
-            eif = new Expression("if([divider] <> 0, [divided] / [divider], 0)", CultureInfo.InvariantCulture);
+            eif = Extensions.CreateExpression("if([divider] <> 0, [divided] / [divider], 0)");
             eif.Parameters["divider"] = 0;
             eif.Parameters["divided"] = 5;
             Assert.Equal(0, eif.Evaluate());
@@ -297,7 +297,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldOverrideExistingFunctions()
         {
-            var e = new Expression("Round(1.99, 2)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("Round(1.99, 2)");
 
             Assert.Equal(1.99d, e.Evaluate());
 
@@ -314,20 +314,20 @@ namespace NCalc.Tests
         public void ShouldEvaluateInOperator()
         {
             // The last argument should not be evaluated
-            var ein = new Expression("in((2 + 2), [1], [2], 1 + 2, 4, 1 / 0)", CultureInfo.InvariantCulture);
+            var ein = Extensions.CreateExpression("in((2 + 2), [1], [2], 1 + 2, 4, 1 / 0)");
             ein.Parameters["1"] = 2;
             ein.Parameters["2"] = 5;
 
             Assert.Equal((object)true, ein.Evaluate());
 
-            var eout = new Expression("in((2 + 2), [1], [2], 1 + 2, 3)", CultureInfo.InvariantCulture);
+            var eout = Extensions.CreateExpression("in((2 + 2), [1], [2], 1 + 2, 3)");
             eout.Parameters["1"] = 2;
             eout.Parameters["2"] = 5;
 
             Assert.Equal((object)false, eout.Evaluate());
 
             // Should work with strings
-            var estring = new Expression("in('to' + 'to', 'titi', 'toto')", CultureInfo.InvariantCulture);
+            var estring = Extensions.CreateExpression("in('to' + 'to', 'titi', 'toto')");
 
             Assert.Equal((object)true, estring.Evaluate());
 
@@ -371,7 +371,7 @@ namespace NCalc.Tests
 
             foreach (KeyValuePair<string, object> pair in expressions)
             {
-                Assert.Equal(pair.Value, new Expression(pair.Key, CultureInfo.InvariantCulture).Evaluate());
+                Assert.Equal(pair.Value, Extensions.CreateExpression(pair.Key).Evaluate());
             }
 
         }
@@ -379,19 +379,19 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleOperatorsPriority()
         {
-            Assert.Equal(8, new Expression("2+2+2+2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(16, new Expression("2*2*2*2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(6, new Expression("2*2+2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(6, new Expression("2+2*2", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(8, Extensions.CreateExpression("2+2+2+2").Evaluate());
+            Assert.Equal(16, Extensions.CreateExpression("2*2*2*2").Evaluate());
+            Assert.Equal(6, Extensions.CreateExpression("2*2+2").Evaluate());
+            Assert.Equal(6, Extensions.CreateExpression("2+2*2").Evaluate());
 
-            Assert.Equal(9d, new Expression("1 + 2 + 3 * 4 / 2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(13.5, new Expression("18/2/2*3", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(9d, Extensions.CreateExpression("1 + 2 + 3 * 4 / 2").Evaluate());
+            Assert.Equal(13.5, Extensions.CreateExpression("18/2/2*3").Evaluate());
         }
 
         [Fact]
         public void ShouldNotLoosePrecision()
         {
-            Assert.Equal(0.5, new Expression("3/6", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(0.5, Extensions.CreateExpression("3/6").Evaluate());
         }
 
         [Fact]
@@ -399,7 +399,7 @@ namespace NCalc.Tests
         {
             try
             {
-                new Expression("4. + 2", CultureInfo.InvariantCulture).Evaluate();
+                Extensions.CreateExpression("4. + 2").Evaluate();
                 throw new Exception();
             }
             catch (EvaluationException e)
@@ -411,13 +411,13 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldNotRoundDecimalValues()
         {
-            Assert.Equal((object)false, new Expression("0 <= -0.6", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal((object)false, Extensions.CreateExpression("0 <= -0.6").Evaluate());
         }
 
         [Fact]
         public void ShouldEvaluateTernaryExpression()
         {
-            Assert.Equal(1, new Expression("1+2<3 ? 3+4 : 1", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(1, Extensions.CreateExpression("1+2<3 ? 3+4 : 1").Evaluate());
         }
 
         [Fact]
@@ -455,21 +455,21 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleStringConcatenation()
         {
-            Assert.Equal("toto", new Expression("'to' + 'to'", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal("one2", new Expression("'one' + 2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(3M, new Expression("1 + '2'", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal("toto", Extensions.CreateExpression("'to' + 'to'").Evaluate());
+            Assert.Equal("one2", Extensions.CreateExpression("'one' + 2").Evaluate());
+            Assert.Equal(3M, Extensions.CreateExpression("1 + '2'").Evaluate());
         }
 
         [Fact]
         public void ShouldDetectSyntaxErrorsBeforeEvaluation()
         {
-            var e = new Expression("a + b * (", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("a + b * (");
             Assert.Null(e.Error);
             Assert.True(e.HasErrors());
             Assert.True(e.HasErrors());
             Assert.NotNull(e.Error);
 
-            e = new Expression("+ b ", CultureInfo.InvariantCulture);
+            e = Extensions.CreateExpression("+ b ");
             Assert.Null(e.Error);
             Assert.True(e.HasErrors());
             Assert.NotNull(e.Error);
@@ -527,7 +527,7 @@ namespace NCalc.Tests
 
                 // Constructs a simple addition randomly. Odds are that the same expression gets constructed multiple times by different threads
                 var exp = n1 + " + " + n2;
-                var e = new Expression(exp, CultureInfo.InvariantCulture);
+                var e = Extensions.CreateExpression(exp);
                 Assert.True(e.Evaluate().Equals(n1 + n2));
             }
             catch (Exception e)
@@ -539,12 +539,12 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleCaseSensitiveness()
         {
-            Assert.Equal(1M, new Expression("aBs(-1)", EvaluateOptions.IgnoreCase, CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(1M, new Expression("Abs(-1)", EvaluateOptions.None, CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(1M, Extensions.CreateExpression("aBs(-1)", EvaluateOptions.IgnoreCase).Evaluate());
+            Assert.Equal(1M, Extensions.CreateExpression("Abs(-1)", EvaluateOptions.None).Evaluate());
 
             try
             {
-                Assert.Equal(1M, new Expression("aBs(-1)", EvaluateOptions.None, CultureInfo.InvariantCulture).Evaluate());
+                Assert.Equal(1M, Extensions.CreateExpression("aBs(-1)", EvaluateOptions.None).Evaluate());
             }
             catch (ArgumentException)
             {
@@ -561,7 +561,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleCustomParametersWhenNoSpecificParameterIsDefined()
         {
-            var e = new Expression("Round(Pow([Pi], 2) + Pow([Pi], 2) + 10, 2)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("Round(Pow([Pi], 2) + Pow([Pi], 2) + 10, 2)");
 
             e.EvaluateParameter += delegate (string name, ParameterArgs arg)
             {
@@ -575,7 +575,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleCustomFunctionsInFunctions()
         {
-            var e = new Expression("if(true, func1(x) + func2(func3(y)), 0)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("if(true, func1(x) + func2(func3(y)), 0)");
 
             e.EvaluateFunction += delegate (string name, FunctionArgs arg)
             {
@@ -616,18 +616,18 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldParseScientificNotation()
         {
-            Assert.Equal(12.2d, new Expression("1.22e1", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(100d, new Expression("1e2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(100d, new Expression("1e+2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0.01d, new Expression("1e-2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(0.001d, new Expression(".1e-2", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(10000000000d, new Expression("1e10", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(12.2d, Extensions.CreateExpression("1.22e1").Evaluate());
+            Assert.Equal(100d, Extensions.CreateExpression("1e2").Evaluate());
+            Assert.Equal(100d, Extensions.CreateExpression("1e+2").Evaluate());
+            Assert.Equal(0.01d, Extensions.CreateExpression("1e-2").Evaluate());
+            Assert.Equal(0.001d, Extensions.CreateExpression(".1e-2").Evaluate());
+            Assert.Equal(10000000000d, Extensions.CreateExpression("1e10").Evaluate());
         }
 
         [Fact]
         public void ShouldEvaluateArrayParameters()
         {
-            var e = new Expression("x * x", EvaluateOptions.IterateParameters, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("x * x", EvaluateOptions.IterateParameters);
             e.Parameters["x"] = new[] { 0, 1, 2, 3, 4 };
 
             var result = (IList)e.Evaluate();
@@ -642,7 +642,7 @@ namespace NCalc.Tests
         [Fact]
         public void CustomFunctionShouldReturnNull()
         {
-            var e = new Expression("SecretOperation(3, 6)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("SecretOperation(3, 6)");
 
             e.EvaluateFunction += delegate (string name, FunctionArgs args)
             {
@@ -658,7 +658,7 @@ namespace NCalc.Tests
         [Fact]
         public void CustomParametersShouldReturnNull()
         {
-            var e = new Expression("x", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("x");
 
             e.EvaluateParameter += delegate (string name, ParameterArgs args)
             {
@@ -674,22 +674,22 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldCompareDates()
         {
-            Assert.Equal((object)true, new Expression("#1/1/2009#==#1/1/2009#", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal((object)false, new Expression("#2/1/2009#==#1/1/2009#", CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal((object)true, Extensions.CreateExpression("#1/1/2009#==#1/1/2009#").Evaluate());
+            Assert.Equal((object)false, Extensions.CreateExpression("#2/1/2009#==#1/1/2009#").Evaluate());
         }
 
         [Fact]
         public void ShouldRoundAwayFromZero()
         {
-            Assert.Equal(22d, new Expression("Round(22.5, 0)", CultureInfo.InvariantCulture).Evaluate());
-            Assert.Equal(23d, new Expression("Round(22.5, 0)", EvaluateOptions.RoundAwayFromZero, CultureInfo.InvariantCulture).Evaluate());
+            Assert.Equal(22d, Extensions.CreateExpression("Round(22.5, 0)").Evaluate());
+            Assert.Equal(23d, Extensions.CreateExpression("Round(22.5, 0)", EvaluateOptions.RoundAwayFromZero).Evaluate());
         }
 
         [Fact]
         public void ShouldEvaluateSubExpressions()
         {
-            var volume = new Expression("[surface] * h", CultureInfo.InvariantCulture);
-            var surface = new Expression("[l] * [L]", CultureInfo.InvariantCulture);
+            var volume = Extensions.CreateExpression("[surface] * h");
+            var surface = Extensions.CreateExpression("[l] * [L]");
             volume.Parameters["surface"] = surface;
             volume.Parameters["h"] = 3;
             surface.Parameters["l"] = 1;
@@ -701,21 +701,21 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldHandleLongValues()
         {
-            var expression = new Expression("40000000000+1", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("40000000000+1");
             Assert.Equal(40000000000 + 1L, expression.Evaluate());
         }
 
         [Fact]
         public void ShouldCompareLongValues()
         {
-            var expression = new Expression("(0=1500000)||(((0+2200000000)-1500000)<0)", CultureInfo.InvariantCulture);
+            var expression = Extensions.CreateExpression("(0=1500000)||(((0+2200000000)-1500000)<0)");
             Assert.Equal((object)false, expression.Evaluate());
         }
 
         [Fact]
         public void ShouldDisplayErrorIfUncompatibleTypes()
         {
-            var e = new Expression("(a > b) + 10", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("(a > b) + 10");
             e.Parameters["a"] = 1;
             e.Parameters["b"] = 2;
             Assert.Throws<InvalidOperationException>(() => e.Evaluate());
@@ -732,10 +732,8 @@ namespace NCalc.Tests
         [InlineData("1-(X1 = 1)", 0)]
         public void ShouldOptionallyCalculateWithBoolean(string formula, object expectedValue)
         {
-            var expression = new Expression(formula, EvaluateOptions.BooleanCalculation, CultureInfo.InvariantCulture)
-            {
-                Parameters = { ["X1"] = 1 }
-            };
+            var expression = Extensions.CreateExpression(formula, EvaluateOptions.BooleanCalculation);
+            expression.Parameters["X1"] = 1;
 
             expression.Evaluate().Should().Be(expectedValue);
 
@@ -746,19 +744,19 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldNotConvertRealTypes()
         {
-            var e = new Expression("x/2", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("x/2");
             e.Parameters["x"] = 2F;
             Assert.Equal(typeof(float), e.Evaluate().GetType());
 
-            e = new Expression("x/2", CultureInfo.InvariantCulture);
+            e = Extensions.CreateExpression("x/2");
             e.Parameters["x"] = 2D;
             Assert.Equal(typeof(double), e.Evaluate().GetType());
 
-            e = new Expression("x/2", CultureInfo.InvariantCulture);
+            e = Extensions.CreateExpression("x/2");
             e.Parameters["x"] = 2m;
             Assert.Equal(typeof(decimal), e.Evaluate().GetType());
 
-            e = new Expression("a / b * 100", CultureInfo.InvariantCulture);
+            e = Extensions.CreateExpression("a / b * 100");
             e.Parameters["a"] = 20M;
             e.Parameters["b"] = 20M;
             Assert.Equal(100M, e.Evaluate());
@@ -768,7 +766,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldShortCircuitBooleanExpressions()
         {
-            var e = new Expression("([a] != 0) && ([b]/[a]>2)", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("([a] != 0) && ([b]/[a]>2)");
             e.Parameters["a"] = 0;
 
             Assert.Equal((object)false, e.Evaluate());
@@ -777,7 +775,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldAddDoubleAndDecimal()
         {
-            var e = new Expression("1.8 + Abs([var1])", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("1.8 + Abs([var1])");
             e.Parameters["var1"] = 9.2;
 
             Assert.Equal(11M, e.Evaluate());
@@ -786,7 +784,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldSubtractDoubleAndDecimal()
         {
-            var e = new Expression("[double] - [decimal]", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[double] - [decimal]");
             e.Parameters["double"] = 2D;
             e.Parameters["decimal"] = 2m;
 
@@ -796,7 +794,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldMultiplyDoubleAndDecimal()
         {
-            var e = new Expression("[double] * [decimal]", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[double] * [decimal]");
             e.Parameters["double"] = 2D;
             e.Parameters["decimal"] = 2m;
 
@@ -806,7 +804,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldDivideDoubleAndDecimal()
         {
-            var e = new Expression("[double] / [decimal]", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[double] / [decimal]");
             e.Parameters["double"] = 2D;
             e.Parameters["decimal"] = 2m;
 
@@ -816,7 +814,7 @@ namespace NCalc.Tests
         [Fact]
         public void ShouldModDoubleAndDecimal()
         {
-            var e = new Expression("[double] % [decimal]", CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression("[double] % [decimal]");
             e.Parameters["double"] = 2D;
             e.Parameters["decimal"] = 2m;
 
@@ -828,7 +826,7 @@ namespace NCalc.Tests
         [Theory]
         public void ShouldCheckPrecisionOfBothParametersForMaxAndMin(string expression, double expected)
         {
-            var e = new Expression(expression, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression(expression);
 
             var result = e.Evaluate();
 
@@ -842,7 +840,7 @@ namespace NCalc.Tests
         {
             const long expected = 9999999999L;
             var expression = $"if(true, {expected}, 0)";
-            var e = new Expression(expression, CultureInfo.InvariantCulture);
+            var e = Extensions.CreateExpression(expression);
 
             var actual = e.Evaluate();
 
@@ -857,23 +855,17 @@ namespace NCalc.Tests
             {
                 var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
                 culture.NumberFormat.NumberDecimalSeparator = ",";
-                Thread.CurrentThread.CurrentCulture = culture;
+                Thread.CurrentThread.CurrentCulture = culture;       
 
                 Assert.Throws<FormatException>(() =>
                 {
-                    var expr = new Expression("[a] < 2.0")
-                    {
-                        Parameters = { ["a"] = "1.7" }
-                    };
-
+                    var expr = Extensions.CreateExpression("[a] < 2.0");
+                    expr.Parameters["a"] = "1.7";
                     expr.Evaluate();
                 });
 
-                var e = new Expression("[a] < 2.0", CultureInfo.InvariantCulture)
-                {
-                    Parameters = { ["a"] = "1.7" }
-                };
-
+                var e = Extensions.CreateExpression("[a] < 2.0");
+                e.Parameters["a"] = "1.7";
                 Assert.Equal(true, e.Evaluate());
             }
             finally
@@ -902,44 +894,28 @@ namespace NCalc.Tests
             void ExecuteTest(string formula, object expectedValue)
             {
                 //Correctly evaluate with decimal dot culture and parameter with dot
-                Assert.Equal(expectedValue, new Expression(formula, cultureDot)
-                {
-                    Parameters = new Dictionary<string, object>
-                        {
-                            {"A","2.0"},
-                            {"B","0.5"}
-                        }
-                }.Evaluate());
-
+                var expression = Extensions.CreateExpression(formula, cultureDot);
+                expression.Parameters["A"] = "2.0";
+                expression.Parameters["B"] = "0.5";
+                Assert.Equal(expectedValue, expression.Evaluate());
+                
                 //Correctly evaluate with decimal comma and parameter with comma
-                Assert.Equal(expectedValue, new Expression(formula, cultureComma)
-                {
-                    Parameters = new Dictionary<string, object>
-                    {
-                        {"A","2.0"},
-                        {"B","0.5"}
-                    }
-                }.Evaluate());
+                expression = Extensions.CreateExpression(formula, cultureComma);
+                expression.Parameters["A"] = "2.0";
+                expression.Parameters["B"] = "0.5";
+                Assert.Equal(expectedValue, expression.Evaluate());
 
                 //combining decimal dot and comma fails
-                Assert.Throws<FormatException>(() => new Expression(formula, cultureComma)
-                {
-                    Parameters = new Dictionary<string, object>
-                    {
-                        {"A","2,0"},
-                        {"B","0.5"}
-                    }
-                }.Evaluate());
+                expression = Extensions.CreateExpression(formula, cultureComma);
+                expression.Parameters["A"] = "2,0";
+                expression.Parameters["B"] = "0.5";
+                Assert.Throws<FormatException>(() => expression.Evaluate());
 
                 //combining decimal dot and comma fails
-                Assert.Throws<FormatException>(() => new Expression(formula, cultureDot)
-                {
-                    Parameters = new Dictionary<string, object>
-                    {
-                        {"A","2,0"},
-                        {"B","0.5"}
-                    }
-                }.Evaluate());
+                expression = Extensions.CreateExpression(formula, cultureDot);
+                expression.Parameters["A"] = "2,0";
+                expression.Parameters["B"] = "0.5";
+                Assert.Throws<FormatException>(() => expression.Evaluate());
             }
         }
     }
