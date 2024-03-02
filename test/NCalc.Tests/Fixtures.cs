@@ -859,13 +859,11 @@ namespace NCalc.Tests
 
                 Assert.Throws<FormatException>(() =>
                 {
-                    var expr = Extensions.CreateExpression("[a] < 2.0");
-                    expr.Parameters["a"] = "1.7";
+                    var expr = new Expression("[a] < 2.0") { Parameters = { ["a"] = "1.7" } };
                     expr.Evaluate();
                 });
 
-                var e = Extensions.CreateExpression("[a] < 2.0");
-                e.Parameters["a"] = "1.7";
+                var e = new Expression("[a]<2.0", CultureInfo.InvariantCulture) { Parameters = { ["a"] = "1.7" } };
                 Assert.Equal(true, e.Evaluate());
             }
             finally
