@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace NCalc
 {
-    internal class LambdaExpressionVistor : LogicalExpressionVisitor
+    public class LambdaExpressionVistor : LogicalExpressionVisitor
     {
         private readonly IDictionary<string, object> _parameters;
         private L.Expression _result;
