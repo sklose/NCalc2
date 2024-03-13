@@ -169,7 +169,7 @@ BinaryExpressionType type = BinaryExpressionType.Unknown;
 
 	
 unaryExpression returns [LogicalExpression value]
-	:	exponentialExpression { $value = exponentialExpression.value; }
+	:	exponentialExpression { $value = $exponentialExpression.value; }
     	|	('!' | NOT) exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.Not, $exponentialExpression.value); }
     	|	('~') exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.BitwiseNot, $exponentialExpression.value); }
     	|	'-' exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.Negate, $exponentialExpression.value); }
