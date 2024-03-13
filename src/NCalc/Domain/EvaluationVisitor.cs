@@ -201,7 +201,6 @@ namespace NCalc.Domain
                         : Numbers.Subtract(left(), right(), _options, _cultureInfo);
                     break;
 
-
                 case BinaryExpressionType.Modulo:
                     Result = Numbers.Modulo(left(), right(), _cultureInfo);
                     break;
@@ -235,24 +234,24 @@ namespace NCalc.Domain
                     Result = Convert.ToUInt16(left(), _cultureInfo) & Convert.ToUInt16(right(), _cultureInfo);
                     break;
 
-
                 case BinaryExpressionType.BitwiseOr:
                     Result = Convert.ToUInt16(left(), _cultureInfo) | Convert.ToUInt16(right(), _cultureInfo);
                     break;
-
 
                 case BinaryExpressionType.BitwiseXOr:
                     Result = Convert.ToUInt16(left(), _cultureInfo) ^ Convert.ToUInt16(right(), _cultureInfo);
                     break;
 
-
                 case BinaryExpressionType.LeftShift:
                     Result = Convert.ToUInt16(left(), _cultureInfo) << Convert.ToUInt16(right(), _cultureInfo);
                     break;
 
-
                 case BinaryExpressionType.RightShift:
                     Result = Convert.ToUInt16(left(), _cultureInfo) >> Convert.ToUInt16(right(), _cultureInfo);
+                    break;
+
+                case BinaryExpressionType.Exponentiation:
+                    Result = Math.Pow(Convert.ToDouble(left(), _cultureInfo), Convert.ToDouble(right(), _cultureInfo));
                     break;
             }
         }
@@ -274,6 +273,10 @@ namespace NCalc.Domain
 
                 case UnaryExpressionType.BitwiseNot:
                     Result = ~Convert.ToUInt16(Result, _cultureInfo);
+                    break;
+
+                case UnaryExpressionType.Positive:
+                    // No-op
                     break;
             }
         }
