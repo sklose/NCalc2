@@ -162,7 +162,10 @@ namespace NCalc.Tests
         {
             Assert.Equal(123456, Extensions.CreateExpression("123456").Evaluate());
             Assert.Equal(new DateTime(2001, 01, 01), Extensions.CreateExpression("#01/01/2001#").Evaluate());
+            Assert.Equal(0.2d, Extensions.CreateExpression(".2").Evaluate());
             Assert.Equal(123.456d, Extensions.CreateExpression("123.456").Evaluate());
+            Assert.Equal(123d, Extensions.CreateExpression("123.").Evaluate());
+            Assert.Equal(12300d, Extensions.CreateExpression("123.E2").Evaluate());
             Assert.Equal((object)true, Extensions.CreateExpression("true").Evaluate());
             Assert.Equal("true", Extensions.CreateExpression("'true'").Evaluate());
             Assert.Equal("azerty", Extensions.CreateExpression("'azerty'").Evaluate());
@@ -340,6 +343,12 @@ namespace NCalc.Tests
                                   {
                                       {"!true", false},
                                       {"not false", true},
+                                      {"Not false", true},
+                                      {"NOT false", true},
+                                      {"-10", -10},
+                                      {"+20", 20},
+                                      {"2**-1", 0.5},
+                                      {"2**+2", 4.0},
                                       {"2 * 3", 6},
                                       {"6 / 2", 3d},
                                       {"7 % 2", 1},
@@ -362,9 +371,15 @@ namespace NCalc.Tests
                                       {"2 >> 1", 1},
                                       {"2 << 1", 4},
                                       {"true && false", false},
+                                      {"True and False", false},
+                                      {"tRue aNd faLse", false},
+                                      {"TRUE ANd fALSE", false},
+                                      {"true AND FALSE", false},
                                       {"true and false", false},
                                       {"true || false", true},
                                       {"true or false", true},
+                                      {"true Or false", true},
+                                      {"true OR false", true},
                                       {"if(true, 0, 1)", 0},
                                       {"if(false, 0, 1)", 1}
                                   };
@@ -386,6 +401,12 @@ namespace NCalc.Tests
 
             Assert.Equal(9d, Extensions.CreateExpression("1 + 2 + 3 * 4 / 2").Evaluate());
             Assert.Equal(13.5, Extensions.CreateExpression("18/2/2*3").Evaluate());
+            Assert.Equal(-1d, Extensions.CreateExpression("-1 ** 2").Evaluate());
+            Assert.Equal(1d, Extensions.CreateExpression("(-1) ** 2").Evaluate());
+            Assert.Equal(512d, Extensions.CreateExpression("2 ** 3 ** 2").Evaluate());
+            Assert.Equal(64d, Extensions.CreateExpression("(2 ** 3) ** 2").Evaluate());
+            Assert.Equal(18d, Extensions.CreateExpression("2 * 3 ** 2").Evaluate());
+            Assert.Equal(8d, Extensions.CreateExpression("2 ** 4 / 2").Evaluate());
         }
 
         [Fact]
@@ -399,7 +420,7 @@ namespace NCalc.Tests
         {
             try
             {
-                Extensions.CreateExpression("4. + 2").Evaluate();
+                Extensions.CreateExpression(". + 2").Evaluate();
                 throw new Exception();
             }
             catch (EvaluationException e)
@@ -469,7 +490,7 @@ namespace NCalc.Tests
             Assert.True(e.HasErrors());
             Assert.NotNull(e.Error);
 
-            e = Extensions.CreateExpression("+ b ");
+            e = Extensions.CreateExpression("* b ");
             Assert.Null(e.Error);
             Assert.True(e.HasErrors());
             Assert.NotNull(e.Error);
@@ -855,7 +876,7 @@ namespace NCalc.Tests
             {
                 var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
                 culture.NumberFormat.NumberDecimalSeparator = ",";
-                Thread.CurrentThread.CurrentCulture = culture;       
+                Thread.CurrentThread.CurrentCulture = culture;
 
                 Assert.Throws<FormatException>(() =>
                 {
@@ -896,7 +917,7 @@ namespace NCalc.Tests
                 expression.Parameters["A"] = "2.0";
                 expression.Parameters["B"] = "0.5";
                 Assert.Equal(expectedValue, expression.Evaluate());
-                
+
                 //Correctly evaluate with decimal comma and parameter with comma
                 expression = Extensions.CreateExpression(formula, cultureComma);
                 expression.Parameters["A"] = "2.0";

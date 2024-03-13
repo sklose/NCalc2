@@ -64,7 +64,7 @@ conditionalExpression returns [LogicalExpression value]
 BinaryExpressionType type = BinaryExpressionType.Unknown;
 }
 	:	left=booleanAndExpression { $value = $left.value; } (
-			('||' | 'or') { type = BinaryExpressionType.Or; } 
+			('||' | OR) { type = BinaryExpressionType.Or; } 
 			right=conditionalExpression { $value = new BinaryExpression(type, $value, $right.value); } 
 			)* 
 	;
@@ -74,7 +74,7 @@ booleanAndExpression returns [LogicalExpression value]
 BinaryExpressionType type = BinaryExpressionType.Unknown;
 }
 	:	left=bitwiseOrExpression { $value = $left.value; } (
-			('&&' | 'and') { type = BinaryExpressionType.And; } 
+			('&&' | AND) { type = BinaryExpressionType.And; } 
 			right=bitwiseOrExpression { $value = new BinaryExpression(type, $value, $right.value); } 
 			)* 
 	;
@@ -169,11 +169,18 @@ BinaryExpressionType type = BinaryExpressionType.Unknown;
 
 	
 unaryExpression returns [LogicalExpression value]
-	:	primaryExpression { $value = $primaryExpression.value; }
-    	|	('!' | 'not') primaryExpression { $value = new UnaryExpression(UnaryExpressionType.Not, $primaryExpression.value); }
-    	|	('~') primaryExpression { $value = new UnaryExpression(UnaryExpressionType.BitwiseNot, $primaryExpression.value); }
-    	|	'-' primaryExpression { $value = new UnaryExpression(UnaryExpressionType.Negate, $primaryExpression.value); }
+	:	exponentialExpression { $value = $exponentialExpression.value; }
+    	|	('!' | NOT) exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.Not, $exponentialExpression.value); }
+    	|	('~') exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.BitwiseNot, $exponentialExpression.value); }
+    	|	'-' exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.Negate, $exponentialExpression.value); }
+		|	'+' exponentialExpression { $value = new UnaryExpression(UnaryExpressionType.Positive, $exponentialExpression.value); }
    	;
+
+exponentialExpression returns [LogicalExpression value]
+	: 	left=primaryExpression { $value = $left.value; } (
+			'**' right=unaryExpression { $value = new BinaryExpression(BinaryExpressionType.Exponentiation, $value, $right.value); }
+			)*
+	;
 		
 primaryExpression returns [LogicalExpression value]
 	:	'(' logicalExpression ')' 	{ $value = $logicalExpression.value; }
@@ -210,13 +217,11 @@ $value = new List<LogicalExpression>();
 	:	'(' ( expressionList {$value = $expressionList.value;} )? ')' 
 	;			
 
-TRUE
-	:	'true'
-	;
-
-FALSE
-	:	'false'
-	;
+TRUE:	T R U E ;
+FALSE:	F A L S E ;
+AND:	A N D ;
+OR:		O R ;
+NOT:	N O T ;
 			
 ID 
 	: 	LETTER (LETTER | DIGIT)*
@@ -227,8 +232,9 @@ INTEGER
 	;
 
 FLOAT 
-	:	DIGIT* '.' DIGIT+ E?
-	|	DIGIT+ E
+	:	DIGIT* '.' DIGIT+ EXPONENT?
+	|	DIGIT+ '.' DIGIT* EXPONENT?
+	|	DIGIT+ EXPONENT
 	;
 
 STRING
@@ -239,10 +245,12 @@ DATETIME
  	:	'#' ~('#')* '#'
 	;
 
-NAME	:	'[' ~(']')* ']'
+NAME	
+	:	'[' ~(']')* ']'
 	;
 	
-E	:	('E'|'e') ('+'|'-')? DIGIT+ 
+EXPONENT
+	:	('E'|'e') ('+'|'-')? DIGIT+ 
 	;	
 	
 fragment LETTER
@@ -278,3 +286,36 @@ fragment UnicodeEscape
 /* Ignore white spaces */	
 WS	:  (' '|'\r'|'\t'|'\u000C'|'\n') -> channel(HIDDEN)
 	;
+
+/* Allow case-insensitive operators by constructing them out of fragments.
+
+ * Solution adapted from https://stackoverflow.com/a/22160240
+
+ */
+
+fragment A: 'a' | 'A';
+fragment B: 'b' | 'B';
+fragment C: 'c' | 'C';
+fragment D: 'd' | 'D';
+fragment E: 'e' | 'E';
+fragment F: 'f' | 'F';
+fragment G: 'g' | 'G';
+fragment H: 'h' | 'H';
+fragment I: 'i' | 'I';
+fragment J: 'j' | 'J';
+fragment K: 'k' | 'K';
+fragment L: 'l' | 'L';
+fragment M: 'm' | 'M';
+fragment N: 'n' | 'N';
+fragment O: 'o' | 'O';
+fragment P: 'p' | 'P';
+fragment Q: 'q' | 'Q';
+fragment R: 'r' | 'R';
+fragment S: 's' | 'S';
+fragment T: 't' | 'T';
+fragment U: 'u' | 'U';
+fragment V: 'v' | 'V';
+fragment W: 'w' | 'W';
+fragment X: 'x' | 'X';
+fragment Y: 'y' | 'Y';
+fragment Z: 'z' | 'Z';
