@@ -1,13 +1,12 @@
 using System;
-using System.Reflection;
 
 namespace NCalc.Domain
 {
-	public class ValueExpression : LogicalExpression
-	{
+    public class ValueExpression : LogicalExpression
+    {
 
- 	public ValueExpression() {}
-  
+        public ValueExpression() { }
+
         public ValueExpression(object value, ValueType type)
         {
             Value = value;
@@ -18,11 +17,11 @@ namespace NCalc.Domain
         {
             switch (value.GetTypeCode())
             {
-                case TypeCode.Boolean :
+                case TypeCode.Boolean:
                     Type = ValueType.Boolean;
                     break;
 
-                case TypeCode.DateTime :
+                case TypeCode.DateTime:
                     Type = ValueType.DateTime;
                     break;
 
@@ -93,12 +92,12 @@ namespace NCalc.Domain
         }
     }
 
-	public enum ValueType
-	{
-		Integer,
-		String,
-		DateTime,
-		Float,
-		Boolean
-	}
+    public enum ValueType
+    {
+        Integer,
+        String,
+        DateTime,
+        Float,
+        Boolean
+    }
 }

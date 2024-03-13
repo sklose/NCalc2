@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Text;
 using System.Globalization;
+using System.Text;
 
 namespace NCalc.Domain
 {
@@ -11,7 +11,7 @@ namespace NCalc.Domain
         public SerializationVisitor()
         {
             Result = new StringBuilder();
-            _numberFormatInfo = new NumberFormatInfo {NumberDecimalSeparator = "."};
+            _numberFormatInfo = new NumberFormatInfo { NumberDecimalSeparator = "." };
         }
 
         public StringBuilder Result { get; protected set; }
@@ -121,15 +121,15 @@ namespace NCalc.Domain
             switch (expression.Type)
             {
                 case UnaryExpressionType.Not:
-                    Result.Append("!");
+                    Result.Append('!');
                     break;
 
                 case UnaryExpressionType.Negate:
-                    Result.Append("-");
+                    Result.Append('-');
                     break;
 
                 case UnaryExpressionType.BitwiseNot:
-                    Result.Append("~");
+                    Result.Append('~');
                     break;
             }
 
@@ -141,23 +141,23 @@ namespace NCalc.Domain
             switch (expression.Type)
             {
                 case ValueType.Boolean:
-                    Result.Append(expression.Value.ToString()).Append(" ");
+                    Result.Append(expression.Value.ToString()).Append(' ');
                     break;
 
                 case ValueType.DateTime:
-                    Result.Append("#").Append(expression.Value.ToString()).Append("#").Append(" ");
+                    Result.Append('#').Append(expression.Value.ToString()).Append('#').Append(' ');
                     break;
 
                 case ValueType.Float:
-                    Result.Append(decimal.Parse(expression.Value.ToString(), NumberStyles.Any).ToString(_numberFormatInfo)).Append(" ");
+                    Result.Append(decimal.Parse(expression.Value.ToString(), NumberStyles.Any).ToString(_numberFormatInfo)).Append(' ');
                     break;
 
                 case ValueType.Integer:
-                    Result.Append(expression.Value.ToString()).Append(" ");
+                    Result.Append(expression.Value.ToString()).Append(' ');
                     break;
 
                 case ValueType.String:
-                    Result.Append("'").Append(expression.Value.ToString()).Append("'").Append(" ");
+                    Result.Append('\'').Append(expression.Value.ToString()).Append('\'').Append(' ');
                     break;
             }
         }
@@ -166,12 +166,12 @@ namespace NCalc.Domain
         {
             Result.Append(function.Identifier.Name);
 
-            Result.Append("(");
+            Result.Append('(');
 
-            for(int i=0; i<function.Expressions.Length; i++)
+            for (int i = 0; i < function.Expressions.Length; i++)
             {
                 function.Expressions[i].Accept(this);
-                if (i < function.Expressions.Length-1)
+                if (i < function.Expressions.Length - 1)
                 {
                     Result.Remove(Result.Length - 1, 1);
                     Result.Append(", ");
@@ -187,7 +187,7 @@ namespace NCalc.Domain
 
         public override void Visit(Identifier parameter)
         {
-            Result.Append("[").Append(parameter.Name).Append("] ");
+            Result.Append('[').Append(parameter.Name).Append("] ");
         }
 
         protected void EncapsulateNoValue(LogicalExpression expression)
@@ -198,13 +198,13 @@ namespace NCalc.Domain
             }
             else
             {
-                Result.Append("(");
+                Result.Append('(');
                 expression.Accept(this);
-                
+
                 // trim spaces before adding a closing paren
-                while(Result[Result.Length - 1] == ' ')
+                while (Result[Result.Length - 1] == ' ')
                     Result.Remove(Result.Length - 1, 1);
-                
+
                 Result.Append(") ");
             }
         }

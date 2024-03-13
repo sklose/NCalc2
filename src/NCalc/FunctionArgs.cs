@@ -9,8 +9,8 @@ namespace NCalc
         public object Result
         {
             get { return _result; }
-            set 
-            { 
+            set
+            {
                 _result = value;
                 HasResult = true;
             }

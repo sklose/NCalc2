@@ -31,7 +31,7 @@ private string extractString(string text) {
             case 't': sb.Remove(slashIndex, 2).Insert(slashIndex, '\t'); break;
             case '\'': sb.Remove(slashIndex, 2).Insert(slashIndex, '\''); break;
             case '\\': sb.Remove(slashIndex, 2).Insert(slashIndex, '\\'); break;
-            default: throw new RecognitionException(null, CharStreams.fromString("Unvalid escape sequence: \\" + escapeType));
+            default: throw new RecognitionException(null, CharStreams.fromString("Invalid escape sequence: \\" + escapeType));
         }
 
         startIndex = slashIndex + 1;
