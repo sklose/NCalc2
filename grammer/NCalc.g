@@ -177,8 +177,8 @@ unaryExpression returns [LogicalExpression value]
    	;
 
 exponentialExpression returns [LogicalExpression value]
-	: 	left=primaryExpression { $value = $left.vlue; } (
-			'**' right=unaryExpression { $retValue = new BinaryExpression(BinaryExpressionType.Exponentiation, $value, $right.value); }
+	: 	left=primaryExpression { $value = $left.value; } (
+			'**' right=unaryExpression { $value = new BinaryExpression(BinaryExpressionType.Exponentiation, $value, $right.value); }
 			)*
 	;
 		
