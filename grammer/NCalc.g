@@ -245,10 +245,12 @@ DATETIME
  	:	'#' ~('#')* '#'
 	;
 
-NAME	:	'[' ~(']')* ']'
+NAME	
+	:	'[' ~(']')* ']'
 	;
 	
-E	:	('E'|'e') ('+'|'-')? DIGIT+ 
+EXPONENT
+	:	('E'|'e') ('+'|'-')? DIGIT+ 
 	;	
 	
 fragment LETTER
