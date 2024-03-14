@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace NCalc
 {
@@ -253,7 +252,7 @@ namespace NCalc
             return body;
         }
 
-        public (System.Linq.Expressions.Expression expr, ParameterExpression param) ToLinqExpression<TContext, TResult>()
+        public (System.Linq.Expressions.Expression expr, System.Linq.Expressions.ParameterExpression param) ToLinqExpression<TContext, TResult>()
         {
             if (HasErrors())
             {
