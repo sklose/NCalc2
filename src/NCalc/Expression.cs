@@ -6,10 +6,8 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace NCalc
 {
@@ -232,7 +230,7 @@ namespace NCalc
 
         private struct Void { };
 
-        private Tuple<System.Linq.Expressions.Expression, ParameterExpression> ToLinqExpressionInternal<TContext, TResult>()
+        private Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpressionInternal<TContext, TResult>()
         {
             if (HasErrors())
             {
@@ -245,7 +243,7 @@ namespace NCalc
             }
 
             LambdaExpressionVistor visitor;
-            ParameterExpression parameter = null;
+            System.Linq.Expressions.ParameterExpression parameter = null;
             if (typeof(TContext) != typeof(Void))
             {
                 parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
