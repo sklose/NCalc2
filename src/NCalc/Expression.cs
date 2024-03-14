@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace NCalc
 {
@@ -228,7 +229,7 @@ namespace NCalc
         protected Dictionary<string, IEnumerator> ParameterEnumerators;
         protected Dictionary<string, object> ParametersBackup;
 
-        public Func<TResult> ToLambda<TResult>()
+        public System.Linq.Expressions.Expression ToLinqExpression<TResult>()
         {
             if (HasErrors())
             {
@@ -243,17 +244,16 @@ namespace NCalc
             var visitor = new LambdaExpressionVistor(Parameters, Options);
             ParsedExpression.Accept(visitor);
 
-            var body = visitor.Result;
+            System.Linq.Expressions.Expression body = visitor.Result;
             if (body.Type != typeof(TResult))
             {
                 body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
             }
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
-            return lambda.Compile();
+            return body;
         }
 
-        public Func<TContext, TResult> ToLambda<TContext, TResult>()
+        public (System.Linq.Expressions.Expression expr, ParameterExpression param) ToLinqExpression<TContext, TResult>()
         {
             if (HasErrors())
             {
@@ -275,6 +275,20 @@ namespace NCalc
                 body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
             }
 
+            return (body, parameter);
+        }
+
+        public Func<TResult> ToLambda<TResult>()
+        {
+            System.Linq.Expressions.Expression body = ToLinqExpression<TResult>();
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
+            return lambda.Compile();
+        }
+
+        public Func<TContext, TResult> ToLambda<TContext, TResult>()
+        {
+
+            var (body, parameter) = ToLinqExpression<TContext, TResult>();
             var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
             return lambda.Compile();
         }
