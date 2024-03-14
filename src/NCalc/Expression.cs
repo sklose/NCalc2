@@ -230,6 +230,8 @@ namespace NCalc
         protected Dictionary<string, IEnumerator> ParameterEnumerators;
         protected Dictionary<string, object> ParametersBackup;
 
+        private struct Void { };
+
         private Tuple<System.Linq.Expressions.Expression, ParameterExpression> ToLinqExpressionInternal<TContext, TResult>()
         {
             if (HasErrors())
@@ -244,7 +246,7 @@ namespace NCalc
 
             LambdaExpressionVistor visitor;
             ParameterExpression parameter = null;
-            if (typeof(TContext) != typeof(object))
+            if (typeof(TContext) != typeof(Void))
             {
                 parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
                 visitor = new LambdaExpressionVistor(parameter, Options);
@@ -266,7 +268,7 @@ namespace NCalc
 
         protected System.Linq.Expressions.Expression ToLinqExpression<TResult>()
         {
-            return ToLinqExpressionInternal<object, TResult>().Item1;
+            return ToLinqExpressionInternal<Void, TResult>().Item1;
         }
 
         protected Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
