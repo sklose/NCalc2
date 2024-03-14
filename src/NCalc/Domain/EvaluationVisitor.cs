@@ -71,10 +71,10 @@ namespace NCalc.Domain
             if (!allowNull)
             {
                 if (a == null)
-                    throw new ArgumentException("Parameter value ", nameof(a));
+                    throw new ArgumentException("Value cannot be null", nameof(a));
 
                 if (b == null)
-                    throw new ArgumentException("Parameter value ", nameof(b));
+                    throw new ArgumentException("Value cannot be null", nameof(b));
             }
 
             if (a == null && b == null)
@@ -87,7 +87,7 @@ namespace NCalc.Domain
                 return -1;
             }
 
-            Type mpt = allowNull ? GetMostPreciseType(a?.GetType(), b?.GetType()) ?? typeof(object) : GetMostPreciseType(a.GetType(), b.GetType());
+            Type mpt = GetMostPreciseType(a.GetType(), b.GetType());
 
             a = Convert.ChangeType(a, mpt, _cultureInfo);
             b = Convert.ChangeType(b, mpt, _cultureInfo);
