@@ -7,7 +7,7 @@ using L = System.Linq.Expressions;
 
 namespace NCalc
 {
-    public class LambdaExpressionVistor : LogicalExpressionVisitor
+    internal class LambdaExpressionVistor : LogicalExpressionVisitor
     {
         private readonly IDictionary<string, object> _parameters;
         private L.Expression _result;
