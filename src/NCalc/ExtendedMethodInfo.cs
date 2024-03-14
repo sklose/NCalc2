@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
 using L = System.Linq.Expressions;
 
-namespace NCalc 
+namespace NCalc
 {
-    public class ExtendedMethodInfo 
+    public class ExtendedMethodInfo
     {
         public MethodInfo BaseMethodInfo { get; set; }
         public L.Expression[] PreparedArguments { get; set; }

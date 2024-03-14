@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using Xunit;
 
 namespace NCalc.Tests
@@ -24,7 +25,7 @@ namespace NCalc.Tests
         [InlineData("5 * 2 = 2 * 5 && (1 / 3.0) * 3 = 1")]
         public void Arithmetics(string formula)
         {
-            var expression = new Expression(formula);
+            var expression = Extensions.CreateExpression(formula);
             var lambda = expression.ToLambda<object>();
 
             var m1 = Measure(() => expression.Evaluate());
@@ -37,10 +38,10 @@ namespace NCalc.Tests
         [InlineData("[Param1] * 7 + [Param2]")]
         public void ParameterAccess(string formula)
         {
-            var expression = new Expression(formula);
+            var expression = Extensions.CreateExpression(formula);
             var lambda = expression.ToLambda<Context, int>();
 
-            var context = new Context {Param1 = 4, Param2 = 9};
+            var context = new Context { Param1 = 4, Param2 = 9 };
             expression.Parameters["Param1"] = 4;
             expression.Parameters["Param2"] = 9;
 
@@ -54,7 +55,7 @@ namespace NCalc.Tests
         [InlineData("[Param1] * 7 + [Param2]")]
         public void DynamicParameterAccess(string formula)
         {
-            var expression = new Expression(formula);
+            var expression = Extensions.CreateExpression(formula);
             var lambda = expression.ToLambda<Context, int>();
 
             var context = new Context { Param1 = 4, Param2 = 9 };
@@ -74,7 +75,7 @@ namespace NCalc.Tests
         [InlineData("Foo([Param1] * 7, [Param2])")]
         public void FunctionWithDynamicParameterAccess(string formula)
         {
-            var expression = new Expression(formula);
+            var expression = Extensions.CreateExpression(formula);
             var lambda = expression.ToLambda<Context, int>();
 
             var context = new Context { Param1 = 4, Param2 = 9 };
@@ -88,7 +89,7 @@ namespace NCalc.Tests
                 if (name == "Foo")
                 {
                     var param = args.EvaluateParameters();
-                    args.Result = context.Foo((int) param[0], (int) param[1]);
+                    args.Result = context.Foo((int)param[0], (int)param[1]);
                 }
             };
 

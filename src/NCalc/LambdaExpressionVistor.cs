@@ -1,9 +1,9 @@
-﻿using System;
+﻿using NCalc.Domain;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NCalc.Domain;
 using L = System.Linq.Expressions;
-using System.Collections.Generic;
 
 namespace NCalc
 {
@@ -168,18 +168,22 @@ namespace NCalc
                 args[i] = _result;
             }
 
-            string functionName = function.Identifier.Name.ToLowerInvariant();
-            if (functionName == "if") {
+            string functionName = function.Identifier.Name.ToUpperInvariant();
+            if (functionName == "IF")
+            {
                 var numberTypePriority = new Type[] { typeof(double), typeof(float), typeof(long), typeof(int), typeof(short) };
                 var index1 = Array.IndexOf(numberTypePriority, args[1].Type);
                 var index2 = Array.IndexOf(numberTypePriority, args[2].Type);
-                if (index1 >= 0 && index2 >= 0 && index1 != index2) {
+                if (index1 >= 0 && index2 >= 0 && index1 != index2)
+                {
                     args[1] = L.Expression.Convert(args[1], numberTypePriority[Math.Min(index1, index2)]);
                     args[2] = L.Expression.Convert(args[2], numberTypePriority[Math.Min(index1, index2)]);
                 }
                 _result = L.Expression.Condition(args[0], args[1], args[2]);
                 return;
-            } else if (functionName == "in") {
+            }
+            else if (functionName == "IN")
+            {
                 var items = L.Expression.NewArrayInit(args[0].Type,
                         new ArraySegment<L.Expression>(args, 1, args.Length - 1));
                 var smi = typeof(Array).GetRuntimeMethod("IndexOf", new[] { typeof(Array), typeof(object) });
@@ -190,24 +194,25 @@ namespace NCalc
 
             //Context methods take precedence over built-in functions because they're user-customisable.
             var mi = FindMethod(function.Identifier.Name, args);
-            if (mi != null) {
+            if (mi != null)
+            {
                 _result = L.Expression.Call(_context, mi.BaseMethodInfo, mi.PreparedArguments);
                 return;
             }
 
             switch (functionName)
             {
-                case "min":
+                case "MIN":
                     var minArg0 = L.Expression.Convert(args[0], typeof(double));
                     var minArg1 = L.Expression.Convert(args[1], typeof(double));
                     _result = L.Expression.Condition(L.Expression.LessThan(minArg0, minArg1), minArg0, minArg1);
                     break;
-                case "max":
+                case "MAX":
                     var maxArg0 = L.Expression.Convert(args[0], typeof(double));
                     var maxArg1 = L.Expression.Convert(args[1], typeof(double));
                     _result = L.Expression.Condition(L.Expression.GreaterThan(maxArg0, maxArg1), maxArg0, maxArg1);
                     break;
-                case "pow":
+                case "POW":
                     var powArg0 = L.Expression.Convert(args[0], typeof(double));
                     var powArg1 = L.Expression.Convert(args[1], typeof(double));
                     _result = L.Expression.Power(powArg0, powArg1);
@@ -229,22 +234,25 @@ namespace NCalc
             }
         }
 
-        private ExtendedMethodInfo FindMethod(string methodName, L.Expression[] methodArgs) 
+        private ExtendedMethodInfo FindMethod(string methodName, L.Expression[] methodArgs)
         {
             if (_context == null) return null;
 
             TypeInfo contextTypeInfo = _context.Type.GetTypeInfo();
             TypeInfo objectTypeInfo = typeof(object).GetTypeInfo();
-            do 
+            do
             {
                 var methods = contextTypeInfo.DeclaredMethods.Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase) && m.IsPublic && !m.IsStatic);
                 var candidates = new List<ExtendedMethodInfo>();
-                foreach (var potentialMethod in methods) {
+                foreach (var potentialMethod in methods)
+                {
                     var methodParams = potentialMethod.GetParameters();
                     var preparedArguments = PrepareMethodArgumentsIfValid(methodParams, methodArgs);
 
-                    if (preparedArguments != null) {
-                        var candidate = new ExtendedMethodInfo() {
+                    if (preparedArguments != null)
+                    {
+                        var candidate = new ExtendedMethodInfo()
+                        {
                             BaseMethodInfo = potentialMethod,
                             PreparedArguments = preparedArguments.Item2,
                             Score = preparedArguments.Item1
@@ -253,7 +261,7 @@ namespace NCalc
                         candidates.Add(candidate);
                     }
                 }
-                if (candidates.Any()) return candidates.OrderBy(method => method.Score).First();
+                if (candidates.Count != 0) return candidates.OrderBy(method => method.Score).First();
                 contextTypeInfo = contextTypeInfo.BaseType.GetTypeInfo();
             } while (contextTypeInfo != objectTypeInfo);
             return null;
@@ -267,10 +275,10 @@ namespace NCalc
         /// <param name="parameters"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
-        private Tuple<int, L.Expression[]> PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments) 
+        private Tuple<int, L.Expression[]> PrepareMethodArgumentsIfValid(ParameterInfo[] parameters, L.Expression[] arguments)
         {
-            if (!parameters.Any() && !arguments.Any()) return Tuple.Create (0, arguments);
-            if (!parameters.Any()) return null;
+            if (parameters.Length == 0 && arguments.Length == 0) return Tuple.Create(0, arguments);
+            if (parameters.Length == 0) return null;
 
             var lastParameter = parameters.Last();
             bool hasParamsKeyword = lastParameter.IsDefined(typeof(ParamArrayAttribute));
@@ -279,11 +287,11 @@ namespace NCalc
             L.Expression[] paramsKeywordArgument = null;
             Type paramsElementType = null;
             int paramsParameterPosition = 0;
-            if (!hasParamsKeyword) 
+            if (!hasParamsKeyword)
             {
                 if (parameters.Length != arguments.Length) return null;
-            } 
-            else 
+            }
+            else
             {
                 paramsParameterPosition = lastParameter.Position;
                 paramsElementType = lastParameter.ParameterType.GetElementType();
@@ -291,7 +299,7 @@ namespace NCalc
             }
 
             int functionMemberScore = 0;
-            for (int i = 0; i < arguments.Length; i++) 
+            for (int i = 0; i < arguments.Length; i++)
             {
                 var isParamsElement = hasParamsKeyword && i >= paramsParameterPosition;
                 var argument = arguments[i];
@@ -303,17 +311,17 @@ namespace NCalc
                     if (!canCastImplicitly) return null;
                     functionMemberScore++;
                 }
-                if (!isParamsElement) 
+                if (!isParamsElement)
                 {
                     newArguments[i] = argument;
-                } 
-                else 
+                }
+                else
                 {
                     paramsKeywordArgument[i - paramsParameterPosition] = argument;
                 }
             }
 
-            if (hasParamsKeyword) 
+            if (hasParamsKeyword)
             {
                 newArguments[paramsParameterPosition] = L.Expression.NewArrayInit(paramsElementType, paramsKeywordArgument);
             }
@@ -323,7 +331,8 @@ namespace NCalc
         private bool TryCastImplicitly(Type from, Type to, ref L.Expression argument)
         {
             bool convertingFromPrimitiveType = _implicitPrimitiveConversionTable.TryGetValue(from, out var possibleConversions);
-            if (!convertingFromPrimitiveType || !possibleConversions.Contains(to)) {
+            if (!convertingFromPrimitiveType || !possibleConversions.Contains(to))
+            {
                 argument = null;
                 return false;
             }
@@ -403,10 +412,10 @@ namespace NCalc
             return action(left, right);
         }
 
-        private L.Expression UnwrapNullable(L.Expression expression)
+        private static L.Expression UnwrapNullable(L.Expression expression)
         {
             var ti = expression.Type.GetTypeInfo();
-            if (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof (Nullable<>))
+            if (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 return L.Expression.Condition(
                     L.Expression.Property(expression, "HasValue"),

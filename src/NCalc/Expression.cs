@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using NCalc.Domain;
-using Antlr4.Runtime;
-using System.Collections.Concurrent;
-using System.Linq;
-using Antlr4.Runtime.Misc;
+﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Atn;
+using Antlr4.Runtime.Misc;
+using NCalc.Domain;
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace NCalc
 {
@@ -19,32 +20,48 @@ namespace NCalc
         /// </summary>
         protected string OriginalExpression;
 
-        public Expression(string expression) : this(expression, EvaluateOptions.None)
+        /// <summary>
+        /// Get or set the culture info.
+        /// </summary>
+        protected CultureInfo CultureInfo { get; set; }
+
+
+        public Expression(string expression) : this(expression, EvaluateOptions.None, CultureInfo.CurrentCulture)
         {
         }
 
-        public Expression(string expression, EvaluateOptions options)
+        public Expression(string expression, CultureInfo cultureInfo) : this(expression, EvaluateOptions.None, cultureInfo)
+        {
+        }
+
+        public Expression(string expression, EvaluateOptions options) : this(expression, options, CultureInfo.CurrentCulture)
+        {
+        }
+
+        public Expression(string expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (String.IsNullOrEmpty(expression))
                 throw new
-                    ArgumentException("Expression can't be empty", "expression");
+                    ArgumentException("Expression can't be empty", nameof(expression));
 
             OriginalExpression = expression;
             Options = options;
+            CultureInfo = cultureInfo;
         }
 
-        public Expression(LogicalExpression expression) : this(expression, EvaluateOptions.None)
+        public Expression(LogicalExpression expression, EvaluateOptions options) : this(expression, options, CultureInfo.CurrentCulture)
         {
         }
 
-        public Expression(LogicalExpression expression, EvaluateOptions options)
+        public Expression(LogicalExpression expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (expression == null)
                 throw new
-                    ArgumentException("Expression can't be null", "expression");
+                    ArgumentException("Expression can't be null", nameof(expression));
 
             ParsedExpression = expression;
             Options = options;
+            CultureInfo = cultureInfo;
         }
 
         #region Cache management
@@ -104,14 +121,13 @@ namespace NCalc
                 if (_compiledExpressions.ContainsKey(expression))
                 {
                     //Debug.WriteLine("Expression retrieved from cache: " + expression);
-                    if (_compiledExpressions.TryGetValue(expression, out var wr))
-                    {
-                        logicalExpression = wr.Target as LogicalExpression;
 
-                        if (wr.IsAlive && logicalExpression != null)
-                        {
-                            return logicalExpression;
-                        }
+                    var wr = _compiledExpressions[expression];
+                    logicalExpression = wr.Target as LogicalExpression;
+
+                    if (wr.IsAlive && logicalExpression != null)
+                    {
+                        return logicalExpression;
                     }
                 }
             }
@@ -133,7 +149,7 @@ namespace NCalc
                 {
                     logicalExpression = parser.ncalcExpression().value;
                 }
-                catch(ParseCanceledException)
+                catch (ParseCanceledException)
                 {
                     lexer.Reset();
 
@@ -276,7 +292,7 @@ namespace NCalc
             }
 
 
-            var visitor = new EvaluationVisitor(Options);
+            var visitor = new EvaluationVisitor(Options, CultureInfo);
             visitor.EvaluateFunction += EvaluateFunction;
             visitor.EvaluateParameter += EvaluateParameter;
             visitor.Parameters = Parameters;

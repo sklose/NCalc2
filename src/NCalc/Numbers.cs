@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections;
-using System.Security.Cryptography;
+using System.Globalization;
 
 namespace NCalc
 {
-    public class Numbers
+    public static class Numbers
     {
-        private static object ConvertIfString(object s)
+        private static object ConvertIfString(object s, CultureInfo cultureInfo)
         {
-            if (s is String|| s is char)
+            if (s is String || s is char)
             {
-                return Decimal.Parse(s.ToString());
+                return Decimal.Parse(s.ToString(), cultureInfo);
             }
 
             return s;
@@ -28,8 +27,13 @@ namespace NCalc
 
         public static object Add(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Add(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object Add(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -216,7 +220,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Single)a + (UInt64)b;
                         case TypeCode.Single: return (Single)a + (Single)b;
                         case TypeCode.Double: return (Single)a + (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) + (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) + (Decimal)b;
                     }
                     break;
 
@@ -234,7 +238,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Double)a + (UInt64)b;
                         case TypeCode.Single: return (Double)a + (Single)b;
                         case TypeCode.Double: return (Double)a + (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) + (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) + (Decimal)b;
                     }
                     break;
 
@@ -250,8 +254,8 @@ namespace NCalc
                         case TypeCode.UInt32: return (Decimal)a + (UInt32)b;
                         case TypeCode.Int64: return (Decimal)a + (Int64)b;
                         case TypeCode.UInt64: return (Decimal)a + (UInt64)b;
-                        case TypeCode.Single: return (Decimal)a + Convert.ToDecimal(b);
-                        case TypeCode.Double: return (Decimal)a + Convert.ToDecimal(b);
+                        case TypeCode.Single: return (Decimal)a + Convert.ToDecimal(b, cultureInfo);
+                        case TypeCode.Double: return (Decimal)a + Convert.ToDecimal(b, cultureInfo);
                         case TypeCode.Decimal: return (Decimal)a + (Decimal)b;
                     }
                     break;
@@ -262,8 +266,13 @@ namespace NCalc
 
         public static object AddChecked(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return AddChecked(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object AddChecked(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -451,7 +460,7 @@ namespace NCalc
                             case TypeCode.UInt64: return (Single)a + (UInt64)b;
                             case TypeCode.Single: return (Single)a + (Single)b;
                             case TypeCode.Double: return (Single)a + (Double)b;
-                            case TypeCode.Decimal: return Convert.ToDecimal(a) + (Decimal)b;
+                            case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) + (Decimal)b;
                         }
                         break;
 
@@ -469,7 +478,7 @@ namespace NCalc
                             case TypeCode.UInt64: return (Double)a + (UInt64)b;
                             case TypeCode.Single: return (Double)a + (Single)b;
                             case TypeCode.Double: return (Double)a + (Double)b;
-                            case TypeCode.Decimal: return Convert.ToDecimal(a) + (Decimal)b;
+                            case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) + (Decimal)b;
                         }
                         break;
 
@@ -485,8 +494,8 @@ namespace NCalc
                             case TypeCode.UInt32: return (Decimal)a + (UInt32)b;
                             case TypeCode.Int64: return (Decimal)a + (Int64)b;
                             case TypeCode.UInt64: return (Decimal)a + (UInt64)b;
-                            case TypeCode.Single: return (Decimal)a + Convert.ToDecimal(b);
-                            case TypeCode.Double: return (Decimal)a + Convert.ToDecimal(b);
+                            case TypeCode.Single: return (Decimal)a + Convert.ToDecimal(b, cultureInfo);
+                            case TypeCode.Double: return (Decimal)a + Convert.ToDecimal(b, cultureInfo);
                             case TypeCode.Decimal: return (Decimal)a + (Decimal)b;
                         }
                         break;
@@ -496,10 +505,27 @@ namespace NCalc
             }
         }
 
+        [Obsolete("This method will be removed in the next major update. Use Subtract method instead")]
         public static object Soustract(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Subtract(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        [Obsolete("This method will be removed in the next major update. Use Subtract method instead")]
+        public static object Soustract(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            return Subtract(a, b, options, cultureInfo);
+        }
+
+        public static object Subtract(object a, object b, EvaluateOptions options)
+        {
+            return Subtract(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object Subtract(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -677,7 +703,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Single)a - (UInt64)b;
                         case TypeCode.Single: return (Single)a - (Single)b;
                         case TypeCode.Double: return (Single)a - (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) - (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) - (Decimal)b;
                     }
                     break;
 
@@ -694,7 +720,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Double)a - (UInt64)b;
                         case TypeCode.Single: return (Double)a - (Single)b;
                         case TypeCode.Double: return (Double)a - (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) - (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) - (Decimal)b;
                     }
                     break;
 
@@ -709,8 +735,8 @@ namespace NCalc
                         case TypeCode.UInt32: return (Decimal)a - (UInt32)b;
                         case TypeCode.Int64: return (Decimal)a - (Int64)b;
                         case TypeCode.UInt64: return (Decimal)a - (UInt64)b;
-                        case TypeCode.Single: return (Decimal)a - Convert.ToDecimal(b);
-                        case TypeCode.Double: return (Decimal)a - Convert.ToDecimal(b);
+                        case TypeCode.Single: return (Decimal)a - Convert.ToDecimal(b, cultureInfo);
+                        case TypeCode.Double: return (Decimal)a - Convert.ToDecimal(b, cultureInfo);
                         case TypeCode.Decimal: return (Decimal)a - (Decimal)b;
                     }
                     break;
@@ -718,10 +744,28 @@ namespace NCalc
 
             return null;
         }
+
+        [Obsolete("This method will be removed in the next major update. Use SubtractChecked method instead")]
         public static object SoustractChecked(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return SubtractChecked(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        [Obsolete("This method will be removed in the next major update. Use SubtractChecked method instead")]
+        public static object SoustractChecked(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            return SubtractChecked(a, b, options, cultureInfo);
+        }
+
+        public static object SubtractChecked(object a, object b, EvaluateOptions options)
+        {
+            return SubtractChecked(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object SubtractChecked(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -900,7 +944,7 @@ namespace NCalc
                             case TypeCode.UInt64: return (Single)a - (UInt64)b;
                             case TypeCode.Single: return (Single)a - (Single)b;
                             case TypeCode.Double: return (Single)a - (Double)b;
-                            case TypeCode.Decimal: return Convert.ToDecimal(a) - (Decimal)b; 
+                            case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) - (Decimal)b;
                         }
                         break;
 
@@ -917,7 +961,7 @@ namespace NCalc
                             case TypeCode.UInt64: return (Double)a - (UInt64)b;
                             case TypeCode.Single: return (Double)a - (Single)b;
                             case TypeCode.Double: return (Double)a - (Double)b;
-                            case TypeCode.Decimal: return Convert.ToDecimal(a) - (Decimal)b;
+                            case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) - (Decimal)b;
                         }
                         break;
 
@@ -932,8 +976,8 @@ namespace NCalc
                             case TypeCode.UInt32: return (Decimal)a - (UInt32)b;
                             case TypeCode.Int64: return (Decimal)a - (Int64)b;
                             case TypeCode.UInt64: return (Decimal)a - (UInt64)b;
-                            case TypeCode.Single: return (Decimal)a - Convert.ToDecimal(b);
-                            case TypeCode.Double: return (Decimal)a - Convert.ToDecimal(b);
+                            case TypeCode.Single: return (Decimal)a - Convert.ToDecimal(b, cultureInfo);
+                            case TypeCode.Double: return (Decimal)a - Convert.ToDecimal(b, cultureInfo);
                             case TypeCode.Decimal: return (Decimal)a - (Decimal)b;
                         }
                         break;
@@ -941,10 +985,16 @@ namespace NCalc
             }
             return null;
         }
+
         public static object Multiply(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Multiply(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object Multiply(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -1105,7 +1155,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Single)a * (UInt64)b;
                         case TypeCode.Single: return (Single)a * (Single)b;
                         case TypeCode.Double: return (Single)a * (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) * (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) * (Decimal)b;
                     }
                     break;
 
@@ -1122,7 +1172,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Double)a * (UInt64)b;
                         case TypeCode.Single: return (Double)a * (Single)b;
                         case TypeCode.Double: return (Double)a * (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) * (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) * (Decimal)b;
                     }
                     break;
 
@@ -1137,8 +1187,8 @@ namespace NCalc
                         case TypeCode.UInt32: return (Decimal)a * (UInt32)b;
                         case TypeCode.Int64: return (Decimal)a * (Int64)b;
                         case TypeCode.UInt64: return (Decimal)a * (UInt64)b;
-                        case TypeCode.Single: return (Decimal)a * Convert.ToDecimal(b);
-                        case TypeCode.Double: return (Decimal)a * Convert.ToDecimal(b);
+                        case TypeCode.Single: return (Decimal)a * Convert.ToDecimal(b, cultureInfo);
+                        case TypeCode.Double: return (Decimal)a * Convert.ToDecimal(b, cultureInfo);
                         case TypeCode.Decimal: return (Decimal)a * (Decimal)b;
                     }
                     break;
@@ -1146,10 +1196,16 @@ namespace NCalc
 
             return null;
         }
+
         public static object MultiplyChecked(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return MultiplyChecked(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object MultiplyChecked(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -1311,7 +1367,7 @@ namespace NCalc
                             case TypeCode.UInt64: return (Single)a * (UInt64)b;
                             case TypeCode.Single: return (Single)a * (Single)b;
                             case TypeCode.Double: return (Single)a * (Double)b;
-                            case TypeCode.Decimal: return Convert.ToDecimal(a) * (Decimal)b;
+                            case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) * (Decimal)b;
                         }
                         break;
 
@@ -1328,7 +1384,7 @@ namespace NCalc
                             case TypeCode.UInt64: return (Double)a * (UInt64)b;
                             case TypeCode.Single: return (Double)a * (Single)b;
                             case TypeCode.Double: return (Double)a * (Double)b;
-                            case TypeCode.Decimal: return Convert.ToDecimal(a) * (Decimal)b;
+                            case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) * (Decimal)b;
                         }
                         break;
 
@@ -1343,8 +1399,8 @@ namespace NCalc
                             case TypeCode.UInt32: return (Decimal)a * (UInt32)b;
                             case TypeCode.Int64: return (Decimal)a * (Int64)b;
                             case TypeCode.UInt64: return (Decimal)a * (UInt64)b;
-                            case TypeCode.Single: return (Decimal)a * Convert.ToDecimal(b);
-                            case TypeCode.Double: return (Decimal)a * Convert.ToDecimal(b);
+                            case TypeCode.Single: return (Decimal)a * Convert.ToDecimal(b, cultureInfo);
+                            case TypeCode.Double: return (Decimal)a * Convert.ToDecimal(b, cultureInfo);
                             case TypeCode.Decimal: return (Decimal)a * (Decimal)b;
                         }
                         break;
@@ -1352,10 +1408,16 @@ namespace NCalc
             }
             return null;
         }
+
         public static object Divide(object a, object b, EvaluateOptions options)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Divide(a, b, options, CultureInfo.CurrentCulture);
+        }
+
+        public static object Divide(object a, object b, EvaluateOptions options, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (options.HasFlag(EvaluateOptions.BooleanCalculation))
             {
@@ -1516,7 +1578,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Single)a / (UInt64)b;
                         case TypeCode.Single: return (Single)a / (Single)b;
                         case TypeCode.Double: return (Single)a / (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) / (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) / (Decimal)b;
                     }
                     break;
 
@@ -1533,7 +1595,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Double)a / (UInt64)b;
                         case TypeCode.Single: return (Double)a / (Single)b;
                         case TypeCode.Double: return (Double)a / (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) / (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) / (Decimal)b;
                     }
                     break;
 
@@ -1548,8 +1610,8 @@ namespace NCalc
                         case TypeCode.UInt32: return (Decimal)a / (UInt32)b;
                         case TypeCode.Int64: return (Decimal)a / (Int64)b;
                         case TypeCode.UInt64: return (Decimal)a / (UInt64)b;
-                        case TypeCode.Single: return (Decimal)a / Convert.ToDecimal(b);
-                        case TypeCode.Double: return (Decimal)a / Convert.ToDecimal(b);
+                        case TypeCode.Single: return (Decimal)a / Convert.ToDecimal(b, cultureInfo);
+                        case TypeCode.Double: return (Decimal)a / Convert.ToDecimal(b, cultureInfo);
                         case TypeCode.Decimal: return (Decimal)a / (Decimal)b;
                     }
                     break;
@@ -1560,8 +1622,13 @@ namespace NCalc
 
         public static object Modulo(object a, object b)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Modulo(a, b, CultureInfo.CurrentCulture);
+        }
+
+        public static object Modulo(object a, object b, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
@@ -1716,7 +1783,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Single)a % (UInt64)b;
                         case TypeCode.Single: return (Single)a % (Single)b;
                         case TypeCode.Double: return (Single)a % (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) % (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) % (Decimal)b;
                     }
                     break;
 
@@ -1733,7 +1800,7 @@ namespace NCalc
                         case TypeCode.UInt64: return (Double)a % (UInt64)b;
                         case TypeCode.Single: return (Double)a % (Single)b;
                         case TypeCode.Double: return (Double)a % (Double)b;
-                        case TypeCode.Decimal: return Convert.ToDecimal(a) % (Decimal)b;
+                        case TypeCode.Decimal: return Convert.ToDecimal(a, cultureInfo) % (Decimal)b;
                     }
                     break;
 
@@ -1748,8 +1815,8 @@ namespace NCalc
                         case TypeCode.UInt32: return (Decimal)a % (UInt32)b;
                         case TypeCode.Int64: return (Decimal)a % (Int64)b;
                         case TypeCode.UInt64: return (Decimal)a % (UInt64)b;
-                        case TypeCode.Single: return (Decimal)a % Convert.ToDecimal(b);
-                        case TypeCode.Double: return (Decimal)a % Convert.ToDecimal(b);
+                        case TypeCode.Single: return (Decimal)a % Convert.ToDecimal(b, cultureInfo);
+                        case TypeCode.Double: return (Decimal)a % Convert.ToDecimal(b, cultureInfo);
                         case TypeCode.Decimal: return (Decimal)a % (Decimal)b;
                     }
                     break;
@@ -1757,10 +1824,16 @@ namespace NCalc
 
             return null;
         }
+
         public static object Max(object a, object b)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Max(a, b, CultureInfo.CurrentCulture);
+        }
+
+        public static object Max(object a, object b, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (a == null && b == null)
             {
@@ -1777,7 +1850,7 @@ namespace NCalc
                 return a;
             }
 
-            TypeCode typeCode = ConvertToHighestPrecision(ref a, ref b);
+            TypeCode typeCode = ConvertToHighestPrecision(ref a, ref b, cultureInfo);
 
             switch (typeCode)
             {
@@ -1807,10 +1880,16 @@ namespace NCalc
 
             return null;
         }
+
         public static object Min(object a, object b)
         {
-            a = ConvertIfString(a);
-            b = ConvertIfString(b);
+            return Min(a, b, CultureInfo.CurrentCulture);
+        }
+
+        public static object Min(object a, object b, CultureInfo cultureInfo)
+        {
+            a = ConvertIfString(a, cultureInfo);
+            b = ConvertIfString(b, cultureInfo);
 
             if (a == null && b == null)
             {
@@ -1827,7 +1906,7 @@ namespace NCalc
                 return a;
             }
 
-            TypeCode typeCode = ConvertToHighestPrecision(ref a,ref b);
+            TypeCode typeCode = ConvertToHighestPrecision(ref a, ref b, cultureInfo);
 
             switch (typeCode)
             {
@@ -1858,13 +1937,12 @@ namespace NCalc
             return null;
         }
 
-
-        private static TypeCode ConvertToHighestPrecision(ref object a, ref object b)
+        private static TypeCode ConvertToHighestPrecision(ref object a, ref object b, CultureInfo cultureInfo)
         {
             TypeCode typeCodeA = a.GetTypeCode();
             TypeCode typeCodeB = b.GetTypeCode();
-            
-            if (typeCodeA==typeCodeB)
+
+            if (typeCodeA == typeCodeB)
                 return typeCodeA;
 
             if (!(TypeCodeBitSize(typeCodeA, out bool floatingPointA) is int bitSizeA))
@@ -1876,13 +1954,13 @@ namespace NCalc
             {
                 if (floatingPointA)
                 {
-                    b = ConvertTo(b, typeCodeA);
+                    b = ConvertTo(b, typeCodeA, cultureInfo);
 
                     return typeCodeA;
                 }
                 else
                 {
-                    a = ConvertTo(a, typeCodeB);
+                    a = ConvertTo(a, typeCodeB, cultureInfo);
 
                     return typeCodeB;
                 }
@@ -1890,20 +1968,20 @@ namespace NCalc
 
             if (bitSizeA > bitSizeB)
             {
-                b = ConvertTo(b, typeCodeA);
+                b = ConvertTo(b, typeCodeA, cultureInfo);
 
                 return typeCodeA;
             }
             else
             {
-                a = ConvertTo(a, typeCodeB);
+                a = ConvertTo(a, typeCodeB, cultureInfo);
 
                 return typeCodeB;
             }
-                
+
         }
 
-        private static int? TypeCodeBitSize(TypeCode typeCode,out bool floatingPoint)
+        private static int? TypeCodeBitSize(TypeCode typeCode, out bool floatingPoint)
         {
             floatingPoint = false;
             switch (typeCode)
@@ -1929,42 +2007,42 @@ namespace NCalc
             }
         }
 
-        private static object  ConvertTo(object value, TypeCode toType)
+        private static object ConvertTo(object value, TypeCode toType, CultureInfo cultureInfo)
         {
             switch (toType)
             {
                 case TypeCode.Byte:
-                    return Convert.ToByte(value);
+                    return Convert.ToByte(value, cultureInfo);
 
                 case TypeCode.SByte:
-                    return Convert.ToSByte(value);
+                    return Convert.ToSByte(value, cultureInfo);
 
                 case TypeCode.Int16:
-                    return Convert.ToInt16(value);
+                    return Convert.ToInt16(value, cultureInfo);
 
                 case TypeCode.UInt16:
-                    return Convert.ToUInt16(value);
+                    return Convert.ToUInt16(value, cultureInfo);
 
                 case TypeCode.Int32:
-                    return Convert.ToInt32(value);
+                    return Convert.ToInt32(value, cultureInfo);
 
                 case TypeCode.UInt32:
-                    return Convert.ToUInt32(value);
+                    return Convert.ToUInt32(value, cultureInfo);
 
                 case TypeCode.Int64:
-                    return Convert.ToInt64(value);
+                    return Convert.ToInt64(value, cultureInfo);
 
                 case TypeCode.UInt64:
-                    return Convert.ToUInt64(value);
+                    return Convert.ToUInt64(value, cultureInfo);
 
                 case TypeCode.Single:
-                    return Convert.ToSingle(value);
+                    return Convert.ToSingle(value, cultureInfo);
 
                 case TypeCode.Double:
-                    return Convert.ToDouble(value);
+                    return Convert.ToDouble(value, cultureInfo);
 
                 case TypeCode.Decimal:
-                    return Convert.ToDecimal(value);
+                    return Convert.ToDecimal(value, cultureInfo);
             }
 
             return null;
