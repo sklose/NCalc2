@@ -6,8 +6,10 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace NCalc
 {
@@ -228,7 +230,7 @@ namespace NCalc
         protected Dictionary<string, IEnumerator> ParameterEnumerators;
         protected Dictionary<string, object> ParametersBackup;
 
-        public System.Linq.Expressions.Expression ToLinqExpression<TResult>()
+        private Tuple<System.Linq.Expressions.Expression, ParameterExpression> ToLinqExpressionInternal<TContext, TResult>()
         {
             if (HasErrors())
             {
@@ -240,32 +242,17 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var visitor = new LambdaExpressionVistor(Parameters, Options);
-            ParsedExpression.Accept(visitor);
-
-            System.Linq.Expressions.Expression body = visitor.Result;
-            if (body.Type != typeof(TResult))
+            LambdaExpressionVistor visitor;
+            ParameterExpression parameter = null;
+            if (typeof(TContext) == typeof(object))
             {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+                parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
+                visitor = new LambdaExpressionVistor(parameter, Options);
             }
-
-            return body;
-        }
-
-        public Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
-        {
-            if (HasErrors())
+            else
             {
-                throw new EvaluationException(Error, ErrorException);
+                visitor = new LambdaExpressionVistor(Parameters, Options);
             }
-
-            if (ParsedExpression == null)
-            {
-                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
-            }
-
-            var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
-            var visitor = new LambdaExpressionVistor(parameter, Options);
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
@@ -275,6 +262,16 @@ namespace NCalc
             }
 
             return Tuple.Create(body, parameter);
+        }
+
+        protected System.Linq.Expressions.Expression ToLinqExpression<TResult>()
+        {
+            return ToLinqExpressionInternal<object, TResult>().Item1;
+        }
+
+        protected Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
+        {
+            return ToLinqExpressionInternal<TContext, TResult>();
         }
 
         public Func<TResult> ToLambda<TResult>()
