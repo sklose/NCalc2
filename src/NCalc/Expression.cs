@@ -244,7 +244,7 @@ namespace NCalc
 
             LambdaExpressionVistor visitor;
             ParameterExpression parameter = null;
-            if (typeof(TContext) == typeof(object))
+            if (typeof(TContext) != typeof(object))
             {
                 parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
                 visitor = new LambdaExpressionVistor(parameter, Options);
