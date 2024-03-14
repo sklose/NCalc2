@@ -252,7 +252,7 @@ namespace NCalc
             return body;
         }
 
-        public (System.Linq.Expressions.Expression expr, System.Linq.Expressions.ParameterExpression param) ToLinqExpression<TContext, TResult>()
+        public Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
         {
             if (HasErrors())
             {
@@ -274,7 +274,7 @@ namespace NCalc
                 body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
             }
 
-            return (body, parameter);
+            return Tuple.Create(body, parameter);
         }
 
         public Func<TResult> ToLambda<TResult>()
