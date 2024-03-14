@@ -286,9 +286,10 @@ namespace NCalc
 
         public Func<TContext, TResult> ToLambda<TContext, TResult>()
         {
-
-            var (body, parameter) = ToLinqExpression<TContext, TResult>();
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
+            var exprAndParamTuple = ToLinqExpression<TContext, TResult>();
+            System.Linq.Expressions.Expression expression = exprAndParamTuple.Item1;
+            System.Linq.Expressions.ParameterExpression parameter = exprAndParamTuple.Item2;
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(expression, parameter);
             return lambda.Compile();
         }
 
