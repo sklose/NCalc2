@@ -937,6 +937,12 @@ namespace NCalc.Tests
                 Assert.Throws<FormatException>(() => expression.Evaluate());
             }
         }
+
+        [Fact]
+        public void ShouldNotThrowNullReferenceExceptionWithNullParameter()
+        {
+
+        }
     }
 }
 

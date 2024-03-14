@@ -68,7 +68,14 @@ namespace NCalc.Domain
         {
             var allowNull = (_options & EvaluateOptions.AllowNullParameter) == EvaluateOptions.AllowNullParameter;
 
-            Type mpt = allowNull ? GetMostPreciseType(a?.GetType(), b?.GetType()) ?? typeof(object) : GetMostPreciseType(a.GetType(), b.GetType());
+            if (!allowNull)
+            {
+                if (a == null)
+                    throw new ArgumentException("Parameter value ", nameof(a));
+
+                if (b == null)
+                    throw new ArgumentException("Parameter value ", nameof(b));
+            }
 
             if (a == null && b == null)
             {
@@ -79,6 +86,8 @@ namespace NCalc.Domain
             {
                 return -1;
             }
+
+            Type mpt = allowNull ? GetMostPreciseType(a?.GetType(), b?.GetType()) ?? typeof(object) : GetMostPreciseType(a.GetType(), b.GetType());
 
             a = Convert.ChangeType(a, mpt, _cultureInfo);
             b = Convert.ChangeType(b, mpt, _cultureInfo);
@@ -91,8 +100,7 @@ namespace NCalc.Domain
                 return 0;
             }
 
-            var cmp = a as IComparable;
-            if (cmp != null)
+            if (a is IComparable cmp)
                 return cmp.CompareTo(b);
 
             return -1;
