@@ -264,12 +264,12 @@ namespace NCalc
             return Tuple.Create(body, parameter);
         }
 
-        protected System.Linq.Expressions.Expression ToLinqExpression<TResult>()
+        protected virtual System.Linq.Expressions.Expression ToLinqExpression<TResult>()
         {
             return ToLinqExpressionInternal<Void, TResult>().Item1;
         }
 
-        protected Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
+        protected virtual Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
         {
             return ToLinqExpressionInternal<TContext, TResult>();
         }
