@@ -217,6 +217,10 @@ namespace NCalc
                     var powArg1 = L.Expression.Convert(args[1], typeof(double));
                     _result = L.Expression.Power(powArg0, powArg1);
                     break;
+                case "SIN":
+                    var sinArg0 = L.Expression.Convert(args[0], typeof(double));
+                    _result = L.Expression.Call(typeof(Math).GetMethod("Sin"), sinArg0);
+                    break;
                 default:
                     throw new MissingMethodException($"method not found: {functionName}");
             }
