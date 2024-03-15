@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using L = System.Linq.Expressions;
 
 namespace NCalc
 {
@@ -230,7 +231,13 @@ namespace NCalc
 
         private struct Void { };
 
-        private Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpressionInternal<TContext, TResult>()
+        public struct ExpressionWithParameter
+        {
+            public L.Expression expr;
+            public L.ParameterExpression param;
+        }
+
+        private ExpressionWithParameter ToLinqExpressionInternal<TContext, TResult>()
         {
             if (HasErrors())
             {
@@ -243,10 +250,10 @@ namespace NCalc
             }
 
             LambdaExpressionVistor visitor;
-            System.Linq.Expressions.ParameterExpression parameter = null;
+            L.ParameterExpression parameter = null;
             if (typeof(TContext) != typeof(Void))
             {
-                parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
+                parameter = L.Expression.Parameter(typeof(TContext), "ctx");
                 visitor = new LambdaExpressionVistor(parameter, Options);
             }
             else
@@ -258,35 +265,33 @@ namespace NCalc
             var body = visitor.Result;
             if (body.Type != typeof(TResult))
             {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+                body = L.Expression.Convert(body, typeof(TResult));
             }
 
-            return Tuple.Create(body, parameter);
+            return new ExpressionWithParameter { expr = body, param = parameter };
         }
 
-        protected virtual System.Linq.Expressions.Expression ToLinqExpression<TResult>()
+        protected virtual L.Expression ToLinqExpression<TResult>()
         {
-            return ToLinqExpressionInternal<Void, TResult>().Item1;
+            return ToLinqExpressionInternal<Void, TResult>().expr;
         }
 
-        protected virtual Tuple<System.Linq.Expressions.Expression, System.Linq.Expressions.ParameterExpression> ToLinqExpression<TContext, TResult>()
+        protected virtual ExpressionWithParameter ToLinqExpression<TContext, TResult>()
         {
             return ToLinqExpressionInternal<TContext, TResult>();
         }
 
-        public Func<TResult> ToLambda<TResult>()
+        public virtual Func<TResult> ToLambda<TResult>()
         {
-            System.Linq.Expressions.Expression body = ToLinqExpression<TResult>();
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
+            L.Expression body = ToLinqExpression<TResult>();
+            var lambda = L.Expression.Lambda<Func<TResult>>(body);
             return lambda.Compile();
         }
 
-        public Func<TContext, TResult> ToLambda<TContext, TResult>()
+        public virtual Func<TContext, TResult> ToLambda<TContext, TResult>()
         {
-            var exprAndParamTuple = ToLinqExpression<TContext, TResult>();
-            System.Linq.Expressions.Expression expression = exprAndParamTuple.Item1;
-            System.Linq.Expressions.ParameterExpression parameter = exprAndParamTuple.Item2;
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(expression, parameter);
+            ExpressionWithParameter exprAndParamTuple = ToLinqExpression<TContext, TResult>();
+            var lambda = L.Expression.Lambda<Func<TContext, TResult>>(exprAndParamTuple.expr, exprAndParamTuple.param);
             return lambda.Compile();
         }
 
