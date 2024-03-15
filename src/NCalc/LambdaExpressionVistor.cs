@@ -26,6 +26,36 @@ namespace NCalc
             { typeof(ulong), new HashSet<Type> { typeof(float), typeof(double), typeof(decimal) }},
         };
 
+        private struct MathCallFunction
+        {
+            public string name;
+            public int argsNum;
+        }
+        private readonly Dictionary<string, MathCallFunction> _MathCallFunctions = new Dictionary<string, MathCallFunction>()
+        {
+            { "ABS",           new MathCallFunction{ name= "Abs",           argsNum= 1 } },
+            { "ACOS",          new MathCallFunction{ name= "Acos",          argsNum= 1 } },
+            { "ASIN",          new MathCallFunction{ name= "Asin",          argsNum= 1 } },
+            { "ATAN",          new MathCallFunction{ name= "Atan",          argsNum= 1 } },
+            { "ATAN2",         new MathCallFunction{ name= "Atan2",         argsNum= 2 } },
+            { "CEILING",       new MathCallFunction{ name= "Ceiling",       argsNum= 1 } },
+            { "COS",           new MathCallFunction{ name= "Cos",           argsNum= 1 } },
+            { "COSH",          new MathCallFunction{ name= "Cosh",          argsNum= 1 } },
+            { "EXP",           new MathCallFunction{ name= "Exp",           argsNum= 1 } },
+            { "FLOOR",         new MathCallFunction{ name= "Floor",         argsNum= 1 } },
+            { "IEEEREMAINDER", new MathCallFunction{ name= "IEEERemainder", argsNum= 2 } },
+            { "LOG",           new MathCallFunction{ name= "Log",           argsNum= 2 } },
+            { "LOG10",         new MathCallFunction{ name= "Log10",         argsNum= 1 } },
+            // ROUND?????
+            { "SIGN",          new MathCallFunction{ name= "Sign",          argsNum= 1 } },
+            { "SIN",           new MathCallFunction{ name= "Sin",           argsNum= 1 } },
+            { "SINH",          new MathCallFunction{ name= "Sinh",          argsNum= 1 } },
+            { "SQRT",          new MathCallFunction{ name= "Sqrt",          argsNum= 1 } },
+            { "TAN",           new MathCallFunction{ name= "Tan",           argsNum= 1 } },
+            { "TANH",          new MathCallFunction{ name= "Tanh",          argsNum= 1 } },
+            { "TRUNCATE",      new MathCallFunction{ name= "Truncate",      argsNum= 1 } },
+        };
+
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
         private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
         private bool Checked { get { return (_options & EvaluateOptions.OverflowProtection) == EvaluateOptions.OverflowProtection; } }
@@ -200,30 +230,76 @@ namespace NCalc
                 return;
             }
 
-            switch (functionName)
+            Action<string, int, int> CheckArgumentsLengthForFunction = delegate (string funcStr, int argsNum, int argsNeed)
             {
-                case "MIN":
-                    var minArg0 = L.Expression.Convert(args[0], typeof(double));
-                    var minArg1 = L.Expression.Convert(args[1], typeof(double));
-                    _result = L.Expression.Condition(L.Expression.LessThan(minArg0, minArg1), minArg0, minArg1);
-                    break;
-                case "MAX":
-                    var maxArg0 = L.Expression.Convert(args[0], typeof(double));
-                    var maxArg1 = L.Expression.Convert(args[1], typeof(double));
-                    _result = L.Expression.Condition(L.Expression.GreaterThan(maxArg0, maxArg1), maxArg0, maxArg1);
-                    break;
-                case "POW":
-                    var powArg0 = L.Expression.Convert(args[0], typeof(double));
-                    var powArg1 = L.Expression.Convert(args[1], typeof(double));
-                    _result = L.Expression.Power(powArg0, powArg1);
-                    break;
-                case "SIN":
-                    var sinArg0 = L.Expression.Convert(args[0], typeof(double));
-                    _result = L.Expression.Call(typeof(Math).GetMethod("Sin"), sinArg0);
-                    break;
-                default:
-                    throw new MissingMethodException($"method not found: {functionName}");
+                if (argsNum != argsNeed)
+                    throw new ArgumentException($"{funcStr} takes exactly {argsNeed} argument");
+            };
+
+            Action<string, int> MakeMathCallExpressionOneDoubleParam = delegate (string mathCallFuncName, int argsNumActual)
+            {
+                CheckArgumentsLengthForFunction(mathCallFuncName, argsNumActual, 1);
+                var arg = L.Expression.Convert(args[0], typeof(double));
+                _result = L.Expression.Call(typeof(Math).GetMethod(mathCallFuncName), arg);
+            };
+
+            Action<string, int> MakeMathCallExpressionTwoDoubleParam = delegate (string mathCallFuncName, int argsNumActual)
+            {
+                CheckArgumentsLengthForFunction(mathCallFuncName, argsNumActual, 2);
+                var arg_0 = L.Expression.Convert(args[0], typeof(double));
+                var arg_1 = L.Expression.Convert(args[1], typeof(double));
+                _result = L.Expression.Call(typeof(Math).GetMethod(mathCallFuncName), arg_0, arg_1);
+            };
+
+
+            L.UnaryExpression arg0;
+            L.UnaryExpression arg1;
+
+            int actualNumArgs = function.Expressions.Length;
+
+            if (_MathCallFunctions.TryGetValue(functionName, out MathCallFunction func))
+            {
+                if (func.argsNum == 1)
+                {
+                    MakeMathCallExpressionOneDoubleParam(func.name, actualNumArgs);
+                }
+                else if(func.argsNum == 2)
+                {
+                    MakeMathCallExpressionTwoDoubleParam(func.name, actualNumArgs);
+                }
+                else
+                {
+                    throw new Exception("LambdaExpressionVistor.Visit: Impossible variant");
+                }
             }
+            else
+            {
+                switch (functionName)
+                {
+                    case "MAX":
+                        CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                        arg0 = L.Expression.Convert(args[0], typeof(double));
+                        arg1 = L.Expression.Convert(args[1], typeof(double));
+                        _result = L.Expression.Condition(L.Expression.GreaterThan(arg0, arg1), arg0, arg1);
+                        break;
+                    case "MIN":
+                        CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                        arg0 = L.Expression.Convert(args[0], typeof(double));
+                        arg1 = L.Expression.Convert(args[1], typeof(double));
+                        _result = L.Expression.Condition(L.Expression.LessThan(arg0, arg1), arg0, arg1);
+                        break;
+                    case "POW":
+                        CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                        arg0 = L.Expression.Convert(args[0], typeof(double));
+                        arg1 = L.Expression.Convert(args[1], typeof(double));
+                        _result = L.Expression.Power(arg0, arg1);
+                        break;
+                    default:
+                        throw new MissingMethodException($"method not found: {functionName}");
+                }
+            }
+
+            
         }
 
         public override void Visit(Identifier function)
