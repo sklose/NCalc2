@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Xunit;
 
@@ -408,5 +409,154 @@ namespace NCalc.Tests
         {
             public double Foo => 2.2;
         }
+
+        struct ContextAndResult
+        {
+            public double x;
+            public double y;
+            public string Func;
+            public double ExpressionResult;
+            public double LambdaResult;
+        }
+
+        [Fact]
+        public void ExpressionAndLambdaFuncBehaviorMatch()
+        {
+            // Arrange
+            double[] testValues = { double.MinValue, -Math.PI, -1, Math.BitDecrement(0), 0, Math.BitIncrement(0), 0.001, 1, 2, 3.14, Math.PI, 10, 100, double.MaxValue };
+
+            string[] functionsImplemented =
+            {
+                "Abs", "Acos", "Asin", "Atan", "Ceiling", "Cos", "Exp", "Floor", "IEEERemainder",
+                "Log", "Log10", "Max", "Min", "Pow", "Round", "Sin", "Sqrt", "Tan", "Truncate"
+            };
+            HashSet<string> functionsWithTwoArguments = new HashSet<string>()
+            {
+                "Round", "IEEERemainder", "Log", "Max", "Min", "Pow"
+            };
+
+            List<ContextAndResult> testResults = new();
+            ContextAndResult currentContext = new();
+
+            // Act
+            try
+            {
+                // Iterate each function name
+                foreach (string funcName in functionsImplemented)
+                {
+                    bool isTwoArgumentFunc = functionsWithTwoArguments.Contains(funcName);
+                    string expressionString = isTwoArgumentFunc ? funcName + "(x, y)" : funcName + "(x)";
+
+                    currentContext.Func = expressionString;
+
+                    var expression = Extensions.CreateExpression(expressionString, EvaluateOptions.UseDoubleForAbsFunction);
+                    var lambda = expression.ToLambda<ContextAndResult, double>();
+
+                    for (int i = 0; i < testValues.Length; ++i)
+                    {
+                        currentContext.x = testValues[i];
+                        expression.Parameters["x"] = currentContext.x;
+
+                        if (isTwoArgumentFunc)
+                        {
+                            currentContext.y = testValues[(i + 1) % testValues.Length];
+                            if (funcName == "Round")
+                                currentContext.y = Math.Clamp(currentContext.y, 0, 15);
+                            expression.Parameters["y"] = currentContext.y;
+                        }
+
+                        currentContext.ExpressionResult = (double)expression.Evaluate();
+                        currentContext.LambdaResult = lambda(currentContext);
+
+                        testResults.Add(currentContext);
+                    }
+                }
+            }
+            // To find an exact spot of error. Change Exception to non-related (for ex. OutOfMemoryException) to navigate stack in Test Explorer
+            catch (Exception ex)
+            {
+                Assert.Fail($@"context x: {currentContext.x},
+func: {currentContext.Func},
+Expression result: {currentContext.ExpressionResult},
+Lambda result: {currentContext.LambdaResult}
+exception message: {ex.Message}
+exception stack: {ex.StackTrace}");
+            }
+
+            static bool IsEqual(double a, double b)
+            {
+                if (double.IsNaN(a) && double.IsNaN(b))
+                {
+                    return true;
+                }
+
+                return a == b;
+                //double tol = Math.Clamp(Math.Max(a, b) * 1e-12, 1e-12, 1);
+                //return Math.Abs(a - b) < tol;
+            }
+
+            // Assert
+            foreach (ContextAndResult testContext in testResults)
+            {
+                Assert.True(IsEqual(testContext.ExpressionResult, testContext.LambdaResult),
+                    $@"context x: {testContext.x},
+                    func: {testContext.Func},
+                    Expression result: {testContext.ExpressionResult},
+                    Lambda result: {testContext.LambdaResult}");
+            }
+        }
+
+        struct ContextWithOverridenMethods
+        {
+            public double x;
+            public double y;
+
+            public double Cos(double val)
+            {
+                return Math.Sin(val) + 1;
+            }
+
+            public double Log(double val)
+            {
+                return Math.Sin(val) + 2;
+            }
+
+            public double Log(double val1, double val2)
+            {
+                return Math.Sin(val1) + 3;
+            }
+        }
+
+        [Fact]
+        public void LambdaOverrideMathFunction()
+        {
+            // Arrange
+            ContextWithOverridenMethods context = new() { x = 3.5, y = 2.5 };
+
+            var expressionCos = Extensions.CreateExpression("Cos(x)");
+            var lambdaCos = expressionCos.ToLambda<ContextWithOverridenMethods, double>();
+
+            var expressionLog1 = Extensions.CreateExpression("Log(x)");
+            var lambdaLog1 = expressionLog1.ToLambda<ContextWithOverridenMethods, double>();
+
+            var expressionLog2 = Extensions.CreateExpression("Log(x, y)");
+            var lambdaLog2 = expressionLog2.ToLambda<ContextWithOverridenMethods, double>();
+
+            // Act
+            double actualCos = lambdaCos(context);
+            double expectedCos = context.Cos(context.x);
+
+            double actualLog1 = lambdaLog1(context);
+            double expectedLog1 = context.Log(context.x);
+
+            double actualLog2 = lambdaLog2(context);
+            double expectedLog2 = context.Log(context.x, context.y);
+
+            // Assert
+            Assert.Equal(expectedCos, actualCos);
+            Assert.Equal(expectedLog1, actualLog1);
+            Assert.Equal(expectedLog2, actualLog2);
+        }
+
     }
 }
