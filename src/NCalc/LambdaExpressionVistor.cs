@@ -28,32 +28,32 @@ namespace NCalc
 
         private struct MathCallFunction
         {
-            public string name;
-            public int argsNum;
+            public string MethodName;
+            public int ArgumentCount;
         }
 
         private readonly Dictionary<string, MathCallFunction> _mathCallFunctions = new Dictionary<string, MathCallFunction>()
         {
-            { "ABS",           new MathCallFunction{ name= "Abs",           argsNum= 1 } },
-            { "ACOS",          new MathCallFunction{ name= "Acos",          argsNum= 1 } },
-            { "ASIN",          new MathCallFunction{ name= "Asin",          argsNum= 1 } },
-            { "ATAN",          new MathCallFunction{ name= "Atan",          argsNum= 1 } },
-            { "ATAN2",         new MathCallFunction{ name= "Atan2",         argsNum= 2 } },
-            { "CEILING",       new MathCallFunction{ name= "Ceiling",       argsNum= 1 } },
-            { "COS",           new MathCallFunction{ name= "Cos",           argsNum= 1 } },
-            { "COSH",          new MathCallFunction{ name= "Cosh",          argsNum= 1 } },
-            { "EXP",           new MathCallFunction{ name= "Exp",           argsNum= 1 } },
-            { "FLOOR",         new MathCallFunction{ name= "Floor",         argsNum= 1 } },
-            { "IEEEREMAINDER", new MathCallFunction{ name= "IEEERemainder", argsNum= 2 } },
-            { "LOG",           new MathCallFunction{ name= "Log",           argsNum= 2 } },
-            { "LOG10",         new MathCallFunction{ name= "Log10",         argsNum= 1 } },
-            { "SIGN",          new MathCallFunction{ name= "Sign",          argsNum= 1 } },
-            { "SIN",           new MathCallFunction{ name= "Sin",           argsNum= 1 } },
-            { "SINH",          new MathCallFunction{ name= "Sinh",          argsNum= 1 } },
-            { "SQRT",          new MathCallFunction{ name= "Sqrt",          argsNum= 1 } },
-            { "TAN",           new MathCallFunction{ name= "Tan",           argsNum= 1 } },
-            { "TANH",          new MathCallFunction{ name= "Tanh",          argsNum= 1 } },
-            { "TRUNCATE",      new MathCallFunction{ name= "Truncate",      argsNum= 1 } },
+            { "ABS",           new MathCallFunction{ MethodName= "Abs",           ArgumentCount= 1 } },
+            { "ACOS",          new MathCallFunction{ MethodName= "Acos",          ArgumentCount= 1 } },
+            { "ASIN",          new MathCallFunction{ MethodName= "Asin",          ArgumentCount= 1 } },
+            { "ATAN",          new MathCallFunction{ MethodName= "Atan",          ArgumentCount= 1 } },
+            { "ATAN2",         new MathCallFunction{ MethodName= "Atan2",         ArgumentCount= 2 } },
+            { "CEILING",       new MathCallFunction{ MethodName= "Ceiling",       ArgumentCount= 1 } },
+            { "COS",           new MathCallFunction{ MethodName= "Cos",           ArgumentCount= 1 } },
+            { "COSH",          new MathCallFunction{ MethodName= "Cosh",          ArgumentCount= 1 } },
+            { "EXP",           new MathCallFunction{ MethodName= "Exp",           ArgumentCount= 1 } },
+            { "FLOOR",         new MathCallFunction{ MethodName= "Floor",         ArgumentCount= 1 } },
+            { "IEEEREMAINDER", new MathCallFunction{ MethodName= "IEEERemainder", ArgumentCount= 2 } },
+            { "LOG",           new MathCallFunction{ MethodName= "Log",           ArgumentCount= 2 } },
+            { "LOG10",         new MathCallFunction{ MethodName= "Log10",         ArgumentCount= 1 } },
+            { "SIGN",          new MathCallFunction{ MethodName= "Sign",          ArgumentCount= 1 } },
+            { "SIN",           new MathCallFunction{ MethodName= "Sin",           ArgumentCount= 1 } },
+            { "SINH",          new MathCallFunction{ MethodName= "Sinh",          ArgumentCount= 1 } },
+            { "SQRT",          new MathCallFunction{ MethodName= "Sqrt",          ArgumentCount= 1 } },
+            { "TAN",           new MathCallFunction{ MethodName= "Tan",           ArgumentCount= 1 } },
+            { "TANH",          new MathCallFunction{ MethodName= "Tanh",          ArgumentCount= 1 } },
+            { "TRUNCATE",      new MathCallFunction{ MethodName= "Truncate",      ArgumentCount= 1 } },
         };
         private static Dictionary<string, MethodInfo> _cachedMathCallMethods = new Dictionary<string, MethodInfo>();
 
@@ -270,13 +270,13 @@ namespace NCalc
 
             if (_mathCallFunctions.TryGetValue(functionName, out MathCallFunction func))
             {
-                if (func.argsNum == 1)
+                if (func.ArgumentCount == 1)
                 {
-                    MakeMathCallExpressionOneDoubleParam(func.name, actualNumArgs);
+                    MakeMathCallExpressionOneDoubleParam(func.MethodName, actualNumArgs);
                 }
-                else if(func.argsNum == 2)
+                else if(func.ArgumentCount == 2)
                 {
-                    MakeMathCallExpressionTwoDoubleParam(func.name, actualNumArgs);
+                    MakeMathCallExpressionTwoDoubleParam(func.MethodName, actualNumArgs);
                 }
                 else
                 {
