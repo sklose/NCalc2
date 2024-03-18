@@ -233,8 +233,8 @@ namespace NCalc
 
         public struct ExpressionWithParameter
         {
-            public L.Expression expr;
-            public L.ParameterExpression param;
+            public L.Expression Expr;
+            public L.ParameterExpression Param;
         }
 
         private ExpressionWithParameter ToLinqExpressionInternal<TContext, TResult>()
@@ -268,12 +268,12 @@ namespace NCalc
                 body = L.Expression.Convert(body, typeof(TResult));
             }
 
-            return new ExpressionWithParameter { expr = body, param = parameter };
+            return new ExpressionWithParameter { Expr = body, Param = parameter };
         }
 
         protected virtual L.Expression ToLinqExpression<TResult>()
         {
-            return ToLinqExpressionInternal<Void, TResult>().expr;
+            return ToLinqExpressionInternal<Void, TResult>().Expr;
         }
 
         protected virtual ExpressionWithParameter ToLinqExpression<TContext, TResult>()
@@ -291,7 +291,7 @@ namespace NCalc
         public virtual Func<TContext, TResult> ToLambda<TContext, TResult>()
         {
             ExpressionWithParameter exprAndParamTuple = ToLinqExpression<TContext, TResult>();
-            var lambda = L.Expression.Lambda<Func<TContext, TResult>>(exprAndParamTuple.expr, exprAndParamTuple.param);
+            var lambda = L.Expression.Lambda<Func<TContext, TResult>>(exprAndParamTuple.Expr, exprAndParamTuple.Param);
             return lambda.Compile();
         }
 
