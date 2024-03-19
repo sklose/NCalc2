@@ -945,7 +945,7 @@ namespace NCalc.Tests
             Exception exception = null;
 
             var expressions = new List<Expression>();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
                 expressions.Add(Extensions.CreateExpression("if(1 > 2, 0, 1)"));
 
             Parallel.ForEach(expressions, expr =>
