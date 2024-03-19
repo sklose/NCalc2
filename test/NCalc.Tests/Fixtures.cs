@@ -948,7 +948,7 @@ namespace NCalc.Tests
             {
                 try
                 {
-                    var expression = Extensions.CreateExpression("1 + 2");
+                    var expression = Extensions.CreateExpression("if(1 > 2, 0, 1)");
                     expression.Evaluate();
                 }
                 catch (Exception ex)
