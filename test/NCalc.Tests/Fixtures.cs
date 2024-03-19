@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -937,6 +938,26 @@ namespace NCalc.Tests
                 Assert.Throws<FormatException>(() => expression.Evaluate());
             }
         }
+
+        [Fact]
+        public void TestMultiThreadingCache()
+        {
+            Exception exception = null;
+
+            Parallel.For(0, 100, x =>
+            {
+                try
+                {
+                    var expression = Extensions.CreateExpression("1 + 2");
+                    expression.Evaluate();
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            });
+
+            Assert.Null(exception);
+        }
     }
 }
-
