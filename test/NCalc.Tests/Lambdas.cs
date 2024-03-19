@@ -476,11 +476,11 @@ namespace NCalc.Tests
             catch (Exception ex)
             {
                 Assert.Fail($@"context x: {currentContext.x},
-func: {currentContext.Func},
-Expression result: {currentContext.ExpressionResult},
-Lambda result: {currentContext.LambdaResult}
-exception message: {ex.Message}
-exception stack: {ex.StackTrace}");
+                    func: {currentContext.Func},
+                    Expression result: {currentContext.ExpressionResult},
+                    Lambda result: {currentContext.LambdaResult}
+                    exception message: {ex.Message}
+                    exception stack: {ex.StackTrace}");
             }
 
             static bool IsEqual(double a, double b)
