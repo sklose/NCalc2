@@ -944,12 +944,15 @@ namespace NCalc.Tests
         {
             Exception exception = null;
 
-            Parallel.For(0, 100, x =>
+            var expressions = new List<Expression>();
+            for (int i = 0; i < 100; i++)
+                expressions.Add(Extensions.CreateExpression("if(1 > 2, 0, 1)"));
+
+            Parallel.ForEach(expressions, expr =>
             {
                 try
                 {
-                    var expression = Extensions.CreateExpression("if(1 > 2, 0, 1)");
-                    expression.Evaluate();
+                    expr.Evaluate();
                 }
                 catch (Exception ex)
                 {
