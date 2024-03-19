@@ -66,7 +66,7 @@ namespace NCalc
 
         #region Cache management
         private static bool _cacheEnabled = true;
-        private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions = 
+        private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions =
             new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
 
         public static bool CacheEnabled
@@ -103,8 +103,6 @@ namespace NCalc
 
         public static LogicalExpression Compile(string expression, bool nocache)
         {
-            LogicalExpression logicalExpression = null;
-
             if (_cacheEnabled && !nocache)
             {
                 if (_compiledExpressions.TryGetValue(expression, out var wr))
@@ -116,51 +114,50 @@ namespace NCalc
                 }
             }
 
-            if (logicalExpression == null)
+            var lexer = new NCalcLexer(CharStreams.fromString(expression));
+            var lexerErrorListener = new ErrorListener<int>();
+            lexer.AddErrorListener(lexerErrorListener);
+
+            var parser = new NCalcParser(new CommonTokenStream(lexer));
+            parser.Interpreter.PredictionMode = PredictionMode.SLL;
+            var parserErrorListener = new ErrorListener<IToken>();
+
+            parser.RemoveErrorListeners();
+            parser.ErrorHandler = new BailErrorStrategy();
+
+            LogicalExpression logicalExpression = null;
+
+            try
             {
-                var lexer = new NCalcLexer(CharStreams.fromString(expression));
-                var lexerErrorListener = new ErrorListener<int>();
-                lexer.AddErrorListener(lexerErrorListener);
+                logicalExpression = parser.ncalcExpression().value;
+            }
+            catch (ParseCanceledException)
+            {
+                lexer.Reset();
 
-                var parser = new NCalcParser(new CommonTokenStream(lexer));
-                parser.Interpreter.PredictionMode = PredictionMode.SLL;
-                var parserErrorListener = new ErrorListener<IToken>();
+                parser.Reset();
+                parser.ErrorHandler = new DefaultErrorStrategy();
+                parser.Interpreter.PredictionMode = PredictionMode.LL;
+                parser.AddErrorListener(parserErrorListener);
+                logicalExpression = parser.ncalcExpression().value;
+            }
 
-                parser.RemoveErrorListeners();
-                parser.ErrorHandler = new BailErrorStrategy();
+            if (parserErrorListener.Errors.Count > 0 || lexerErrorListener.Errors.Count > 0)
+            {
+                var errors = string.Join(Environment.NewLine,
+                    lexerErrorListener.Errors.Select(e => e.ToString()).Union(
+                    parserErrorListener.Errors.Select(e => e.ToString()))
+                );
 
-                try
-                {
-                    logicalExpression = parser.ncalcExpression().value;
-                }
-                catch (ParseCanceledException)
-                {
-                    lexer.Reset();
+                throw new EvaluationException(errors);
+            }
 
-                    parser.Reset();
-                    parser.ErrorHandler = new DefaultErrorStrategy();
-                    parser.Interpreter.PredictionMode = PredictionMode.LL;
-                    parser.AddErrorListener(parserErrorListener);
-                    logicalExpression = parser.ncalcExpression().value;
-                }
+            if (_cacheEnabled && !nocache)
+            {
+                _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
 
-                if (parserErrorListener.Errors.Count > 0 || lexerErrorListener.Errors.Count > 0)
-                {
-                    var errors = string.Join(Environment.NewLine,
-                        lexerErrorListener.Errors.Select(e => e.ToString()).Union(
-                        parserErrorListener.Errors.Select(e => e.ToString()))
-                    );
-
-                    throw new EvaluationException(errors);
-                }
-
-                if (_cacheEnabled && !nocache)
-                {
-                    _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
-
-                    ClearCache();
-                    //Debug.WriteLine("Expression added to cache: " + expression);
-                }
+                ClearCache();
+                //Debug.WriteLine("Expression added to cache: " + expression);
             }
 
             return logicalExpression;
