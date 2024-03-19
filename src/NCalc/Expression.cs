@@ -66,7 +66,8 @@ namespace NCalc
 
         #region Cache management
         private static bool _cacheEnabled = true;
-        private static ConcurrentDictionary<string, WeakReference> _compiledExpressions = new ConcurrentDictionary<string, WeakReference>();
+        private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions = 
+            new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
 
         public static bool CacheEnabled
         {
@@ -78,7 +79,7 @@ namespace NCalc
                 if (!CacheEnabled)
                 {
                     // Clears cache
-                    _compiledExpressions = new ConcurrentDictionary<string, WeakReference>();
+                    _compiledExpressions.Clear();
                 }
             }
         }
@@ -86,27 +87,15 @@ namespace NCalc
         /// <summary>
         /// Removed unused entries from cached compiled expression
         /// </summary>
-        private static void CleanCache()
+        private static void ClearCache()
         {
-            try
+            foreach (var kvp in _compiledExpressions)
             {
-                var keysToRemove = new List<string>();
-                foreach (var de in _compiledExpressions)
+                if (!kvp.Value.TryGetTarget(out _))
                 {
-                    if (!de.Value.IsAlive)
-                    {
-                        keysToRemove.Add(de.Key);
-                    }
-                }
-
-                foreach (string key in keysToRemove)
-                {
-                    _compiledExpressions.TryRemove(key, out _);
+                    _compiledExpressions.TryRemove(kvp.Key, out _);
                     //Debug.WriteLine("Cache entry released: " + key);
                 }
-            }
-            finally
-            {
             }
         }
 
@@ -118,17 +107,12 @@ namespace NCalc
 
             if (_cacheEnabled && !nocache)
             {
-                if (_compiledExpressions.ContainsKey(expression))
+                if (_compiledExpressions.TryGetValue(expression, out var wr))
                 {
                     //Debug.WriteLine("Expression retrieved from cache: " + expression);
 
-                    var wr = _compiledExpressions[expression];
-                    logicalExpression = wr.Target as LogicalExpression;
-
-                    if (wr.IsAlive && logicalExpression != null)
-                    {
-                        return logicalExpression;
-                    }
+                    if (wr.TryGetTarget(out var target))
+                        return target;
                 }
             }
 
@@ -172,21 +156,9 @@ namespace NCalc
 
                 if (_cacheEnabled && !nocache)
                 {
-                    try
-                    {
-                        if (_compiledExpressions.TryGetValue(expression, out var wr))
-                        {
-                            _compiledExpressions.TryUpdate(expression, new WeakReference(logicalExpression), wr);
-                        }
-                        else
-                        {
-                            _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
-                        }
-                    }
-                    finally
-                    {
-                        CleanCache();
-                    }
+                    _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
+
+                    ClearCache();
                     //Debug.WriteLine("Expression added to cache: " + expression);
                 }
             }
