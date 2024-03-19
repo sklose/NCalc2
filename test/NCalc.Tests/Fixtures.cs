@@ -226,6 +226,7 @@ namespace NCalc.Tests
             Assert.Equal(-1d, Extensions.CreateExpression("IEEERemainder(3,2)").Evaluate());
             Assert.Equal(0d, Extensions.CreateExpression("Log(1,10)").Evaluate());
             Assert.Equal(0d, Extensions.CreateExpression("Ln(1)").Evaluate());
+            Assert.Equal(Math.Log(0.5), Extensions.CreateExpression("Ln(0.5)").Evaluate());
             Assert.Equal(0d, Extensions.CreateExpression("Log10(1)").Evaluate());
             Assert.Equal(9d, Extensions.CreateExpression("Pow(3,2)").Evaluate());
             Assert.Equal(3.22d, Extensions.CreateExpression("Round(3.222,2)").Evaluate());
