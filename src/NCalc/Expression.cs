@@ -56,8 +56,7 @@ namespace NCalc
         public Expression(LogicalExpression expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (expression == null)
-                throw new
-                    ArgumentException("Expression can't be null", nameof(expression));
+                throw new ArgumentException("Expression can't be null", nameof(expression));
 
             ParsedExpression = expression;
             Options = options;
