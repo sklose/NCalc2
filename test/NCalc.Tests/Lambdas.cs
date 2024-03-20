@@ -435,13 +435,15 @@ namespace NCalc.Tests
                 "Round", "IEEERemainder", "Log", "Max", "Min", "Pow"
             };
 
+            string[] doubleToStringFormats = new [] { "F17", "0" };
+
             List<ContextAndResult> testResults = new();
             ContextAndResult currentContext = new();
 
             // Act
             try
             {
-                // Iterate each function name
+                // Iterate each function name with context
                 foreach (string funcName in functionsImplemented)
                 {
                     bool isTwoArgumentFunc = functionsWithTwoArguments.Contains(funcName);
@@ -460,6 +462,7 @@ namespace NCalc.Tests
                         if (isTwoArgumentFunc)
                         {
                             currentContext.y = testValues[(i + 1) % testValues.Length];
+                            // Edge case (Round second argument is int decimal places to round from 0 to 15)
                             if (funcName == "Round")
                                 currentContext.y = Math.Clamp(currentContext.y, 0, 15);
                             expression.Parameters["y"] = currentContext.y;
@@ -471,11 +474,65 @@ namespace NCalc.Tests
                         testResults.Add(currentContext);
                     }
                 }
+
+                // Iterate each function name without context with numbers of format 123.456 (doubles) or 123 (integers)
+                foreach (string doubleToStringFormat in doubleToStringFormats)
+                {
+                    for (int i = 0; i < testValues.Length; ++i)
+                    {
+                        currentContext.x = testValues[i];
+                        // Edge case (Exception when too big doubles not fit into Int64)
+                        // We are multiplying by 0.99 because after clamping exception is still thrown
+                        // Int64.MinValue = -9223372036854775808, (double)Int64.MinValue = -9223372036854780000 which is lesser)
+                        if (doubleToStringFormat == "0" && Math.Abs(currentContext.x) > Int64.MaxValue)
+                        {
+                            currentContext.x = Math.Clamp(currentContext.x, Int64.MinValue, Int64.MaxValue) * 0.99;
+                        }
+
+                        string doubleParam1 = currentContext.x.ToString(doubleToStringFormat);
+
+                        foreach (string funcName in functionsImplemented)
+                        {
+                            bool isTwoArgumentFunc = functionsWithTwoArguments.Contains(funcName);
+
+                            string expressionString;
+
+                            if (isTwoArgumentFunc)
+                            {
+                                currentContext.y = testValues[(i + 1) % testValues.Length];
+                                // Edge case (see previous)
+                                if (doubleToStringFormat == "0" && Math.Abs(currentContext.y) > Int64.MaxValue)
+                                {
+                                    currentContext.y = Math.Clamp(currentContext.y, Int64.MinValue, Int64.MaxValue) * 0.99;
+                                }
+                                // Edge case (Round second argument is int decimal places to round from 0 to 15)
+                                if (funcName == "Round")
+                                    currentContext.y = Math.Clamp(currentContext.y, 0, 15);
+
+                                string doubleParam2 = currentContext.y.ToString(doubleToStringFormat);
+                                expressionString = funcName + $"({doubleParam1}, {doubleParam2})";
+                            }
+                            else
+                            {
+                                expressionString = funcName + $"({doubleParam1})";
+                            }
+                            currentContext.Func = expressionString;
+
+                            var expression = Extensions.CreateExpression(expressionString, EvaluateOptions.UseDoubleForAbsFunction);
+                            var lambda = expression.ToLambda<double>();
+
+                            currentContext.ExpressionResult = Convert.ToDouble(expression.Evaluate());
+                            currentContext.LambdaResult = lambda();
+                            testResults.Add(currentContext);
+                        }
+
+                    }
+                }
             }
             // Serves to find an exact spot of error. Change Exception to non-related (for ex. OutOfMemoryException) to navigate via links in Test Explorer
             catch (Exception ex)
             {
-                Assert.Fail($@"context x: {currentContext.x},
+                Assert.Fail($@"{ex.GetType()}, context x: {currentContext.x},
                     func: {currentContext.Func},
                     Expression result: {currentContext.ExpressionResult},
                     Lambda result: {currentContext.LambdaResult}
@@ -524,6 +581,11 @@ namespace NCalc.Tests
             // Arrange
             ContextWithOverridenMethods context = new() { x = 3.5, y = 2.5 };
 
+            // Not overriden function
+            var expressionAbs = Extensions.CreateExpression("Abs(x)");
+            var lambdaAbs = expressionAbs.ToLambda<ContextWithOverridenMethods, double>();
+
+            // Overriden functions
             var expressionCos = Extensions.CreateExpression("Cos(x)");
             var lambdaCos = expressionCos.ToLambda<ContextWithOverridenMethods, double>();
 
@@ -534,6 +596,9 @@ namespace NCalc.Tests
             var lambdaLog2 = expressionLog2.ToLambda<ContextWithOverridenMethods, double>();
 
             // Act
+            double actualAbs = lambdaAbs(context);
+            double expectedAbs = Math.Abs(context.x);
+
             double actualCos = lambdaCos(context);
             double expectedCos = context.Cos(context.x);
 
@@ -544,6 +609,7 @@ namespace NCalc.Tests
             double expectedLog2 = context.Log(context.x, context.y);
 
             // Assert
+            Assert.Equal(expectedAbs, actualAbs);
             Assert.Equal(expectedCos, actualCos);
             Assert.Equal(expectedLog1, actualLog1);
             Assert.Equal(expectedLog2, actualLog2);
