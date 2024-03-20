@@ -472,7 +472,7 @@ namespace NCalc.Tests
                     }
                 }
             }
-            // To find an exact spot of error. Change Exception to non-related (for ex. OutOfMemoryException) to navigate stack in Test Explorer
+            // Serves to find an exact spot of error. Change Exception to non-related (for ex. OutOfMemoryException) to navigate via links in Test Explorer
             catch (Exception ex)
             {
                 Assert.Fail($@"context x: {currentContext.x},
@@ -511,20 +511,11 @@ namespace NCalc.Tests
             public double x;
             public double y;
 
-            public double Cos(double val)
-            {
-                return Math.Sin(val) + 1;
-            }
+            public double Cos(double val) => Math.Sin(val) + 1;
 
-            public double Log(double val)
-            {
-                return Math.Sin(val) + 2;
-            }
+            public double Log(double val) => Math.Sin(val) + 2;
 
-            public double Log(double val1, double val2)
-            {
-                return Math.Sin(val1) + 3;
-            }
+            public double Log(double val1, double val2) => Math.Sin(val1) + 3;
         }
 
         [Fact]
