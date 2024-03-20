@@ -91,8 +91,7 @@ namespace NCalc.Domain
                 return 0;
             }
 
-            var cmp = a as IComparable;
-            if (cmp != null)
+            if (a is IComparable cmp)
                 return cmp.CompareTo(b);
 
             return -1;
