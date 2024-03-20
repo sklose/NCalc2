@@ -697,8 +697,7 @@ namespace NCalc.Domain
 
         private void OnEvaluateFunction(string name, FunctionArgs args)
         {
-            if (EvaluateFunction != null)
-                EvaluateFunction(name, args);
+            EvaluateFunction?.Invoke(name, args);
         }
 
         public override void Visit(Identifier parameter)
@@ -742,8 +741,7 @@ namespace NCalc.Domain
 
         private void OnEvaluateParameter(string name, ParameterArgs args)
         {
-            if (EvaluateParameter != null)
-                EvaluateParameter(name, args);
+            EvaluateParameter?.Invoke(name, args);
         }
 
         public Dictionary<string, object> Parameters { get; set; }
