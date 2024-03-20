@@ -245,7 +245,7 @@ namespace NCalc
                     throw new ArgumentException($"{funcStr} takes exactly {argsNeed} argument");
             };
 
-            void MakeMathCallExpression (MathCallFunction mathMethod, int argsNumActual)
+            void MakeMathCallExpression(MathCallFunction mathMethod, int argsNumActual)
             {
                 CheckArgumentsLengthForFunction(mathMethod.MathMethodInfo.Name, argsNumActual, mathMethod.ArgumentCount);
 
@@ -260,6 +260,7 @@ namespace NCalc
 
             switch (functionName)
             {
+                // Exceptional handling
                 case "MAX":
                     CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
                     arg0 = L.Expression.Convert(args[0], typeof(double));
@@ -286,6 +287,7 @@ namespace NCalc
                     _result = L.Expression.Call(_mathCallFunctions["ROUND"].MathMethodInfo, arg0, arg1, L.Expression.Constant(rounding));
                     break;
                 default:
+                    // Regular handling
                     if (_mathCallFunctions.TryGetValue(functionName, out MathCallFunction func))
                     {
                         MakeMathCallExpression(func, actualNumArgs);
