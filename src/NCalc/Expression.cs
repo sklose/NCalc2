@@ -4,10 +4,10 @@ using Antlr4.Runtime.Misc;
 using NCalc.Domain;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using L = System.Linq.Expressions;
 
 namespace NCalc
@@ -66,22 +66,13 @@ namespace NCalc
 
         #region Cache management
         private static bool _cacheEnabled = true;
-        private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions =
-            new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
+        private static readonly ConditionalWeakTable<string, LogicalExpression> _compiledExpressions =
+            new ConditionalWeakTable<string, LogicalExpression>();
 
         public static bool CacheEnabled
         {
             get { return _cacheEnabled; }
-            set
-            {
-                _cacheEnabled = value;
-
-                if (!CacheEnabled)
-                {
-                    // Clears cache
-                    _compiledExpressions.Clear();
-                }
-            }
+            set { _cacheEnabled = value; }
         }
         #endregion
 
@@ -92,11 +83,7 @@ namespace NCalc
                 if (_compiledExpressions.TryGetValue(expression, out var wr))
                 {
                     //Debug.WriteLine("Expression retrieved from cache: " + expression);
-
-                    if (wr.TryGetTarget(out var target))
-                        return target;
-                    else
-                        _compiledExpressions.TryRemove(expression, out var val);
+                    return wr;
                 }
             }
 
@@ -140,8 +127,13 @@ namespace NCalc
 
             if (_cacheEnabled && !nocache)
             {
-                _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
-                //Debug.WriteLine("Expression added to cache: " + expression);
+                if (_compiledExpressions.TryGetValue(expression, out var wr))
+                    wr = logicalExpression;
+                else
+                {
+                    _compiledExpressions.Add(expression, logicalExpression);
+                    //Debug.WriteLine("Expression added to cache: " + expression);
+                }
             }
 
             return logicalExpression;
