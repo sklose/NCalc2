@@ -56,8 +56,7 @@ namespace NCalc
         public Expression(LogicalExpression expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (expression == null)
-                throw new
-                    ArgumentException("Expression can't be null", nameof(expression));
+                throw new ArgumentException("Expression can't be null", nameof(expression));
 
             ParsedExpression = expression;
             Options = options;
@@ -318,10 +317,10 @@ namespace NCalc
 
                 foreach (object parameter in Parameters.Values)
                 {
-                    if (parameter is IEnumerable)
+                    if (parameter is IEnumerable enumerable)
                     {
                         int localsize = 0;
-                        foreach (object o in (IEnumerable)parameter)
+                        foreach (object o in enumerable)
                         {
                             localsize++;
                         }
@@ -339,8 +338,7 @@ namespace NCalc
 
                 foreach (string key in Parameters.Keys)
                 {
-                    var parameter = Parameters[key] as IEnumerable;
-                    if (parameter != null)
+                    if (Parameters[key] is IEnumerable parameter)
                     {
                         ParameterEnumerators.Add(key, parameter.GetEnumerator());
                     }
