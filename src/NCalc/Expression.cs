@@ -87,7 +87,7 @@ namespace NCalc
         /// <summary>
         /// Removed unused entries from cached compiled expression
         /// </summary>
-        private static void ClearCache()
+        private static void CleanCache()
         {
             foreach (var kvp in _compiledExpressions)
             {
@@ -156,7 +156,7 @@ namespace NCalc
             {
                 _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
 
-                ClearCache();
+                CleanCache();
                 //Debug.WriteLine("Expression added to cache: " + expression);
             }
 
