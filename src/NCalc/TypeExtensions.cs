@@ -37,8 +37,7 @@ namespace System
             if (type == null)
                 return TypeCode.Empty;
 
-            TypeCode tc;
-            if (!TypeCodeMap.TryGetValue(type, out tc))
+            if (!TypeCodeMap.TryGetValue(type, out TypeCode tc))
             {
                 tc = TypeCode.Object;
             }
