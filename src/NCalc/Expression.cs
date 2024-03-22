@@ -42,8 +42,7 @@ namespace NCalc
         public Expression(string expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (String.IsNullOrEmpty(expression))
-                throw new
-                    ArgumentException("Expression can't be empty", nameof(expression));
+                throw new ArgumentException("Expression can't be empty", nameof(expression));
 
             OriginalExpression = expression;
             Options = options;
