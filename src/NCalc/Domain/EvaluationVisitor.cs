@@ -512,6 +512,20 @@ namespace NCalc.Domain
 
                 #endregion
 
+                #region Ln
+                case "LN":
+
+                    CheckCase("Ln", function.Identifier.Name);
+
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Ln() takes exactly 1 argument");
+
+                    Result = Math.Log(Convert.ToDouble(Evaluate(function.Expressions[0]), _cultureInfo));
+
+                    break;
+
+                #endregion
+
                 #region Log
                 case "LOG":
 
