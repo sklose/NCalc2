@@ -83,6 +83,22 @@ namespace NCalc
                 }
             }
         }
+
+        /// <summary>
+        /// Removed unused entries from cached compiled expression
+        /// </summary>
+        private static void CleanCache()
+        {
+            foreach (var kvp in _compiledExpressions)
+            {
+                if (!kvp.Value.TryGetTarget(out _))
+                {
+                    _compiledExpressions.TryRemove(kvp.Key, out _);
+                    //Debug.WriteLine("Cache entry released: " + key);
+                }
+            }
+        }
+
         #endregion
 
         public static LogicalExpression Compile(string expression, bool nocache)
@@ -95,8 +111,6 @@ namespace NCalc
 
                     if (wr.TryGetTarget(out var target))
                         return target;
-                    else
-                        _compiledExpressions.TryRemove(expression, out var val);
                 }
             }
 
@@ -141,6 +155,8 @@ namespace NCalc
             if (_cacheEnabled && !nocache)
             {
                 _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
+
+                CleanCache();
                 //Debug.WriteLine("Expression added to cache: " + expression);
             }
 
