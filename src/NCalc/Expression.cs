@@ -288,12 +288,16 @@ namespace NCalc
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
             {
                 int size = -1;
+                int localSize = 0;
 
-                foreach (object parameter in Parameters.Values)
+                var parameterEnumerators = new Dictionary<string, IEnumerator>();
+
+                foreach (var parameter in Parameters)
                 {
-                    if (parameter is IEnumerable enumerable)
+                    if (parameter.Value is IEnumerable enumerable)
                     {
-                        int localSize = 0;
+                        parameterEnumerators.Add(parameter.Key, enumerable.GetEnumerator());
+
                         foreach (object o in enumerable)
                         {
                             localSize++;
@@ -310,24 +314,14 @@ namespace NCalc
                     }
                 }
 
-                var parameterEnumerators = new Dictionary<string, IEnumerator>();
-
-                foreach (string key in Parameters.Keys)
-                {
-                    if (Parameters[key] is IEnumerable parameter)
-                    {
-                        parameterEnumerators.Add(key, parameter.GetEnumerator());
-                    }
-                }
-
                 var results = new List<object>();
                 for (int i = 0; i < size; i++)
                 {
-                    foreach (string key in parameterEnumerators.Keys)
+                    foreach (var parameterEnumerator in parameterEnumerators)
                     {
-                        IEnumerator enumerator = parameterEnumerators[key];
+                        IEnumerator enumerator = parameterEnumerator.Value;
                         enumerator.MoveNext();
-                        Parameters[key] = enumerator.Current;
+                        Parameters[parameterEnumerator.Key] = enumerator.Current;
                     }
 
                     ParsedExpression.Accept(visitor);
