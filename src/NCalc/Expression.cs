@@ -193,7 +193,10 @@ namespace NCalc
 
         public LogicalExpression ParsedExpression { get; private set; }
 
+        [Obsolete("This property will be removed in the next minor update")]
         protected Dictionary<string, IEnumerator> ParameterEnumerators;
+        
+        [Obsolete("This property will be removed in the next minor update")]
         protected Dictionary<string, object> ParametersBackup;
 
         private struct Void { };
@@ -291,51 +294,40 @@ namespace NCalc
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
             {
                 int size = -1;
-                ParametersBackup = new Dictionary<string, object>();
-                foreach (string key in Parameters.Keys)
-                {
-                    ParametersBackup.Add(key, Parameters[key]);
-                }
 
-                ParameterEnumerators = new Dictionary<string, IEnumerator>();
+                var parameterEnumerators = new Dictionary<string, IEnumerator>();
 
-                foreach (object parameter in Parameters.Values)
+                foreach (var parameter in Parameters)
                 {
-                    if (parameter is IEnumerable enumerable)
+                    if (parameter.Value is IEnumerable enumerable)
                     {
-                        int localsize = 0;
+                        parameterEnumerators.Add(parameter.Key, enumerable.GetEnumerator());
+
+                        int localSize = 0;
                         foreach (object o in enumerable)
                         {
-                            localsize++;
+                            localSize++;
                         }
 
                         if (size == -1)
                         {
-                            size = localsize;
+                            size = localSize;
                         }
-                        else if (localsize != size)
+                        else if (localSize != size)
                         {
                             throw new EvaluationException("When IterateParameters option is used, IEnumerable parameters must have the same number of items");
                         }
                     }
                 }
 
-                foreach (string key in Parameters.Keys)
-                {
-                    if (Parameters[key] is IEnumerable parameter)
-                    {
-                        ParameterEnumerators.Add(key, parameter.GetEnumerator());
-                    }
-                }
-
                 var results = new List<object>();
                 for (int i = 0; i < size; i++)
                 {
-                    foreach (string key in ParameterEnumerators.Keys)
+                    foreach (var parameterEnumerator in parameterEnumerators)
                     {
-                        IEnumerator enumerator = ParameterEnumerators[key];
+                        IEnumerator enumerator = parameterEnumerator.Value;
                         enumerator.MoveNext();
-                        Parameters[key] = enumerator.Current;
+                        Parameters[parameterEnumerator.Key] = enumerator.Current;
                     }
 
                     ParsedExpression.Accept(visitor);
@@ -347,7 +339,6 @@ namespace NCalc
 
             ParsedExpression.Accept(visitor);
             return visitor.Result;
-
         }
 
         public event EvaluateFunctionHandler EvaluateFunction;
@@ -360,6 +351,5 @@ namespace NCalc
             get { return _parameters ?? (_parameters = new Dictionary<string, object>()); }
             set { _parameters = value; }
         }
-
     }
 }
