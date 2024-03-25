@@ -288,7 +288,6 @@ namespace NCalc
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
             {
                 int size = -1;
-                int localSize = 0;
 
                 var parameterEnumerators = new Dictionary<string, IEnumerator>();
 
@@ -298,6 +297,7 @@ namespace NCalc
                     {
                         parameterEnumerators.Add(parameter.Key, enumerable.GetEnumerator());
 
+                        int localSize = 0;
                         foreach (object o in enumerable)
                         {
                             localSize++;
