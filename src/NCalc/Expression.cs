@@ -193,6 +193,12 @@ namespace NCalc
 
         public LogicalExpression ParsedExpression { get; private set; }
 
+        [Obsolete("This property will be removed in the next minor update")]
+        protected Dictionary<string, IEnumerator> ParameterEnumerators;
+        
+        [Obsolete("This property will be removed in the next minor update")]
+        protected Dictionary<string, object> ParametersBackup;
+
         private struct Void { };
 
         public struct ExpressionWithParameter
