@@ -26,6 +26,45 @@ namespace NCalc
             { typeof(ulong), new HashSet<Type> { typeof(float), typeof(double), typeof(decimal) }},
         };
 
+        private struct MathCallFunction
+        {
+            public MethodInfo MathMethodInfo;
+            public int ArgumentCount;
+        }
+
+        private static MathCallFunction GetMathCallFunctionHelper(string method, int argCount) => new MathCallFunction {
+            MathMethodInfo = typeof(Math).GetMethod(method, Enumerable.Repeat(typeof(double), argCount).ToArray()),
+            ArgumentCount = argCount };
+
+        private static readonly Dictionary<string, MathCallFunction> _mathCallFunctions = new Dictionary<string, MathCallFunction>()
+        {
+            { "ABS",           GetMathCallFunctionHelper(nameof(Math.Abs),           1 ) },
+            { "ACOS",          GetMathCallFunctionHelper(nameof(Math.Acos),          1 ) },
+            { "ASIN",          GetMathCallFunctionHelper(nameof(Math.Asin),          1 ) },
+            { "ATAN",          GetMathCallFunctionHelper(nameof(Math.Atan),          1 ) },
+            { "ATAN2",         GetMathCallFunctionHelper(nameof(Math.Atan2),         2 ) },
+            { "CEILING",       GetMathCallFunctionHelper(nameof(Math.Ceiling),       1 ) },
+            { "COS",           GetMathCallFunctionHelper(nameof(Math.Cos),           1 ) },
+            { "COSH",          GetMathCallFunctionHelper(nameof(Math.Cosh),          1 ) },
+            { "EXP",           GetMathCallFunctionHelper(nameof(Math.Exp),           1 ) },
+            { "FLOOR",         GetMathCallFunctionHelper(nameof(Math.Floor),         1 ) },
+            { "IEEEREMAINDER", GetMathCallFunctionHelper(nameof(Math.IEEERemainder), 2 ) },
+            { "LOG",           GetMathCallFunctionHelper(nameof(Math.Log),           2 ) },
+            { "LOG10",         GetMathCallFunctionHelper(nameof(Math.Log10),         1 ) },
+            { "SIGN",          GetMathCallFunctionHelper(nameof(Math.Sign),          1 ) },
+            { "SIN",           GetMathCallFunctionHelper(nameof(Math.Sin),           1 ) },
+            { "SINH",          GetMathCallFunctionHelper(nameof(Math.Sinh),          1 ) },
+            { "SQRT",          GetMathCallFunctionHelper(nameof(Math.Sqrt),          1 ) },
+            { "TAN",           GetMathCallFunctionHelper(nameof(Math.Tan),           1 ) },
+            { "TANH",          GetMathCallFunctionHelper(nameof(Math.Tanh),          1 ) },
+            { "TRUNCATE",      GetMathCallFunctionHelper(nameof(Math.Truncate),      1 ) },
+
+            // Exceptional handling
+            { "ROUND",         new MathCallFunction() { 
+                MathMethodInfo = typeof(Math).GetMethod(nameof(Math.Round), new[] { typeof(double), typeof(int), typeof(MidpointRounding) }),
+                ArgumentCount = 2 } }
+        };
+
         private bool Ordinal { get { return (_options & EvaluateOptions.MatchStringsOrdinal) == EvaluateOptions.MatchStringsOrdinal; } }
         private bool IgnoreCaseString { get { return (_options & EvaluateOptions.MatchStringsWithIgnoreCase) == EvaluateOptions.MatchStringsWithIgnoreCase; } }
         private bool Checked { get { return (_options & EvaluateOptions.OverflowProtection) == EvaluateOptions.OverflowProtection; } }
@@ -200,25 +239,64 @@ namespace NCalc
                 return;
             }
 
+            void CheckArgumentsLengthForFunction(string funcStr, int argsNum, int argsNeed)
+            {
+                if (argsNum != argsNeed)
+                    throw new ArgumentException($"{funcStr} takes exactly {argsNeed} argument");
+            };
+
+            void MakeMathCallExpression(MathCallFunction mathMethod, int argsNumActual)
+            {
+                CheckArgumentsLengthForFunction(mathMethod.MathMethodInfo.Name, argsNumActual, mathMethod.ArgumentCount);
+
+                _result = L.Expression.Call(mathMethod.MathMethodInfo,
+                    Enumerable.Range(0, argsNumActual).Select( i => L.Expression.Convert(args[i], typeof(double)) ));
+            }
+
+            L.UnaryExpression arg0;
+            L.UnaryExpression arg1;
+
+            int actualNumArgs = function.Expressions.Length;
+
             switch (functionName)
             {
-                case "MIN":
-                    var minArg0 = L.Expression.Convert(args[0], typeof(double));
-                    var minArg1 = L.Expression.Convert(args[1], typeof(double));
-                    _result = L.Expression.Condition(L.Expression.LessThan(minArg0, minArg1), minArg0, minArg1);
-                    break;
+                // Exceptional handling
                 case "MAX":
-                    var maxArg0 = L.Expression.Convert(args[0], typeof(double));
-                    var maxArg1 = L.Expression.Convert(args[1], typeof(double));
-                    _result = L.Expression.Condition(L.Expression.GreaterThan(maxArg0, maxArg1), maxArg0, maxArg1);
+                    CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                    arg0 = L.Expression.Convert(args[0], typeof(double));
+                    arg1 = L.Expression.Convert(args[1], typeof(double));
+                    _result = L.Expression.Condition(L.Expression.GreaterThan(arg0, arg1), arg0, arg1);
+                    break;
+                case "MIN":
+                    CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                    arg0 = L.Expression.Convert(args[0], typeof(double));
+                    arg1 = L.Expression.Convert(args[1], typeof(double));
+                    _result = L.Expression.Condition(L.Expression.LessThan(arg0, arg1), arg0, arg1);
                     break;
                 case "POW":
-                    var powArg0 = L.Expression.Convert(args[0], typeof(double));
-                    var powArg1 = L.Expression.Convert(args[1], typeof(double));
-                    _result = L.Expression.Power(powArg0, powArg1);
+                    CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                    arg0 = L.Expression.Convert(args[0], typeof(double));
+                    arg1 = L.Expression.Convert(args[1], typeof(double));
+                    _result = L.Expression.Power(arg0, arg1);
+                    break;
+                case "ROUND":
+                    CheckArgumentsLengthForFunction(functionName, function.Expressions.Length, 2);
+                    arg0 = L.Expression.Convert(args[0], typeof(double));
+                    arg1 = L.Expression.Convert(args[1], typeof(int));
+                    MidpointRounding rounding = (_options & EvaluateOptions.RoundAwayFromZero) == EvaluateOptions.RoundAwayFromZero ? MidpointRounding.AwayFromZero : MidpointRounding.ToEven;
+                    _result = L.Expression.Call(_mathCallFunctions["ROUND"].MathMethodInfo, arg0, arg1, L.Expression.Constant(rounding));
                     break;
                 default:
-                    throw new MissingMethodException($"method not found: {functionName}");
+                    // Regular handling
+                    if (_mathCallFunctions.TryGetValue(functionName, out MathCallFunction func))
+                    {
+                        MakeMathCallExpression(func, actualNumArgs);
+                    }
+                    else
+                    {
+                        throw new MissingMethodException($"method not found: {functionName}");
+                    }
+                    break;
             }
         }
 
