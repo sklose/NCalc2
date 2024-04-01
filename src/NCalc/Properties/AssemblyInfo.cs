@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // In SDK-style projects such as this one, several assembly attributes that were historically
@@ -18,3 +19,5 @@ using System.Runtime.InteropServices;
 [assembly: Guid("489d159b-9d5f-4726-97dd-b181db3eecc8")]
 
 [assembly: CLSCompliant(false)]
+
+[assembly: InternalsVisibleTo("NCalc.Tests")]

@@ -1,4 +1,6 @@
-﻿using Antlr4.Runtime;
+﻿using System.Threading;
+
+using Antlr4.Runtime;
 using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Misc;
 using NCalc.Domain;
@@ -67,6 +69,8 @@ namespace NCalc
         private static bool _cacheEnabled = true;
         private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions =
             new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
+        internal static int CachedCompilations = 0;
+        private const int _cacheCleanInterval = 1000;
 
         public static bool CacheEnabled
         {
@@ -155,7 +159,10 @@ namespace NCalc
             {
                 _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
 
-                CleanCache();
+                if (Interlocked.Increment(ref CachedCompilations) % _cacheCleanInterval == 0)
+                {
+                    CleanCache();
+                }
                 //Debug.WriteLine("Expression added to cache: " + expression);
             }
 
