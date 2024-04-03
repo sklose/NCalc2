@@ -11,6 +11,8 @@ using Xunit.Abstractions;
 
 namespace NCalc.Tests
 {
+
+    [Collection("Expression")]
     public class Fixtures
     {
         private readonly ITestOutputHelper _output;

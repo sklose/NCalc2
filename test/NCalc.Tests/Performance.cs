@@ -5,6 +5,7 @@ using Xunit;
 
 namespace NCalc.Tests
 {
+    [Collection("Expression")]
     public class Performance
     {
         private const int Iterations = 100000;

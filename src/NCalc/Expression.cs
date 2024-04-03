@@ -69,8 +69,11 @@ namespace NCalc
         private static bool _cacheEnabled = true;
         private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions =
             new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
-        internal static int CachedCompilations = 0;
-        private const int _cacheCleanInterval = 1000;
+        internal static int CurrentCachedCompilations => _compiledExpressions.Count;
+
+        private static int _totalCachedCompilations = 0;
+        internal static int TotalCachedCompilations => _totalCachedCompilations;
+        public static int CacheCleanInterval { get; set; } = 1000;
 
         public static bool CacheEnabled
         {
@@ -86,6 +89,7 @@ namespace NCalc
                 }
             }
         }
+
 
         /// <summary>
         /// Removed unused entries from cached compiled expression
@@ -159,7 +163,7 @@ namespace NCalc
             {
                 _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
 
-                if (Interlocked.Increment(ref CachedCompilations) % _cacheCleanInterval == 0)
+                if (Interlocked.Increment(ref _totalCachedCompilations) % CacheCleanInterval == 0)
                 {
                     CleanCache();
                 }
