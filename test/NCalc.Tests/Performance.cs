@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using Xunit;
 
 namespace NCalc.Tests
 {
-    [Collection("Expression")]
     public class Performance
     {
         private const int Iterations = 100000;

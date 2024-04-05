@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Globalization;
 using Xunit;
 
 namespace NCalc.Tests
 {
-    [Collection("Expression")]
     public class Lambdas
     {
         private class Context
