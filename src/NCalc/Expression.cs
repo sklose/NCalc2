@@ -1,4 +1,6 @@
-﻿using Antlr4.Runtime;
+﻿using System.Threading;
+
+using Antlr4.Runtime;
 using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Misc;
 using NCalc.Domain;
@@ -67,6 +69,11 @@ namespace NCalc
         private static bool _cacheEnabled = true;
         private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions =
             new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
+        internal static int CurrentCachedCompilations => _compiledExpressions.Count;
+
+        private static int _totalCachedCompilations = 0;
+        internal static int TotalCachedCompilations => _totalCachedCompilations;
+        public static int CacheCleanInterval { get; set; } = 1000;
 
         public static bool CacheEnabled
         {
@@ -82,6 +89,7 @@ namespace NCalc
                 }
             }
         }
+
 
         /// <summary>
         /// Removed unused entries from cached compiled expression
@@ -155,7 +163,10 @@ namespace NCalc
             {
                 _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
 
-                CleanCache();
+                if (Interlocked.Increment(ref _totalCachedCompilations) % CacheCleanInterval == 0)
+                {
+                    CleanCache();
+                }
                 //Debug.WriteLine("Expression added to cache: " + expression);
             }
 
@@ -192,12 +203,6 @@ namespace NCalc
         public Exception ErrorException { get; private set; }
 
         public LogicalExpression ParsedExpression { get; private set; }
-
-        [Obsolete("This property will be removed in the next minor update")]
-        protected Dictionary<string, IEnumerator> ParameterEnumerators;
-        
-        [Obsolete("This property will be removed in the next minor update")]
-        protected Dictionary<string, object> ParametersBackup;
 
         private struct Void { };
 

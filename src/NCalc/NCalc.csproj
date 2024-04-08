@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<Description>This is a port of NCalc for .NET Core applications.</Description>
 		<AssemblyTitle>CoreCLR-NCalc</AssemblyTitle>
-		<VersionPrefix>3.0.0</VersionPrefix>
+		<VersionPrefix>3.1.0</VersionPrefix>
 		<Authors>Sebastian Klose</Authors>
 		<TargetFrameworks>net45;netstandard2.0;net6.0;net8.0</TargetFrameworks>
 		<AssemblyName>NCalc</AssemblyName>
