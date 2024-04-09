@@ -77,10 +77,10 @@ namespace NCalc.Domain
             if (!allowNull)
             {
                 if (a == null)
-                    throw new ArgumentException("Value cannot be null", nameof(a));
+                    throw new ArgumentNullException(nameof(a));
 
                 if (b == null)
-                    throw new ArgumentException("Value cannot be null", nameof(b));
+                    throw new ArgumentNullException(nameof(b));
             }
 
             if (a == null && b == null)
