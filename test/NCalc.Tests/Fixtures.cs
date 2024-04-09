@@ -118,13 +118,13 @@ namespace NCalc.Tests
         }
 
         [Fact]
-        public void ExpressionThrowsNullReferenceExceptionWithoutNullOption()
+        public void ExpressionThrowsArgumentNullExceptionWithoutNullOption()
         {
             var e = Extensions.CreateExpression("'a string' == null");
 
             e.Parameters["null"] = null;
 
-            Assert.Throws<NullReferenceException>(() => e.Evaluate());
+            Assert.Throws<ArgumentNullException>(() => e.Evaluate());
         }
 
         [Fact]
