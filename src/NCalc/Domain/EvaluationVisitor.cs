@@ -43,7 +43,13 @@ namespace NCalc.Domain
             throw new Exception("The method or operation is not implemented.");
         }
 
-        private static Type[] CommonTypes = new[] { typeof(Int64), typeof(Double), typeof(Boolean), typeof(String), typeof(Decimal) };
+        private static readonly Type[] CommonTypes = new[] {
+            typeof(Int64),
+            typeof(Double),
+            typeof(Boolean),
+            typeof(String),
+            typeof(Decimal)
+        };
 
         /// <summary>
         /// Gets the the most precise type.
@@ -515,6 +521,20 @@ namespace NCalc.Domain
 
                 #endregion
 
+                #region Ln
+                case "LN":
+
+                    CheckCase("Ln", function.Identifier.Name);
+
+                    if (function.Expressions.Length != 1)
+                        throw new ArgumentException("Ln() takes exactly 1 argument");
+
+                    Result = Math.Log(Convert.ToDouble(Evaluate(function.Expressions[0]), _cultureInfo));
+
+                    break;
+
+                #endregion
+
                 #region Log
                 case "LOG":
 
@@ -700,8 +720,7 @@ namespace NCalc.Domain
 
         private void OnEvaluateFunction(string name, FunctionArgs args)
         {
-            if (EvaluateFunction != null)
-                EvaluateFunction(name, args);
+            EvaluateFunction?.Invoke(name, args);
         }
 
         public override void Visit(Identifier parameter)
@@ -745,8 +764,7 @@ namespace NCalc.Domain
 
         private void OnEvaluateParameter(string name, ParameterArgs args)
         {
-            if (EvaluateParameter != null)
-                EvaluateParameter(name, args);
+            EvaluateParameter?.Invoke(name, args);
         }
 
         public Dictionary<string, object> Parameters { get; set; }

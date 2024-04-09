@@ -1,4 +1,6 @@
-﻿using Antlr4.Runtime;
+﻿using System.Threading;
+
+using Antlr4.Runtime;
 using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Misc;
 using NCalc.Domain;
@@ -8,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using L = System.Linq.Expressions;
 
 namespace NCalc
 {
@@ -41,8 +44,7 @@ namespace NCalc
         public Expression(string expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (String.IsNullOrEmpty(expression))
-                throw new
-                    ArgumentException("Expression can't be empty", nameof(expression));
+                throw new ArgumentException("Expression can't be empty", nameof(expression));
 
             OriginalExpression = expression;
             Options = options;
@@ -56,8 +58,7 @@ namespace NCalc
         public Expression(LogicalExpression expression, EvaluateOptions options, CultureInfo cultureInfo)
         {
             if (expression == null)
-                throw new
-                    ArgumentException("Expression can't be null", nameof(expression));
+                throw new ArgumentException("Expression can't be null", nameof(expression));
 
             ParsedExpression = expression;
             Options = options;
@@ -66,7 +67,13 @@ namespace NCalc
 
         #region Cache management
         private static bool _cacheEnabled = true;
-        private static ConcurrentDictionary<string, WeakReference> _compiledExpressions = new ConcurrentDictionary<string, WeakReference>();
+        private static readonly ConcurrentDictionary<string, WeakReference<LogicalExpression>> _compiledExpressions =
+            new ConcurrentDictionary<string, WeakReference<LogicalExpression>>();
+        internal static int CurrentCachedCompilations => _compiledExpressions.Count;
+
+        private static int _totalCachedCompilations = 0;
+        internal static int TotalCachedCompilations => _totalCachedCompilations;
+        public static int CacheCleanInterval { get; set; } = 1000;
 
         public static bool CacheEnabled
         {
@@ -78,35 +85,24 @@ namespace NCalc
                 if (!CacheEnabled)
                 {
                     // Clears cache
-                    _compiledExpressions = new ConcurrentDictionary<string, WeakReference>();
+                    _compiledExpressions.Clear();
                 }
             }
         }
+
 
         /// <summary>
         /// Removed unused entries from cached compiled expression
         /// </summary>
         private static void CleanCache()
         {
-            try
+            foreach (var kvp in _compiledExpressions)
             {
-                var keysToRemove = new List<string>();
-                foreach (var de in _compiledExpressions)
+                if (!kvp.Value.TryGetTarget(out _))
                 {
-                    if (!de.Value.IsAlive)
-                    {
-                        keysToRemove.Add(de.Key);
-                    }
-                }
-
-                foreach (string key in keysToRemove)
-                {
-                    _compiledExpressions.TryRemove(key, out _);
+                    _compiledExpressions.TryRemove(kvp.Key, out _);
                     //Debug.WriteLine("Cache entry released: " + key);
                 }
-            }
-            finally
-            {
             }
         }
 
@@ -114,81 +110,64 @@ namespace NCalc
 
         public static LogicalExpression Compile(string expression, bool nocache)
         {
-            LogicalExpression logicalExpression = null;
-
             if (_cacheEnabled && !nocache)
             {
-                if (_compiledExpressions.ContainsKey(expression))
+                if (_compiledExpressions.TryGetValue(expression, out var wr))
                 {
                     //Debug.WriteLine("Expression retrieved from cache: " + expression);
 
-                    var wr = _compiledExpressions[expression];
-                    logicalExpression = wr.Target as LogicalExpression;
-
-                    if (wr.IsAlive && logicalExpression != null)
-                    {
-                        return logicalExpression;
-                    }
+                    if (wr.TryGetTarget(out var target))
+                        return target;
                 }
             }
 
-            if (logicalExpression == null)
+            var lexer = new NCalcLexer(CharStreams.fromString(expression));
+            var lexerErrorListener = new ErrorListener<int>();
+            lexer.AddErrorListener(lexerErrorListener);
+
+            var parser = new NCalcParser(new CommonTokenStream(lexer));
+            parser.Interpreter.PredictionMode = PredictionMode.SLL;
+            var parserErrorListener = new ErrorListener<IToken>();
+
+            parser.RemoveErrorListeners();
+            parser.ErrorHandler = new BailErrorStrategy();
+
+            LogicalExpression logicalExpression = null;
+
+            try
             {
-                var lexer = new NCalcLexer(CharStreams.fromString(expression));
-                var lexerErrorListener = new ErrorListener<int>();
-                lexer.AddErrorListener(lexerErrorListener);
+                logicalExpression = parser.ncalcExpression().value;
+            }
+            catch (ParseCanceledException)
+            {
+                lexer.Reset();
 
-                var parser = new NCalcParser(new CommonTokenStream(lexer));
-                parser.Interpreter.PredictionMode = PredictionMode.SLL;
-                var parserErrorListener = new ErrorListener<IToken>();
+                parser.Reset();
+                parser.ErrorHandler = new DefaultErrorStrategy();
+                parser.Interpreter.PredictionMode = PredictionMode.LL;
+                parser.AddErrorListener(parserErrorListener);
+                logicalExpression = parser.ncalcExpression().value;
+            }
 
-                parser.RemoveErrorListeners();
-                parser.ErrorHandler = new BailErrorStrategy();
+            if (parserErrorListener.Errors.Count > 0 || lexerErrorListener.Errors.Count > 0)
+            {
+                var errors = string.Join(Environment.NewLine,
+                    lexerErrorListener.Errors.Select(e => e.ToString()).Union(
+                    parserErrorListener.Errors.Select(e => e.ToString()))
+                );
 
-                try
+                throw new EvaluationException(errors);
+            }
+
+            if (_cacheEnabled && !nocache)
+            {
+                _compiledExpressions[expression] = new WeakReference<LogicalExpression>(logicalExpression);
+
+                if (Interlocked.Increment(ref _totalCachedCompilations) % CacheCleanInterval == 0)
                 {
-                    logicalExpression = parser.ncalcExpression().value;
+                    CleanCache();
                 }
-                catch (ParseCanceledException)
-                {
-                    lexer.Reset();
-
-                    parser.Reset();
-                    parser.ErrorHandler = new DefaultErrorStrategy();
-                    parser.Interpreter.PredictionMode = PredictionMode.LL;
-                    parser.AddErrorListener(parserErrorListener);
-                    logicalExpression = parser.ncalcExpression().value;
-                }
-
-                if (parserErrorListener.Errors.Count > 0 || lexerErrorListener.Errors.Count > 0)
-                {
-                    var errors = string.Join(Environment.NewLine,
-                        lexerErrorListener.Errors.Select(e => e.ToString()).Union(
-                        parserErrorListener.Errors.Select(e => e.ToString()))
-                    );
-
-                    throw new EvaluationException(errors);
-                }
-
-                if (_cacheEnabled && !nocache)
-                {
-                    try
-                    {
-                        if (_compiledExpressions.TryGetValue(expression, out var wr))
-                        {
-                            _compiledExpressions.TryUpdate(expression, new WeakReference(logicalExpression), wr);
-                        }
-                        else
-                        {
-                            _compiledExpressions.TryAdd(expression, new WeakReference(logicalExpression));
-                        }
-                    }
-                    finally
-                    {
-                        CleanCache();
-                    }
-                    //Debug.WriteLine("Expression added to cache: " + expression);
-                }
+                //Debug.WriteLine("Expression added to cache: " + expression);
             }
 
             return logicalExpression;
@@ -225,10 +204,15 @@ namespace NCalc
 
         public LogicalExpression ParsedExpression { get; private set; }
 
-        protected Dictionary<string, IEnumerator> ParameterEnumerators;
-        protected Dictionary<string, object> ParametersBackup;
+        private struct Void { };
 
-        public Func<TResult> ToLambda<TResult>()
+        public struct ExpressionWithParameter
+        {
+            public L.Expression Expr;
+            public L.ParameterExpression Param;
+        }
+
+        private ExpressionWithParameter ToLinqExpressionInternal<TContext, TResult>()
         {
             if (HasErrors())
             {
@@ -240,42 +224,49 @@ namespace NCalc
                 ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
             }
 
-            var visitor = new LambdaExpressionVistor(Parameters, Options);
+            LambdaExpressionVistor visitor;
+            L.ParameterExpression parameter = null;
+            if (typeof(TContext) != typeof(Void))
+            {
+                parameter = L.Expression.Parameter(typeof(TContext), "ctx");
+                visitor = new LambdaExpressionVistor(parameter, Options);
+            }
+            else
+            {
+                visitor = new LambdaExpressionVistor(Parameters, Options);
+            }
             ParsedExpression.Accept(visitor);
 
             var body = visitor.Result;
             if (body.Type != typeof(TResult))
             {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
+                body = L.Expression.Convert(body, typeof(TResult));
             }
 
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TResult>>(body);
+            return new ExpressionWithParameter { Expr = body, Param = parameter };
+        }
+
+        protected virtual L.Expression ToLinqExpression<TResult>()
+        {
+            return ToLinqExpressionInternal<Void, TResult>().Expr;
+        }
+
+        protected virtual ExpressionWithParameter ToLinqExpression<TContext, TResult>()
+        {
+            return ToLinqExpressionInternal<TContext, TResult>();
+        }
+
+        public virtual Func<TResult> ToLambda<TResult>()
+        {
+            L.Expression body = ToLinqExpression<TResult>();
+            var lambda = L.Expression.Lambda<Func<TResult>>(body);
             return lambda.Compile();
         }
 
-        public Func<TContext, TResult> ToLambda<TContext, TResult>()
+        public virtual Func<TContext, TResult> ToLambda<TContext, TResult>()
         {
-            if (HasErrors())
-            {
-                throw new EvaluationException(Error, ErrorException);
-            }
-
-            if (ParsedExpression == null)
-            {
-                ParsedExpression = Compile(OriginalExpression, (Options & EvaluateOptions.NoCache) == EvaluateOptions.NoCache);
-            }
-
-            var parameter = System.Linq.Expressions.Expression.Parameter(typeof(TContext), "ctx");
-            var visitor = new LambdaExpressionVistor(parameter, Options);
-            ParsedExpression.Accept(visitor);
-
-            var body = visitor.Result;
-            if (body.Type != typeof(TResult))
-            {
-                body = System.Linq.Expressions.Expression.Convert(body, typeof(TResult));
-            }
-
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<TContext, TResult>>(body, parameter);
+            ExpressionWithParameter exprAndParamTuple = ToLinqExpression<TContext, TResult>();
+            var lambda = L.Expression.Lambda<Func<TContext, TResult>>(exprAndParamTuple.Expr, exprAndParamTuple.Param);
             return lambda.Compile();
         }
 
@@ -308,52 +299,40 @@ namespace NCalc
             if ((Options & EvaluateOptions.IterateParameters) == EvaluateOptions.IterateParameters)
             {
                 int size = -1;
-                ParametersBackup = new Dictionary<string, object>();
-                foreach (string key in Parameters.Keys)
-                {
-                    ParametersBackup.Add(key, Parameters[key]);
-                }
 
-                ParameterEnumerators = new Dictionary<string, IEnumerator>();
+                var parameterEnumerators = new Dictionary<string, IEnumerator>();
 
-                foreach (object parameter in Parameters.Values)
+                foreach (var parameter in Parameters)
                 {
-                    if (parameter is IEnumerable)
+                    if (parameter.Value is IEnumerable enumerable)
                     {
-                        int localsize = 0;
-                        foreach (object o in (IEnumerable)parameter)
+                        parameterEnumerators.Add(parameter.Key, enumerable.GetEnumerator());
+
+                        int localSize = 0;
+                        foreach (object o in enumerable)
                         {
-                            localsize++;
+                            localSize++;
                         }
 
                         if (size == -1)
                         {
-                            size = localsize;
+                            size = localSize;
                         }
-                        else if (localsize != size)
+                        else if (localSize != size)
                         {
                             throw new EvaluationException("When IterateParameters option is used, IEnumerable parameters must have the same number of items");
                         }
                     }
                 }
 
-                foreach (string key in Parameters.Keys)
-                {
-                    var parameter = Parameters[key] as IEnumerable;
-                    if (parameter != null)
-                    {
-                        ParameterEnumerators.Add(key, parameter.GetEnumerator());
-                    }
-                }
-
                 var results = new List<object>();
                 for (int i = 0; i < size; i++)
                 {
-                    foreach (string key in ParameterEnumerators.Keys)
+                    foreach (var parameterEnumerator in parameterEnumerators)
                     {
-                        IEnumerator enumerator = ParameterEnumerators[key];
+                        IEnumerator enumerator = parameterEnumerator.Value;
                         enumerator.MoveNext();
-                        Parameters[key] = enumerator.Current;
+                        Parameters[parameterEnumerator.Key] = enumerator.Current;
                     }
 
                     ParsedExpression.Accept(visitor);
@@ -365,7 +344,6 @@ namespace NCalc
 
             ParsedExpression.Accept(visitor);
             return visitor.Result;
-
         }
 
         public event EvaluateFunctionHandler EvaluateFunction;
@@ -378,6 +356,5 @@ namespace NCalc
             get { return _parameters ?? (_parameters = new Dictionary<string, object>()); }
             set { _parameters = value; }
         }
-
     }
 }
