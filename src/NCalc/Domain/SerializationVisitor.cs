@@ -101,7 +101,7 @@ namespace NCalc.Domain
                     break;
 
                 case BinaryExpressionType.BitwiseXOr:
-                    Result.Append("~ ");
+                    Result.Append("^ ");
                     break;
 
                 case BinaryExpressionType.LeftShift:

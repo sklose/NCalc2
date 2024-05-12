@@ -941,6 +941,18 @@ namespace NCalc.Tests
                 Assert.Throws<FormatException>(() => expression.Evaluate());
             }
         }
+
+
+        [Fact]
+        public void ShouldUseCorrectBitwiseXOr()
+        {
+            var logicalExpression = Extensions.CreateExpression(expression: "1 ^ 2");
+
+            var serializedString = logicalExpression.ToString();
+
+            Assert.Equal("1 ^ 2", serializedString);
+            Assert.Equal(3, logicalExpression.Evaluate());
+        }
     }
 }
 
