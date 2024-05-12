@@ -942,17 +942,15 @@ namespace NCalc.Tests
             }
         }
 
-
         [Fact]
         public void ShouldUseCorrectBitwiseXOr()
         {
-            var logicalExpression = Extensions.CreateExpression(expression: "1 ^ 2");
+            var logicalExpression = Expression.Compile("1 ^ 2", true);
 
             var serializedString = logicalExpression.ToString();
 
             Assert.Equal("1 ^ 2", serializedString);
-            Assert.Equal(3, logicalExpression.Evaluate());
+            Assert.Equal(3, new Expression(logicalExpression, EvaluateOptions.None).Evaluate());
         }
     }
 }
-
