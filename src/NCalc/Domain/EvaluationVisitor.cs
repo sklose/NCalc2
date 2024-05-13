@@ -6,8 +6,6 @@ namespace NCalc.Domain
 {
     public class EvaluationVisitor : LogicalExpressionVisitor
     {
-        private delegate T Func<T>();
-
         private readonly EvaluateOptions _options = EvaluateOptions.None;
         private readonly CultureInfo _cultureInfo = CultureInfo.CurrentCulture;
         private readonly StringComparer _comparer;
