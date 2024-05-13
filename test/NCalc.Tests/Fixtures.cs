@@ -958,7 +958,7 @@ namespace NCalc.Tests
         {
             object val = 'a';
             var expr = new ValueExpression(val);
-            Assert.Equal("a", expr.ToString());
+            Assert.Equal("'a'", expr.ToString());
         }
     }
 }
