@@ -956,7 +956,8 @@ namespace NCalc.Tests
         [Fact]
         public void ShoudTreatCharAsString()
         {
-            var expr = new ValueExpression('a');
+            object val = 'a';
+            var expr = new ValueExpression(val);
             Assert.Equal("a", expr.ToString());
         }
     }
