@@ -952,5 +952,12 @@ namespace NCalc.Tests
             Assert.Equal("1 ^ 2", serializedString);
             Assert.Equal(3, new Expression(logicalExpression, EvaluateOptions.None).Evaluate());
         }
+
+        [Fact]
+        public void ShoudTreatCharAsString()
+        {
+            var expr = new ValueExpression('a');
+            Assert.Equal("a", expr.ToString());
+        }
     }
 }

@@ -42,6 +42,7 @@ namespace NCalc.Domain
                     Type = ValueType.Integer;
                     break;
 
+                case TypeCode.Char:
                 case TypeCode.String:
                     Type = ValueType.String;
                     break;
