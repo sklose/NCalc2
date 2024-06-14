@@ -10,6 +10,7 @@
 		<PackageId>CoreCLR-NCalc</PackageId>
 		<PackageTags>ncalc;coreclr;expression;evaluator</PackageTags>
 		<PackageProjectUrl>https://github.com/sklose/NCalc2</PackageProjectUrl>
+                <PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>git://github.com/sklose/NCalc2</RepositoryUrl>
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
